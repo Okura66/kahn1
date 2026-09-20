@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr" class="dark">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -223,29 +223,29 @@
     <!-- Controls Bar -->
     <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 p-4 rounded-xl border border-brand-border bg-brand-surface">
       <div class="flex flex-col gap-2">
-        <!-- Row 1: Thème -->
+        <!-- Row 1: Topic -->
         <div class="flex items-center gap-1.5 overflow-x-auto text-xs font-mono text-brand-muted">
-          <span class="text-brand-dim mr-1">Thème :</span>
-          <button onclick="setTheme('all')" id="btn-th-all" class="px-2.5 py-0.5 rounded bg-zinc-800 text-white font-medium border border-brand-border transition-colors">Tous</button>
+          <span class="text-brand-dim mr-1">Topic:</span>
+          <button onclick="setTheme('all')" id="btn-th-all" class="px-2.5 py-0.5 rounded bg-zinc-800 text-white font-medium border border-brand-border transition-colors">All</button>
           <button onclick="setTheme('iot')" id="btn-th-iot" class="px-2.5 py-0.5 rounded hover:text-white transition-colors text-emerald-400">Smart Home</button>
           <button onclick="setTheme('banking')" id="btn-th-banking" class="px-2.5 py-0.5 rounded hover:text-white transition-colors">Banking</button>
           <button onclick="setTheme('sentiment')" id="btn-th-sentiment" class="px-2.5 py-0.5 rounded hover:text-white transition-colors">Sentiment</button>
         </div>
 
-        <!-- Row 2: Choix de l'Adversaire -->
+        <!-- Row 2: Opponent Selection -->
         <div class="flex items-center gap-1.5 overflow-x-auto text-[11px] font-mono text-brand-muted">
-          <span class="text-brand-dim mr-1">Adversaire :</span>
+          <span class="text-brand-dim mr-1">Opponent:</span>
           <button onclick="setOpponent('gemini')" id="btn-op-gemini" class="px-2 py-0.5 rounded bg-zinc-800 text-white font-medium border border-brand-border transition-colors">Gemini Flash Lite (System 2)</button>
           <button onclick="setOpponent('jev')" id="btn-op-jev" class="px-2 py-0.5 rounded hover:text-white transition-colors text-sky-400">TypeSafe JEV (Cloud S1 API)</button>
         </div>
 
-        <!-- Row 3: Concurrence I/O (Requêtes Parallèles) -->
+        <!-- Row 3: Concurrent I/O -->
         <div class="flex items-center gap-1.5 overflow-x-auto text-[11px] font-mono text-brand-muted">
-          <span class="text-brand-dim mr-1">I/O Concurrente :</span>
-          <button onclick="setConcurrency(2)" id="btn-conc-2" class="px-2 py-0.5 rounded hover:text-white transition-colors">2 flux</button>
-          <button onclick="setConcurrency(5)" id="btn-conc-5" class="px-2 py-0.5 rounded hover:text-white transition-colors">5 flux</button>
-          <button onclick="setConcurrency(10)" id="btn-conc-10" class="px-2 py-0.5 rounded bg-zinc-800 text-white font-medium border border-brand-border transition-colors">10 flux (Parallèle)</button>
-          <button onclick="setConcurrency(20)" id="btn-conc-20" class="px-2 py-0.5 rounded hover:text-white transition-colors text-purple-400">20 flux (Max I/O)</button>
+          <span class="text-brand-dim mr-1">Concurrent I/O:</span>
+          <button onclick="setConcurrency(2)" id="btn-conc-2" class="px-2 py-0.5 rounded hover:text-white transition-colors">2 streams</button>
+          <button onclick="setConcurrency(5)" id="btn-conc-5" class="px-2 py-0.5 rounded hover:text-white transition-colors">5 streams</button>
+          <button onclick="setConcurrency(10)" id="btn-conc-10" class="px-2 py-0.5 rounded bg-zinc-800 text-white font-medium border border-brand-border transition-colors">10 streams (Parallel)</button>
+          <button onclick="setConcurrency(20)" id="btn-conc-20" class="px-2 py-0.5 rounded hover:text-white transition-colors text-purple-400">20 streams (Max I/O)</button>
         </div>
       </div>
 
@@ -259,10 +259,10 @@
         </div>
 
         <button id="btn-draw" onclick="drawItems()" class="py-2 px-4 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-brand-border text-xs font-mono font-medium text-white transition-all">
-          1. Tirer <span id="label-n-items">100</span> items
+          1. Draw <span id="label-n-items">100</span> items
         </button>
         <button id="btn-race" onclick="startRace()" disabled class="py-2 px-5 rounded-lg bg-white hover:bg-zinc-200 text-black font-mono font-bold text-xs transition-all disabled:opacity-30 disabled:cursor-not-allowed">
-          2. Lancer la course
+          2. Start Race
         </button>
       </div>
     </div>
@@ -289,8 +289,8 @@
         </div>
 
         <div class="flex items-center justify-between text-[11px] font-mono text-brand-muted pt-1 border-t border-brand-border/60">
-          <span>Temps moyen : ~32 ms / item</span>
-          <span id="status-kahn1">En attente</span>
+          <span>Mean Latency: ~32 ms / item</span>
+          <span id="status-kahn1">Idle</span>
         </div>
       </div>
 
@@ -313,8 +313,8 @@
         </div>
 
         <div class="flex items-center justify-between text-[11px] font-mono text-brand-muted pt-1 border-t border-brand-border/60">
-          <span id="label-opp-footer">Génération JSON autorégressive</span>
-          <span id="status-gemini">En attente</span>
+          <span id="label-opp-footer">Autoregressive JSON Generation</span>
+          <span id="status-gemini">Idle</span>
         </div>
       </div>
 
@@ -324,7 +324,7 @@
     <div id="inspector-card" class="p-4 rounded-xl border border-brand-border bg-brand-surface flex flex-col gap-2 font-mono text-xs">
       <div class="flex items-center justify-between border-b border-brand-border pb-2">
         <div class="flex items-center gap-2">
-          <span class="text-white font-bold">Détail de l'item sélectionné</span>
+          <span class="text-white font-bold">Selected Item Details</span>
           <span id="insp-id" class="text-brand-muted">#1</span>
         </div>
         <div class="text-[11px] text-brand-muted">
@@ -332,7 +332,7 @@
         </div>
       </div>
       <p id="insp-text" class="text-xs font-sans text-zinc-300 bg-brand-card p-2.5 rounded border border-brand-border/60">
-        Cliquez sur une case pour inspecter la décision.
+        Click a block to inspect model decision.
       </p>
       <div class="flex items-center justify-between pt-1 text-[11px]">
         <div>Kahn1 : <span id="insp-kahn-ans" class="text-emerald-400 font-semibold">—</span></div>
@@ -344,7 +344,7 @@
 
   <!-- Footer -->
   <footer class="w-full pt-4 mt-4 border-t border-brand-border flex items-center justify-between text-xs font-mono text-brand-muted">
-    <div>OpenJEV • Architecture Cognitive System 1</div>
+    <div>OpenJEV • System 1 Cognitive Architecture</div>
     <div class="flex items-center gap-3">
       <span>16:9 Standard</span>
       <span>•</span>
@@ -356,7 +356,7 @@
   <!-- JAVASCRIPT LOGIC                                                      -->
   <!-- ===================================================================== -->
   <script>
-    // État global
+    // Global state
     let activeView = 'matrix'; // 'race' (défaut visuel des carrés) ou 'matrix'
     let ioConcurrency = 10; // Concurrence I/O par défaut pour Gemini / JEV
     let schemaPresets = [];
@@ -433,7 +433,7 @@
     }
 
     // -----------------------------------------------------------------------
-    // Navigation entre vues (Matrix vs Race)
+    // Navigation between views (Matrix vs Race)
     // -----------------------------------------------------------------------
     function switchArenaView(view) {
       activeView = view;
@@ -463,7 +463,7 @@
     }
 
     // -----------------------------------------------------------------------
-    // Vue 1 : Multi-Question Matrix Batch
+    // View 1 : Multi-Question Matrix Batch
     // -----------------------------------------------------------------------
     async function loadSchemaPresets() {
       try {
@@ -476,7 +476,7 @@
           }
         }
       } catch (err) {
-        console.error("Erreur chargement schema presets:", err);
+        console.error("Error loading schema presets:", err);
       }
     }
 
@@ -660,7 +660,7 @@
     }
 
     // -----------------------------------------------------------------------
-    // Vue 2 : 100-Items Throughput Race
+    // View 2 : 100-Items Throughput Race
     // -----------------------------------------------------------------------
     function setTheme(th) {
       if (isRacing) return;
@@ -699,7 +699,7 @@
         nameEl.textContent = "Gemini 3.5 Flash Lite";
         badgeEl.textContent = "System 2";
         badgeEl.className = "text-[10px] font-mono text-purple-400";
-        footerEl.textContent = "Génération JSON autorégressive";
+        footerEl.textContent = "Autoregressive JSON Generation";
         inspOppLabel.textContent = "Gemini :";
       }
       resetGridState();
@@ -760,7 +760,7 @@
           inspectItem(0);
         }
       } catch (err) {
-        console.error("Erreur lors du tirage des items :", err);
+        console.error("Error drawing items:", err);
       } finally {
         btn.disabled = false;
         btn.classList.remove('opacity-50');
@@ -839,7 +839,7 @@
           document.getElementById('score-kahn1').textContent = `${correctCount} / ${items.length}`;
         }
         kahnFinished = true;
-        document.getElementById('status-kahn1').textContent = 'Terminé OK';
+        document.getElementById('status-kahn1').textContent = 'Completed';
       })();
 
       // Opponent concurrent runner
@@ -887,7 +887,7 @@
         const workers = Array.from({ length: workersCount }, () => worker());
         await Promise.all(workers);
         oppFinished = true;
-        document.getElementById('status-gemini').textContent = 'Terminé OK';
+        document.getElementById('status-gemini').textContent = 'Completed';
       })();
 
       await Promise.all([kahnPromise, oppPromise]);
@@ -897,7 +897,7 @@
       document.getElementById('btn-race').disabled = false;
     }
 
-    // Initialisation au chargement
+    // Initialization on load
     window.addEventListener('DOMContentLoaded', () => {
       drawItems();
       loadSchemaPresets();

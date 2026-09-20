@@ -243,17 +243,7 @@ kahn1/
 - `confidence = (p_max - 1/n) / (1 - 1/n)`, clamped to $[0, 1]$. Measures distance from equiprobability, **not** probability of being correct (TypeSafe formula).
 - `score = Σ p_i × i` ($i$ 0-based level index). Yields a continuous expectation (e.g. 1.84 between levels 1 and 2).
 
-## Quality Targets & Performance Benchmarks
-
-| Criterion | Target Threshold | Measured Result | Status |
-|---|:---:|:---:|:---:|
-| ECE (15 bins) on unseen holdout tasks | < 0.05 | **0.0212** | ✅ Passed |
-| ECE improvement vs raw backbone | Factor ≥ 3× | **8.1×** ($0.1725 \to 0.0212$) | ✅ Passed |
-| Type / Schema errors | = 0 | **0.0 %** (guaranteed by construction) | ✅ Passed |
-| Latency N=10 vs N=1 on shared state | < 1.4× | **0.77× to 1.23×** (GPU tensor scaling) | ✅ Passed |
-| AURC vs JSON baseline | Strictly better | **Strictly better** (JSON fails 100% at parsing) | ✅ Passed |
-| Accuracy at 100% coverage | ≥ 95% of JSON baseline | **Passed** | ✅ Passed |
-
 ## License
 
-MIT.
+Released under the [MIT License](LICENSE).
+

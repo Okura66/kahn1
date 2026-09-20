@@ -16,6 +16,26 @@
 
 ---
 
+## 📦 Model Weights & Hugging Face Release
+
+The official fine-tuned and temperature-calibrated weights are hosted on the Hugging Face Hub:
+
+👉 **[https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B)**
+
+```bash
+# Serve directly with vLLM (Prefix Caching enabled):
+vllm serve Okura66/Kahn1-Qwen2.5-3B --enable-prefix-caching --dtype bfloat16
+```
+
+```python
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model = AutoModelForCausalLM.from_pretrained("Okura66/Kahn1-Qwen2.5-3B")
+tokenizer = AutoTokenizer.from_pretrained("Okura66/Kahn1-Qwen2.5-3B")
+```
+
+---
+
 ## What Kahn1 does
 
 - Takes a **state** (arbitrary text context) and a **list of typed questions** (Choice / Score / Noul).

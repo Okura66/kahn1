@@ -10,6 +10,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import os
 from pathlib import Path
 import sys
 
@@ -25,7 +26,7 @@ base_model: {base_model}
 tags:
 - kahn1
 - system-one
-- openjev
+- jev
 - fast-inference
 - calibrated-probabilities
 - classification
@@ -86,7 +87,7 @@ print(answers["urgency"].choice, answers["urgency"].confidence)
 
 ## Citation & Licence
 
-Projet OpenJEV / SysOne sous licence Apache 2.0 / MIT.
+Projet Kahn1 / SysOne sous licence Apache 2.0 / MIT.
 """
 
 
@@ -116,9 +117,10 @@ def publish_model(
         card_content = generate_model_card(repo_name=repo_id.split("/")[-1])
         card_path.write_text(card_content, encoding="utf-8")
 
-    api = HfApi(token=token)
-    print(f"[publish_model] Création/Vérification du dépôt distant '{repo_id}'...")
-    create_repo(repo_id=repo_id, private=private, exist_ok=True, token=token)
+    resolved_token = token or os.environ.get("HF_TOKEN")
+    api = HfApi(token=resolved_token)
+    print(f"[publish_model] Création/Vérification du dépôt distant '{repo_id}' (private={private})...")
+    api.create_repo(repo_id=repo_id, private=private, exist_ok=True)
 
     print(f"[publish_model] Téléversement des fichiers depuis {model_dir} vers '{repo_id}'...")
     api.upload_folder(
@@ -135,14 +137,14 @@ def main():
 
     parser.add_argument("--model-dir", default="checkpoints/qwen_merged", help="Chemin vers le modèle fusionné")
     parser.add_argument("--private", action="store_true", help="Créer un dépôt privé")
-    parser.add_argument("--token", default=None, help="Token API Hugging Face (optionnel si connecté via CLI)")
+    parser.add_argument("--token", default=None, help="Token API Hugging Face (optionnel si présent dans HF_TOKEN)")
     args = parser.parse_args()
 
     publish_model(
         repo_id=args.repo_id,
         model_dir=args.model_dir,
         private=args.private,
-        token=args.token,
+        token=args.token or os.environ.get("HF_TOKEN"),
     )
 
 

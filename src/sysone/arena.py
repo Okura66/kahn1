@@ -1,4 +1,4 @@
-"""Comparison Arena module: Kahn1 (OpenJEV System 1) vs Gemini Flash.
+"""Comparison Arena module: Kahn1 (SysOne) vs Gemini Flash.
 
 Orchestrates real-time comparative evaluations:
 1. Kahn1 execution (local sysone engine or indexed calibrated holdout benchmark).
@@ -952,7 +952,7 @@ async def run_kahn1_prediction(
         await asyncio.sleep(real_latency / 1000.0)
 
         return {
-            "model": "Kahn1 (OpenJEV)",
+            "model": "Kahn1",
             "mode": "System 1 • Logits Directs",
             "choice": best_opt,
             "confidence": round(conf, 4),
@@ -981,7 +981,7 @@ async def run_kahn1_prediction(
             probs[opt] = round((w / w_sum) * rem, 4)
 
     return {
-        "model": "Kahn1 (OpenJEV)",
+        "model": "Kahn1",
         "mode": "System 1 • Logits Directs",
         "choice": target,
         "confidence": p_main,
@@ -1497,7 +1497,7 @@ async def run_kahn1_schema_batch(
                         "expected_score": v.get("expected_score"),
                     }
                 return {
-                    "model": "Kahn1 (OpenJEV System 1)",
+                    "model": "Kahn1 (SysOne)",
                     "mode": f"Prefix Caching Local GPU (Hit rate: {data.get('cache_hit_rate', 1.0) * 100:.0f}%)",
                     "answers": answers,
                     "latency_ms": round(data.get("latency_ms", elapsed_ms), 1),
@@ -1547,7 +1547,7 @@ async def run_kahn1_schema_batch(
         }
 
     return {
-        "model": "Kahn1 (OpenJEV System 1)",
+        "model": "Kahn1 (SysOne)",
         "mode": "Prefix Caching Local GPU (1 seul forward batch)",
         "answers": answers,
         "latency_ms": round(elapsed_ms, 1),

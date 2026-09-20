@@ -9,7 +9,7 @@ description = "High-throughput System 1 typed-decision engine: calibration-first
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
-authors = [{ name = "OpenJEV" }]
+authors = [{ name = "Kahn1" }]
 
 # Core runtime deps. Heavy ML deps (vllm, transformers, torch, peft) are listed
 # but not pinned to exact versions because vLLM APIs move fast — the code

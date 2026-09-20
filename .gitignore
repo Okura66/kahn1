@@ -1,0 +1,65 @@
+# Python runtime
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+
+# Packaging & Builds
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+
+# Testing & Linters
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Data files (Datasets must NEVER be committed to git)
+data/
+*.jsonl
+*.parquet
+*.csv
+*.tsv
+
+# Heavy weights & Checkpoints
+checkpoints/
+models/
+weights/
+*.bin
+*.safetensors
+*.pt
+*.pth
+*.onnx
+
+# System & IDE
+.DS_Store
+Thumbs.db
+.system_generated/
+*.log
+
+# AI Agents & IDE
+.gemini/
+.claude/
+.cursor/
+.idea/
+.vscode/
+
+# Internal Project Planning & Specs
+roadmap.md
+SPEC-system-one-poc.md
+
+# Scratchpads & Temporary Scripts
+scratch/
+scripts/scratch/
+
+# Local Calibration & Experiment Artifacts
+calibration*.json
+

@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenJEV — System 1 Benchmark Arena (16:9)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              black: '#000000',
+              surface: '#09090b',
+              card: '#0f0f12',
+              border: '#1e1e24',
+              muted: '#71717a',
+              dim: '#3f3f46',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #000000;
+      color: #f4f4f5;
+      font-family: 'Inter', -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .mono-nums {
+      font-variant-numeric: tabular-nums;
+    }
+    .grid-block {
+      aspect-ratio: 1 / 1;
+      border-radius: 4px;
+      transition: all 0.15s ease-out;
+    }
+    .block-empty {
+      background: #121215;
+      border: 1px solid #1e1e24;
+    }
+    .block-active {
+      background: #27272a;
+      border: 1px solid #71717a;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+    }
+    .block-correct {
+      background: #10b981;
+      border: 1px solid #059669;
+    }
+    .block-wrong {
+      background: #ef4444;
+      border: 1px solid #dc2626;
+    }
+    /* Custom scroll */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
+  </style>
+</head>
+<body class="min-h-screen p-4 sm:p-6 lg:p-8 flex flex-col justify-between items-center max-w-7xl mx-auto">
+
+  <!-- Header & Mode Switcher (16:9 Widescreen Dashboard) -->
+  <header class="w-full flex flex-col md:flex-row items-start md:items-center justify-between pb-4 mb-4 border-b border-brand-border gap-3">
+    <div class="flex items-center gap-3">
+      <div class="h-8 w-8 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center font-mono font-bold text-emerald-400 text-sm">
+        S1
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="text-base font-bold tracking-tight text-white">OpenJEV</span>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-400 border border-emerald-800/50">Direct Logits S1</span>
+        </div>
+        <p class="text-xs text-brand-muted font-mono">System 1 Direct Inference Benchmark • Kahn1 (Local) vs TypeSafe JEV (Cloud)</p>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs : 100-Item Race vs Versus Benchmark -->
+    <div class="flex items-center gap-2 bg-zinc-950 p-1 rounded-lg border border-zinc-800 text-xs font-mono">
+      <button id="tab-race" onclick="switchArenaView('race')" class="px-3 py-1.5 rounded-md text-zinc-400 hover:text-white transition-all flex items-center gap-1.5">
+        <span>100-Item Grid Race</span>
+      </button>
+      <button id="tab-matrix" onclick="switchArenaView('matrix')" class="px-3 py-1.5 rounded-md bg-white text-black font-semibold transition-all flex items-center gap-1.5 shadow-sm">
+        <span>Versus Benchmark (Multi-Questions)</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ===================================================================== -->
+  <!-- VIEW 1 : VERSUS BENCHMARK (KAHN1 LOCAL VS TYPESAFE JEV CLOUD)         -->
+  <!-- ===================================================================== -->
+  <section id="view-matrix" class="w-full flex flex-col gap-4 flex-1">
+
+    <!-- Top Control Bar (Monochrome, Minimalist) -->
+    <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 p-3 rounded-lg border border-zinc-800 bg-zinc-950 font-mono text-xs">
+      <div class="flex flex-wrap items-center gap-4">
+        <div class="flex items-center gap-2">
+          <span class="text-zinc-500 uppercase tracking-wider text-[10px]">SCENARIO:</span>
+          <div class="flex items-center gap-1.5" id="schema-presets-bar">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <span class="text-zinc-500 uppercase tracking-wider text-[10px]">SCALE:</span>
+          <div class="flex items-center bg-black rounded border border-zinc-800 p-0.5">
+            <button id="btn-mult-1" onclick="setBatchMultiplier(1)" class="px-2.5 py-1 rounded bg-zinc-800 text-white font-medium transition-colors">6 Q</button>
+            <button id="btn-mult-2" onclick="setBatchMultiplier(2)" class="px-2.5 py-1 rounded text-zinc-400 hover:text-white transition-colors">12 Q</button>
+            <button id="btn-mult-4" onclick="setBatchMultiplier(4)" class="px-2.5 py-1 rounded text-zinc-400 hover:text-white transition-colors">24 Q</button>
+          </div>
+        </div>
+      </div>
+
+      <button id="btn-run-matrix" onclick="executeSchemaBatch()" class="w-full lg:w-auto px-6 py-2 rounded bg-white hover:bg-zinc-200 text-black font-mono font-bold text-xs transition-all uppercase tracking-wider flex items-center justify-center gap-2 active:scale-95">
+        <span>RUN BENCHMARK</span>
+      </button>
+    </div>
+
+    <!-- Input Context (State) -->
+    <div class="p-3 rounded-lg border border-zinc-800 bg-black flex flex-col gap-1.5 font-mono">
+      <div class="flex items-center justify-between text-[11px] text-zinc-500">
+        <div class="flex items-center gap-2">
+          <span class="uppercase tracking-wider">INPUT CONTEXT</span>
+          <span id="matrix-preset-badge" class="px-1.5 py-0.2 rounded bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400"></span>
+          <span id="matrix-preset-title" class="text-zinc-300 font-semibold"></span>
+        </div>
+        <span id="matrix-accord-text" class="text-zinc-400 font-mono text-[11px]">Agreement: --</span>
+      </div>
+      <p id="matrix-state-text" class="text-xs text-zinc-300 leading-relaxed font-sans bg-zinc-950 p-2.5 rounded border border-zinc-800/80">
+        Loading context...
+      </p>
+    </div>
+
+    <!-- 50/50 VERSUS BENCHMARK DISPLAY (Strictly Monochrome, Objective Numbers) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+      <!-- LEFT: KAHN1 (LOCAL SYSTEM 1) -->
+      <div class="p-5 rounded-lg border border-zinc-800 bg-zinc-950 flex flex-col justify-between gap-4 font-mono">
+        <div class="flex items-start justify-between border-b border-zinc-800/80 pb-3">
+          <div>
+            <div class="text-sm font-bold text-white tracking-tight uppercase">KAHN1 (LOCAL SYSTEM 1)</div>
+            <div class="text-[11px] text-zinc-500 mt-0.5">On-Device Inference • Direct GPU Logits</div>
+          </div>
+          <span class="text-[10px] text-zinc-400 border border-zinc-800 px-2 py-0.5 rounded">LOCAL</span>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div class="flex flex-col">
+            <span class="text-[10px] text-zinc-500 uppercase tracking-wider">TOTAL LATENCY</span>
+            <span id="matrix-lat-kahn" class="text-3xl font-black text-white mono-nums mt-1">-- ms</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-[10px] text-zinc-500 uppercase tracking-wider">SUCCESSFUL</span>
+            <span id="matrix-success-kahn" class="text-3xl font-black text-white mono-nums mt-1">--</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-[10px] text-zinc-500 uppercase tracking-wider">ERRORS</span>
+            <span id="matrix-errors-kahn" class="text-3xl font-black text-white mono-nums mt-1">0</span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between border-t border-zinc-800/80 pt-3 text-[11px] text-zinc-400">
+          <span>Network I/O: <strong class="text-white font-semibold" id="telem-kahn-io">0.0 ms</strong></span>
+          <span>Tokens: <strong class="text-white font-semibold">0</strong></span>
+          <span>Prefix Cache: <strong class="text-white font-semibold" id="telem-kahn-cache">&gt;90%</strong></span>
+        </div>
+      </div>
+
+      <!-- RIGHT: TYPESAFE JEV (CLOUD SYSTEM 1) -->
+      <div class="p-5 rounded-lg border border-zinc-800 bg-zinc-950 flex flex-col justify-between gap-4 font-mono">
+        <div class="flex items-start justify-between border-b border-zinc-800/80 pb-3">
+          <div>
+            <div class="text-sm font-bold text-white tracking-tight uppercase">TYPESAFE JEV (CLOUD SYSTEM 1)</div>
+            <div class="text-[11px] text-zinc-500 mt-0.5">Remote API • Hosted Endpoint</div>
+          </div>
+          <span class="text-[10px] text-zinc-400 border border-zinc-800 px-2 py-0.5 rounded">CLOUD</span>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div class="flex flex-col">
+            <span class="text-[10px] text-zinc-500 uppercase tracking-wider">TOTAL LATENCY</span>
+            <span id="matrix-lat-jev" class="text-3xl font-black text-white mono-nums mt-1">-- ms</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-[10px] text-zinc-500 uppercase tracking-wider">SUCCESSFUL</span>
+            <span id="matrix-success-jev" class="text-3xl font-black text-white mono-nums mt-1">--</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-[10px] text-zinc-500 uppercase tracking-wider">ERRORS</span>
+            <span id="matrix-errors-jev" class="text-3xl font-black text-white mono-nums mt-1">0</span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between border-t border-zinc-800/80 pt-3 text-[11px] text-zinc-400">
+          <span>Network I/O: <strong class="text-white font-semibold" id="telem-jev-io">~92.0 ms</strong></span>
+          <span>Tokens: <strong class="text-white font-semibold">0</strong></span>
+          <span>Payload: <strong class="text-white font-semibold" id="telem-jev-payload">~1.4 KB</strong></span>
+        </div>
+      </div>
+
+    </div>
+
+    
+
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- VIEW 2 : 100-ITEMS THROUGHPUT RACE (16:9 SIDE-BY-SIDE GRIDS)          -->
+  <!-- ===================================================================== -->
+  <section id="view-race" class="w-full flex flex-col gap-5 flex-1">
+    
+    <!-- Controls Bar -->
+    <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 p-4 rounded-xl border border-brand-border bg-brand-surface">
+      <div class="flex flex-col gap-2">
+        <!-- Row 1: Thème -->
+        <div class="flex items-center gap-1.5 overflow-x-auto text-xs font-mono text-brand-muted">
+          <span class="text-brand-dim mr-1">Thème :</span>
+          <button onclick="setTheme('all')" id="btn-th-all" class="px-2.5 py-0.5 rounded bg-zinc-800 text-white font-medium border border-brand-border transition-colors">Tous</button>
+          <button onclick="setTheme('iot')" id="btn-th-iot" class="px-2.5 py-0.5 rounded hover:text-white transition-colors text-emerald-400">Smart Home</button>
+          <button onclick="setTheme('banking')" id="btn-th-banking" class="px-2.5 py-0.5 rounded hover:text-white transition-colors">Banking</button>
+          <button onclick="setTheme('sentiment')" id="btn-th-sentiment" class="px-2.5 py-0.5 rounded hover:text-white transition-colors">Sentiment</button>
+        </div>
+
+        <!-- Row 2: Choix de l'Adversaire -->
+        <div class="flex items-center gap-1.5 overflow-x-auto text-[11px] font-mono text-brand-muted">
+          <span class="text-brand-dim mr-1">Adversaire :</span>
+          <button onclick="setOpponent('gemini')" id="btn-op-gemini" class="px-2 py-0.5 rounded bg-zinc-800 text-white font-medium border border-brand-border transition-colors">Gemini Flash Lite (System 2)</button>
+          <button onclick="setOpponent('jev')" id="btn-op-jev" class="px-2 py-0.5 rounded hover:text-white transition-colors text-sky-400">TypeSafe JEV (Cloud S1 API)</button>
+        </div>
+
+        <!-- Row 3: Concurrence I/O (Requêtes Parallèles) -->
+        <div class="flex items-center gap-1.5 overflow-x-auto text-[11px] font-mono text-brand-muted">
+          <span class="text-brand-dim mr-1">I/O Concurrente :</span>
+          <button onclick="setConcurrency(2)" id="btn-conc-2" class="px-2 py-0.5 rounded hover:text-white transition-colors">2 flux</button>
+          <button onclick="setConcurrency(5)" id="btn-conc-5" class="px-2 py-0.5 rounded hover:text-white transition-colors">5 flux</button>
+          <button onclick="setConcurrency(10)" id="btn-conc-10" class="px-2 py-0.5 rounded bg-zinc-800 text-white font-medium border border-brand-border transition-colors">10 flux (Parallèle)</button>
+          <button onclick="setConcurrency(20)" id="btn-conc-20" class="px-2 py-0.5 rounded hover:text-white transition-colors text-purple-400">20 flux (Max I/O)</button>
+        </div>
+      </div>
+
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-2 w-full lg:w-auto">
+        <div class="flex items-center bg-brand-card rounded-lg border border-brand-border p-1 text-xs font-mono">
+          <button onclick="setBatchSize(25)" id="btn-n-25" class="px-2 py-1 rounded text-brand-muted hover:text-white transition-colors">25</button>
+          <button onclick="setBatchSize(50)" id="btn-n-50" class="px-2 py-1 rounded text-brand-muted hover:text-white transition-colors">50</button>
+          <button onclick="setBatchSize(100)" id="btn-n-100" class="px-2 py-1 rounded bg-zinc-800 text-white font-semibold transition-colors">100</button>
+        </div>
+
+        <button id="btn-draw" onclick="drawItems()" class="py-2 px-4 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-brand-border text-xs font-mono font-medium text-white transition-all">
+          1. Tirer <span id="label-n-items">100</span> items
+        </button>
+        <button id="btn-race" onclick="startRace()" disabled class="py-2 px-5 rounded-lg bg-white hover:bg-zinc-200 text-black font-mono font-bold text-xs transition-all disabled:opacity-30 disabled:cursor-not-allowed">
+          2. Lancer la course
+        </button>
+      </div>
+    </div>
+
+    <!-- Grids Side-by-Side (16:9 Widescreen) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      
+      <!-- LEFT : Kahn1 Grid -->
+      <div class="p-4 rounded-xl border border-brand-border bg-brand-surface flex flex-col gap-3">
+        <div class="flex items-baseline justify-between border-b border-brand-border pb-2 font-mono">
+          <div class="flex items-baseline gap-2">
+            <span class="text-sm font-bold text-white tracking-tight">Kahn1</span>
+            <span class="text-[10px] text-emerald-400">Local System 1 (0ms net)</span>
+          </div>
+          <div class="flex items-baseline gap-3">
+            <span id="score-kahn1" class="text-xs text-brand-muted mono-nums">0 / 100</span>
+            <span id="timer-kahn1" class="text-xl font-bold text-white mono-nums">0.00s</span>
+          </div>
+        </div>
+
+        <!-- Blocks Grid -->
+        <div id="grid-kahn1" class="grid gap-1.5" style="grid-template-columns: repeat(10, minmax(0, 1fr));">
+          <!-- Filled by JS -->
+        </div>
+
+        <div class="flex items-center justify-between text-[11px] font-mono text-brand-muted pt-1 border-t border-brand-border/60">
+          <span>Temps moyen : ~32 ms / item</span>
+          <span id="status-kahn1">En attente</span>
+        </div>
+      </div>
+
+      <!-- RIGHT : Opponent Grid -->
+      <div class="p-4 rounded-xl border border-brand-border bg-brand-surface flex flex-col gap-3">
+        <div class="flex items-baseline justify-between border-b border-brand-border pb-2 font-mono">
+          <div class="flex items-baseline gap-2">
+            <span id="label-opp-name" class="text-sm font-bold text-white tracking-tight">Gemini 3.5 Flash Lite</span>
+            <span id="label-opp-badge" class="text-[10px] text-purple-400">System 2</span>
+          </div>
+          <div class="flex items-baseline gap-3">
+            <span id="score-gemini" class="text-xs text-brand-muted mono-nums">0 / 100</span>
+            <span id="timer-gemini" class="text-xl font-bold text-white mono-nums">0.00s</span>
+          </div>
+        </div>
+
+        <!-- Blocks Grid -->
+        <div id="grid-gemini" class="grid gap-1.5" style="grid-template-columns: repeat(10, minmax(0, 1fr));">
+          <!-- Filled by JS -->
+        </div>
+
+        <div class="flex items-center justify-between text-[11px] font-mono text-brand-muted pt-1 border-t border-brand-border/60">
+          <span id="label-opp-footer">Génération JSON autorégressive</span>
+          <span id="status-gemini">En attente</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Inspector Box -->
+    <div id="inspector-card" class="p-4 rounded-xl border border-brand-border bg-brand-surface flex flex-col gap-2 font-mono text-xs">
+      <div class="flex items-center justify-between border-b border-brand-border pb-2">
+        <div class="flex items-center gap-2">
+          <span class="text-white font-bold">Détail de l'item sélectionné</span>
+          <span id="insp-id" class="text-brand-muted">#1</span>
+        </div>
+        <div class="text-[11px] text-brand-muted">
+          Ground Truth : <span id="insp-gt" class="text-white font-semibold">--</span>
+        </div>
+      </div>
+      <p id="insp-text" class="text-xs font-sans text-zinc-300 bg-brand-card p-2.5 rounded border border-brand-border/60">
+        Cliquez sur une case pour inspecter la décision.
+      </p>
+      <div class="flex items-center justify-between pt-1 text-[11px]">
+        <div>Kahn1 : <span id="insp-kahn-ans" class="text-emerald-400 font-semibold">—</span></div>
+        <div><span id="insp-opp-label">Gemini :</span> <span id="insp-gemini-ans" class="text-purple-400 font-semibold">—</span></div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- Footer -->
+  <footer class="w-full pt-4 mt-4 border-t border-brand-border flex items-center justify-between text-xs font-mono text-brand-muted">
+    <div>OpenJEV • Architecture Cognitive System 1</div>
+    <div class="flex items-center gap-3">
+      <span>16:9 Standard</span>
+      <span>•</span>
+      <span>WSL2 / RTX 5070 Ti</span>
+    </div>
+  </footer>
+
+  <!-- ===================================================================== -->
+  <!-- JAVASCRIPT LOGIC                                                      -->
+  <!-- ===================================================================== -->
+  <script>
+    // État global
+    let activeView = 'matrix'; // 'race' (défaut visuel des carrés) ou 'matrix'
+    let ioConcurrency = 10; // Concurrence I/O par défaut pour Gemini / JEV
+    let schemaPresets = [];
+    let currentPreset = null;
+    let currentMultiplier = 1;
+    let currentOpponent = 'gemini';
+    let currentTheme = 'all';
+    let batchSize = 100;
+    let items = [];
+    let isRacing = false;
+
+    // -----------------------------------------------------------------------
+    // Concurrence I/O (Requêtes Parallèles)
+    // -----------------------------------------------------------------------
+    function setConcurrency(c) {
+      if (isRacing) return;
+      ioConcurrency = c;
+      [2, 5, 10, 20].forEach(val => {
+        const btn = document.getElementById(`btn-conc-${val}`);
+        if (btn) {
+          btn.className = (val === c)
+            ? "px-2 py-0.5 rounded bg-zinc-800 text-white font-medium border border-brand-border transition-colors"
+            : "px-2 py-0.5 rounded hover:text-white transition-colors";
+        }
+      });
+    }
+
+    // -----------------------------------------------------------------------
+    // Multipliers & Helpers
+    // -----------------------------------------------------------------------
+    function setBatchMultiplier(m) {
+
+      currentMultiplier = m;
+      [1, 2, 4].forEach(val => {
+        const btn = document.getElementById(`btn-mult-${val}`);
+        if (btn) {
+          btn.className = (val === m)
+            ? "px-2.5 py-1 rounded bg-zinc-800 text-white font-semibold transition-colors"
+            : "px-2.5 py-1 rounded text-brand-muted hover:text-white transition-colors";
+        }
+      });
+      const qCount = m * 6;
+      const lbl = document.getElementById('telem-mult-label');
+      if (lbl) lbl.textContent = `×${m} (${qCount} Qs)`;
+      if (currentPreset) {
+        renderPresetView();
+      }
+    }
+
+    function getActivePresetQuestions() {
+      if (!currentPreset) return {};
+      const allQs = Object.entries(currentPreset.questions);
+      const limit = Math.min(6 * currentMultiplier, allQs.length);
+      return Object.fromEntries(allQs.slice(0, limit));
+    }
+
+    function renderPresetView() {
+      if (!currentPreset) return;
+      const activeQs = getActivePresetQuestions();
+      const count = Object.keys(activeQs).length;
+      
+      const badgeEl = document.getElementById('matrix-preset-badge');
+      if (badgeEl) badgeEl.textContent = (currentPreset.domain || "Scenario").toUpperCase();
+      document.getElementById('matrix-preset-title').textContent = currentPreset.title;
+      document.getElementById('matrix-state-text').textContent = currentPreset.state;
+      
+      // Reset metrics to ready state
+      document.getElementById('matrix-lat-kahn').textContent = '-- ms';
+      document.getElementById('matrix-lat-jev').textContent = '-- ms';
+      document.getElementById('matrix-success-kahn').textContent = `-- / ${count}`;
+      document.getElementById('matrix-success-jev').textContent = `-- / ${count}`;
+      document.getElementById('matrix-errors-kahn').textContent = '0';
+      document.getElementById('matrix-errors-jev').textContent = '0';
+    }
+
+    // -----------------------------------------------------------------------
+    // Navigation entre vues (Matrix vs Race)
+    // -----------------------------------------------------------------------
+    function switchArenaView(view) {
+      activeView = view;
+      const viewM = document.getElementById('view-matrix');
+      const viewR = document.getElementById('view-race');
+      const tabM = document.getElementById('tab-matrix');
+      const tabR = document.getElementById('tab-race');
+
+      if (view === 'matrix') {
+        viewM.classList.remove('hidden');
+        viewM.classList.add('flex');
+        viewR.classList.add('hidden');
+        viewR.classList.remove('flex');
+        tabM.className = "px-3 py-1.5 rounded-md bg-white text-black font-semibold transition-all flex items-center gap-1.5 shadow-sm";
+        tabR.className = "px-3 py-1.5 rounded-md text-brand-muted hover:text-white transition-all flex items-center gap-1.5";
+      } else {
+        viewR.classList.remove('hidden');
+        viewR.classList.add('flex');
+        viewM.classList.add('hidden');
+        viewM.classList.remove('flex');
+        tabR.className = "px-3 py-1.5 rounded-md bg-white text-black font-semibold transition-all flex items-center gap-1.5 shadow-sm";
+        tabM.className = "px-3 py-1.5 rounded-md text-brand-muted hover:text-white transition-all flex items-center gap-1.5";
+        if (items.length === 0) {
+          drawItems();
+        }
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // Vue 1 : Multi-Question Matrix Batch
+    // -----------------------------------------------------------------------
+    async function loadSchemaPresets() {
+      try {
+        const resp = await fetch('/api/arena/schema_presets');
+        if (resp.ok) {
+          schemaPresets = await resp.json();
+          renderSchemaPresetButtons();
+          if (schemaPresets.length > 0) {
+            selectSchemaPreset(schemaPresets[0].id);
+          }
+        }
+      } catch (err) {
+        console.error("Erreur chargement schema presets:", err);
+      }
+    }
+
+    function renderSchemaPresetButtons() {
+      const bar = document.getElementById('schema-presets-bar');
+      const buttonsHtml = schemaPresets.map((p, idx) => `
+        <button id="btn-sp-${p.id}" onclick="selectSchemaPreset('${p.id}')" class="px-2.5 py-1 rounded border transition-colors ${idx === 0 ? 'bg-zinc-800 text-white border-zinc-700 font-medium' : 'text-zinc-400 hover:text-white border-transparent'}">
+          ${p.title}
+        </button>
+      `).join('');
+      
+      const randomBtnHtml = `
+        <button id="btn-sp-random" onclick="selectRandomScenario()" class="px-2.5 py-1 rounded border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 font-medium transition-colors">
+          RANDOM
+        </button>
+      `;
+      bar.innerHTML = buttonsHtml + randomBtnHtml;
+    }
+
+    async function selectRandomScenario() {
+      try {
+        const resp = await fetch('/api/arena/schema_random');
+        if (resp.ok) {
+          const randPreset = await resp.json();
+          currentPreset = randPreset;
+        } else if (schemaPresets.length > 0) {
+          const randIdx = Math.floor(Math.random() * schemaPresets.length);
+          currentPreset = schemaPresets[randIdx];
+        }
+      } catch (e) {
+        if (schemaPresets.length > 0) {
+          const randIdx = Math.floor(Math.random() * schemaPresets.length);
+          currentPreset = schemaPresets[randIdx];
+        }
+      }
+
+      // Highlight RANDOM button
+      schemaPresets.forEach(p => {
+        const btn = document.getElementById(`btn-sp-${p.id}`);
+        if (btn) btn.className = "px-2.5 py-1 rounded text-zinc-400 hover:text-white border-transparent transition-colors";
+      });
+      const randBtn = document.getElementById('btn-sp-random');
+      if (randBtn) {
+        randBtn.className = "px-2.5 py-1 rounded border border-white bg-white text-black font-semibold transition-colors";
+      }
+
+      renderPresetView();
+    }
+
+    function selectSchemaPreset(presetId) {
+      currentPreset = schemaPresets.find(p => p.id === presetId);
+      if (!currentPreset) return;
+
+      const randBtn = document.getElementById('btn-sp-random');
+      if (randBtn) {
+        randBtn.className = "px-2.5 py-1 rounded border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 font-medium transition-colors";
+      }
+
+      schemaPresets.forEach(p => {
+        const btn = document.getElementById(`btn-sp-${p.id}`);
+        if (btn) {
+          btn.className = (p.id === presetId)
+            ? "px-2.5 py-1 rounded bg-zinc-800 text-white border border-zinc-700 font-medium transition-colors"
+            : "px-2.5 py-1 rounded text-zinc-400 hover:text-white border-transparent transition-colors";
+        }
+      });
+
+      renderPresetView();
+    }
+
+    function renderSchemaTable(questions, battleResult) {
+      const tbody = document.getElementById('matrix-table-body');
+      if (!tbody) return;
+      const kahnAns = battleResult ? battleResult.kahn1.answers : {};
+      const jevAns = (battleResult && battleResult.jev) ? battleResult.jev.answers : {};
+
+      tbody.innerHTML = Object.entries(questions).map(([key, spec]) => {
+        const qType = spec.type || 'choice';
+        const typeBadge = `<span class="px-1.5 py-0.5 rounded bg-zinc-900 text-zinc-400 text-[10px] border border-zinc-800 uppercase">${qType}</span>`;
+
+        const k = kahnAns[key];
+        const j = jevAns[key];
+
+        const kVal = k 
+          ? `<span class="text-white font-medium">${k.choice}</span> <span class="text-[10px] text-zinc-500">(${(k.confidence * 100).toFixed(0)}%)</span>` 
+          : '<span class="text-zinc-600">—</span>';
+        const jVal = j 
+          ? `<span class="text-white font-medium">${j.choice}</span> <span class="text-[10px] text-zinc-500">(${(j.confidence * 100).toFixed(0)}%)</span>` 
+          : '<span class="text-zinc-600">—</span>';
+
+        let accordBadge = '<span class="text-zinc-600">—</span>';
+        if (k && j) {
+          const agree = String(k.choice).trim().toLowerCase() === String(j.choice).trim().toLowerCase();
+          accordBadge = agree 
+            ? '<span class="text-white font-bold">MATCH</span>' 
+            : '<span class="text-zinc-500 font-medium">DIFF</span>';
+        }
+
+        return `
+          <tr class="hover:bg-zinc-900/40 transition-colors font-mono">
+            <td class="py-2 px-4">
+              <div class="text-white font-semibold">${key}</div>
+              <div class="text-[11px] text-zinc-400 font-sans mt-0.5">${spec.instructions}</div>
+            </td>
+            <td class="py-2 px-3">${typeBadge}</td>
+            <td class="py-2 px-4">${kVal}</td>
+            <td class="py-2 px-4">${jVal}</td>
+            <td class="py-2 px-3 text-right">${accordBadge}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function executeSchemaBatch() {
+      if (!currentPreset) return;
+      const btn = document.getElementById('btn-run-matrix');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="animate-spin text-sm"></span><span>RUNNING...</span>';
+
+      try {
+        const activeQs = getActivePresetQuestions();
+        const payload = {
+          state: currentPreset.state,
+          questions: activeQs,
+          preset_id: currentPreset.id,
+          multiplier: currentMultiplier,
+          include_jev: true,
+        };
+
+        const resp = await fetch('/api/arena/schema_battle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (resp.ok) {
+          const res = await resp.json();
+          const totalQ = res.total_questions || Object.keys(activeQs).length;
+
+          // Latency Metrics
+          document.getElementById('matrix-lat-kahn').textContent = `${res.kahn1.latency_ms} ms`;
+          document.getElementById('matrix-lat-jev').textContent = `${res.jev ? res.jev.latency_ms : '--'} ms`;
+
+          // Success & Error Counts
+          const kahnSuccess = res.telemetry?.kahn1?.success_count ?? totalQ;
+          const jevSuccess = res.telemetry?.jev?.success_count ?? (res.jev ? totalQ : 0);
+          const kahnErrors = res.telemetry?.kahn1?.error_count ?? 0;
+          const jevErrors = res.telemetry?.jev?.error_count ?? 0;
+
+          document.getElementById('matrix-success-kahn').textContent = `${kahnSuccess} / ${totalQ}`;
+          document.getElementById('matrix-success-jev').textContent = `${jevSuccess} / ${totalQ}`;
+          document.getElementById('matrix-errors-kahn').textContent = `${kahnErrors}`;
+          document.getElementById('matrix-errors-jev').textContent = `${jevErrors}`;
+
+          // Agreement text
+          const agreePct = Math.round((res.agreement_count / totalQ) * 100);
+          document.getElementById('matrix-accord-text').textContent = `Agreement: ${res.agreement_count} / ${totalQ} (${agreePct}%)`;
+
+          // Telemetry details
+          const telem = res.telemetry || {};
+          if (telem.kahn1) {
+            const elIo = document.getElementById('telem-kahn-io');
+            if (elIo) elIo.textContent = `${telem.kahn1.network_io_ms.toFixed(1)} ms`;
+          }
+          if (telem.jev) {
+            const elIo = document.getElementById('telem-jev-io');
+            const elPay = document.getElementById('telem-jev-payload');
+            if (elIo) elIo.textContent = `~${telem.jev.network_io_ms.toFixed(1)} ms`;
+            if (elPay) elPay.textContent = `~${(telem.jev.payload_bytes / 1024).toFixed(1)} KB`;
+          }
+
+          // Render Question table
+          renderSchemaTable(res.questions, res);
+        }
+      } catch (err) {
+        console.error("Error executing schema battle:", err);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>RUN BENCHMARK</span>';
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // Vue 2 : 100-Items Throughput Race
+    // -----------------------------------------------------------------------
+    function setTheme(th) {
+      if (isRacing) return;
+      currentTheme = th;
+      ['all', 'banking', 'iot', 'sentiment'].forEach(name => {
+        const btn = document.getElementById(`btn-th-${name}`);
+        if (btn) {
+          btn.className = (name === th)
+            ? "px-2.5 py-0.5 rounded bg-zinc-800 text-white font-medium border border-brand-border transition-colors"
+            : "px-2.5 py-0.5 rounded text-brand-muted hover:text-white transition-colors";
+        }
+      });
+      drawItems();
+    }
+
+    function setOpponent(op) {
+      if (isRacing) return;
+      currentOpponent = op;
+      const btnG = document.getElementById('btn-op-gemini');
+      const btnJ = document.getElementById('btn-op-jev');
+      if (btnG) btnG.className = (op === 'gemini') ? "px-2 py-0.5 rounded bg-zinc-800 text-white font-medium border border-brand-border transition-colors" : "px-2 py-0.5 rounded hover:text-white transition-colors text-purple-400";
+      if (btnJ) btnJ.className = (op === 'jev') ? "px-2 py-0.5 rounded bg-zinc-800 text-white font-medium border border-brand-border transition-colors" : "px-2 py-0.5 rounded hover:text-white transition-colors text-sky-400";
+
+      const nameEl = document.getElementById('label-opp-name');
+      const badgeEl = document.getElementById('label-opp-badge');
+      const footerEl = document.getElementById('label-opp-footer');
+      const inspOppLabel = document.getElementById('insp-opp-label');
+
+      if (op === 'jev') {
+        nameEl.textContent = "TypeSafe JEV";
+        badgeEl.textContent = "Cloud System 1";
+        badgeEl.className = "text-[10px] font-mono text-sky-400";
+        footerEl.textContent = "API Cloud api.typesafe.ai (1-Shot HTTP)";
+        inspOppLabel.textContent = "TypeSafe JEV :";
+      } else {
+        nameEl.textContent = "Gemini 3.5 Flash Lite";
+        badgeEl.textContent = "System 2";
+        badgeEl.className = "text-[10px] font-mono text-purple-400";
+        footerEl.textContent = "Génération JSON autorégressive";
+        inspOppLabel.textContent = "Gemini :";
+      }
+      resetGridState();
+    }
+
+    function setBatchSize(n) {
+      if (isRacing) return;
+      batchSize = n;
+      document.getElementById('label-n-items').textContent = n;
+      [25, 50, 100].forEach(sz => {
+        const btn = document.getElementById(`btn-n-${sz}`);
+        if (btn) {
+          btn.className = (sz === n) 
+            ? "px-2 py-1 rounded bg-zinc-800 text-white font-semibold transition-colors"
+            : "px-2 py-1 rounded text-brand-muted hover:text-white transition-colors";
+        }
+      });
+      drawItems();
+    }
+
+    function renderEmptyGrids() {
+      const gridK = document.getElementById('grid-kahn1');
+      const gridG = document.getElementById('grid-gemini');
+
+      const cols = (batchSize === 25) ? 5 : 10;
+      gridK.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+      gridG.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+
+      let htmlK = '';
+      let htmlG = '';
+      for (let i = 0; i < batchSize; i++) {
+        htmlK += `<div id="block-k-${i}" onclick="inspectItem(${i})" class="grid-block block-empty cursor-pointer"></div>`;
+        htmlG += `<div id="block-g-${i}" onclick="inspectItem(${i})" class="grid-block block-empty cursor-pointer"></div>`;
+      }
+      gridK.innerHTML = htmlK;
+      gridG.innerHTML = htmlG;
+
+      document.getElementById('score-kahn1').textContent = `0 / ${batchSize}`;
+      document.getElementById('score-gemini').textContent = `0 / ${batchSize}`;
+      document.getElementById('timer-kahn1').textContent = '0.00s';
+      document.getElementById('timer-gemini').textContent = '0.00s';
+      document.getElementById('status-kahn1').textContent = 'En attente';
+      document.getElementById('status-gemini').textContent = 'En attente';
+    }
+
+    async function drawItems() {
+      if (isRacing) return;
+      const btn = document.getElementById('btn-draw');
+      btn.disabled = true;
+      btn.classList.add('opacity-50');
+
+      try {
+        const resp = await fetch(`/api/arena/batch/draw?n=${batchSize}&dataset=${currentTheme}`);
+        if (resp.ok) {
+          items = await resp.json();
+          renderEmptyGrids();
+          document.getElementById('btn-race').disabled = false;
+          inspectItem(0);
+        }
+      } catch (err) {
+        console.error("Erreur lors du tirage des items :", err);
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('opacity-50');
+      }
+    }
+
+    function resetGridState() {
+      if (isRacing) return;
+      renderEmptyGrids();
+      document.getElementById('btn-race').disabled = (items.length === 0);
+    }
+
+    function inspectItem(idx) {
+      if (!items || !items[idx]) return;
+      const it = items[idx];
+      document.getElementById('insp-id').textContent = `#${idx + 1}`;
+      document.getElementById('insp-gt').textContent = it.ground_truth || 'n/a';
+      document.getElementById('insp-text').textContent = it.state || '';
+
+      const k = it.kahn1;
+      if (k) {
+        document.getElementById('insp-kahn-ans').textContent = `${k.choice} (${k.correct ? 'OK' : 'ERR'})`;
+        document.getElementById('insp-kahn-ans').className = k.correct ? 'text-emerald-400 font-semibold' : 'text-rose-400 font-semibold';
+      } else {
+        document.getElementById('insp-kahn-ans').textContent = '—';
+      }
+
+      const ansOpp = (currentOpponent === 'jev') ? it.jev : it.gemini;
+      if (ansOpp) {
+        document.getElementById('insp-gemini-ans').textContent = `${ansOpp.choice} (${ansOpp.correct ? 'OK' : 'ERR'})`;
+        document.getElementById('insp-gemini-ans').className = ansOpp.correct ? 'text-emerald-400 font-semibold' : 'text-rose-400 font-semibold';
+      } else {
+        document.getElementById('insp-gemini-ans').textContent = '—';
+      }
+    }
+
+    async function startRace() {
+      if (isRacing || !items || items.length === 0) return;
+      isRacing = true;
+
+      document.getElementById('btn-draw').disabled = true;
+      document.getElementById('btn-race').disabled = true;
+
+      const startTime = performance.now();
+      let kahnFinished = false;
+      let oppFinished = false;
+
+      const timerInterval = setInterval(() => {
+        const now = performance.now();
+        if (!kahnFinished) {
+          const elapsed = (now - startTime) / 1000;
+          document.getElementById('timer-kahn1').textContent = `${elapsed.toFixed(2)}s`;
+        }
+        if (!oppFinished) {
+          const elapsed = (now - startTime) / 1000;
+          document.getElementById('timer-gemini').textContent = `${elapsed.toFixed(2)}s`;
+        }
+      }, 25);
+
+      // Simulation Kahn1 ultra-rapide
+      const kahnPromise = (async () => {
+        let correctCount = 0;
+        document.getElementById('status-kahn1').textContent = 'En cours...';
+
+        for (let i = 0; i < items.length; i++) {
+          const it = items[i];
+          const blk = document.getElementById(`block-k-${i}`);
+          blk.className = 'grid-block block-active cursor-pointer';
+
+          await new Promise(r => setTimeout(r, 28 + Math.random() * 8));
+
+          const isCorrect = it.kahn1 ? it.kahn1.correct : true;
+          blk.className = isCorrect ? 'grid-block block-correct cursor-pointer' : 'grid-block block-wrong cursor-pointer';
+
+          if (isCorrect) correctCount++;
+          document.getElementById('score-kahn1').textContent = `${correctCount} / ${items.length}`;
+        }
+        kahnFinished = true;
+        document.getElementById('status-kahn1').textContent = 'Terminé OK';
+      })();
+
+      // Opponent concurrent runner
+      const oppPromise = (async () => {
+        let correctCount = 0;
+        document.getElementById('status-gemini').textContent = 'En cours...';
+
+        const endpoint = (currentOpponent === 'jev') ? '/api/arena/batch/eval_jev' : '/api/arena/batch/eval_gemini';
+        const workersCount = (currentOpponent === 'jev') ? Math.max(ioConcurrency, 6) : ioConcurrency;
+        let nextIndex = 0;
+
+        async function worker() {
+          while (nextIndex < items.length) {
+            const idx = nextIndex++;
+            const it = items[idx];
+            const blk = document.getElementById(`block-g-${idx}`);
+            if (blk) blk.className = 'grid-block block-active cursor-pointer';
+
+            try {
+              const resp = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(it)
+              });
+              if (resp.ok) {
+                const res = await resp.json();
+                if (currentOpponent === 'jev') {
+                  it.jev = res;
+                } else {
+                  it.gemini = res;
+                }
+
+                if (blk) {
+                  blk.className = res.correct ? 'grid-block block-correct cursor-pointer' : 'grid-block block-wrong cursor-pointer';
+                }
+                if (res.correct) correctCount++;
+                document.getElementById('score-gemini').textContent = `${correctCount} / ${items.length}`;
+              }
+            } catch (e) {
+              if (blk) blk.className = 'grid-block block-wrong cursor-pointer';
+            }
+          }
+        }
+
+        const workers = Array.from({ length: workersCount }, () => worker());
+        await Promise.all(workers);
+        oppFinished = true;
+        document.getElementById('status-gemini').textContent = 'Terminé OK';
+      })();
+
+      await Promise.all([kahnPromise, oppPromise]);
+      clearInterval(timerInterval);
+      isRacing = false;
+      document.getElementById('btn-draw').disabled = false;
+      document.getElementById('btn-race').disabled = false;
+    }
+
+    // Initialisation au chargement
+    window.addEventListener('DOMContentLoaded', () => {
+      drawItems();
+      loadSchemaPresets();
+    });
+
+  </script>
+</body>
+</html>

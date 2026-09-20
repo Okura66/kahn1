@@ -1,0 +1,5 @@
+# reports/ — eval outputs (gitignored except REPORT.md and SPIKE.md)
+*.png
+*.json
+*.csv
+*.log

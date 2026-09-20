@@ -1,0 +1,52 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sysone"
+version = "0.1.0"
+description = "High-throughput System 1 typed-decision engine: calibration-first, no text generation."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "OpenJEV" }]
+
+# Core runtime deps. Heavy ML deps (vllm, transformers, torch, peft) are listed
+# but not pinned to exact versions because vLLM APIs move fast — the code
+# verifies real signatures at runtime (see engine.py and spike.py).
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+    "pydantic>=2.6",
+    "numpy>=1.26",
+    "scikit-learn>=1.4",
+    "matplotlib>=3.8",
+    "datasets>=2.18",
+    "transformers>=4.40",
+    "torch>=2.1",
+    "peft>=0.10",
+    "scipy>=1.11",
+]
+
+[project.optional-dependencies]
+gpu = [
+    # vLLM is GPU-only and heavy; install separately on the target box.
+    "vllm>=0.4",
+]
+
+[project.scripts]
+sysone = "sysone.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sysone"]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0",
+    "pytest-xdist>=3.5",
+    "httpx>=0.27",  # for FastAPI TestClient
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "."]

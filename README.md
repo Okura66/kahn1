@@ -1,7 +1,8 @@
 # Kahn1 — High-Throughput "System 1" Typed Decision Engine
 
 <p align="left">
-  <a href="https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Kahn1--Qwen2.5--3B-ffcc00.svg" alt="Hugging Face Model" /></a>
+  <a href="https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Model-Kahn1--Qwen2.5--3B-ffcc00.svg" alt="Hugging Face Model" /></a>
+  <a href="https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B-LoRA"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20LoRA-Kahn1--Qwen2.5--3B--LoRA-orange.svg" alt="Hugging Face LoRA" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/Python-3.11%2B-blue.svg" alt="Python 3.11+" /></a>
   <a href="tests/"><img src="https://img.shields.io/badge/Tests-104%20passed-success.svg" alt="Tests: 104 passed" /></a>
@@ -10,28 +11,37 @@
 </p>
 
 > [!TIP]
-> **Official Model Weights Available on Hugging Face**: [`Okura66/Kahn1-Qwen2.5-3B`](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B) (standalone merged bfloat16 checkpoint + calibrated temperatures + Model Card).
+> **Official Model Weights on Hugging Face**:
+> - Full Merged Standalone Checkpoint (6.17 GB): [`Okura66/Kahn1-Qwen2.5-3B`](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B)
+> - Lightweight LoRA Adapter (239 MB): [`Okura66/Kahn1-Qwen2.5-3B-LoRA`](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B-LoRA)
 
 **Kahn1** (powered by the `sysone` Python framework) is an open-source, deterministic System 1 decision engine for structured classification, continuous ordinal scoring, and binary verification. Named in homage to Daniel Kahneman (*Thinking, Fast and Slow*), Kahn1 eliminates autoregressive text generation and JSON schema parsing by extracting strictly typed decisions and calibrated probability distributions directly from model logits at the single-token level.
 
 ---
 
-## 📦 Model Weights & Hugging Face Release
+## 📦 Model Weights & Hugging Face Releases
 
-The official fine-tuned and temperature-calibrated weights are hosted on the Hugging Face Hub:
+Two packaging formats are available on the Hugging Face Hub:
 
-👉 **[https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B)**
+### Option 1: Full Merged Model (Recommended for vLLM & Production)
+👉 **[Okura66/Kahn1-Qwen2.5-3B](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B)** (6.17 GB standalone)
 
 ```bash
 # Serve directly with vLLM (Prefix Caching enabled):
 vllm serve Okura66/Kahn1-Qwen2.5-3B --enable-prefix-caching --dtype bfloat16
 ```
 
+### Option 2: Lightweight LoRA Adapter (239 MB)
+👉 **[Okura66/Kahn1-Qwen2.5-3B-LoRA](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B-LoRA)**
+
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
+from peft import PeftModel
+import torch
 
-model = AutoModelForCausalLM.from_pretrained("Okura66/Kahn1-Qwen2.5-3B")
-tokenizer = AutoTokenizer.from_pretrained("Okura66/Kahn1-Qwen2.5-3B")
+base = AutoModelForCausalLM.from_pretrained("Qwen/Qwen2.5-3B-Instruct", torch_dtype=torch.bfloat16, device_map="auto")
+tokenizer = AutoTokenizer.from_pretrained("Okura66/Kahn1-Qwen2.5-3B-LoRA")
+model = PeftModel.from_pretrained(base, "Okura66/Kahn1-Qwen2.5-3B-LoRA")
 ```
 
 ---

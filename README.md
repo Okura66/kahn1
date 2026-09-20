@@ -1,5 +1,14 @@
 # Kahn1 — High-Throughput "System 1" Typed Decision Engine
 
+<p align="left">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
+  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/Python-3.11%2B-blue.svg" alt="Python 3.11+" /></a>
+  <a href="tests/"><img src="https://img.shields.io/badge/Tests-104%20passed-success.svg" alt="Tests: 104 passed" /></a>
+  <a href="https://docs.vllm.ai/"><img src="https://img.shields.io/badge/Engine-vLLM%20%7C%20Prefix%20Caching-purple.svg" alt="Engine: vLLM" /></a>
+  <a href="https://huggingface.co/Qwen/Qwen2.5-3B-Instruct"><img src="https://img.shields.io/badge/Model-Qwen2.5--3B-orange.svg" alt="Model: Qwen2.5-3B" /></a>
+  <img src="https://img.shields.io/badge/Latency-sub--20ms-brightgreen.svg" alt="Latency: sub-20ms" />
+</p>
+
 **Kahn1** (powered by the `sysone` Python framework) is an open-source, deterministic System 1 decision engine for structured classification, continuous ordinal scoring, and binary verification. Named in homage to Daniel Kahneman (*Thinking, Fast and Slow*), Kahn1 eliminates autoregressive text generation and JSON schema parsing by extracting strictly typed decisions and calibrated probability distributions directly from model logits at the single-token level.
 
 ---

@@ -1,10 +1,10 @@
-# sysone — High-Throughput "System 1" Typed Decision Engine
+# Kahn1 — High-Throughput "System 1" Typed Decision Engine
 
-**sysone** is an open-source, deterministic System 1 decision engine for structured classification, continuous ordinal scoring, and binary verification. By eliminating autoregressive text generation and JSON schema parsing, `sysone` extracts strictly typed decisions and calibrated probability distributions directly from model logits at the single-token level.
+**Kahn1** (powered by the `sysone` Python framework) is an open-source, deterministic System 1 decision engine for structured classification, continuous ordinal scoring, and binary verification. Named in homage to Daniel Kahneman (*Thinking, Fast and Slow*), Kahn1 eliminates autoregressive text generation and JSON schema parsing by extracting strictly typed decisions and calibrated probability distributions directly from model logits at the single-token level.
 
 ---
 
-## What sysone does
+## What Kahn1 does
 
 - Takes a **state** (arbitrary text context) and a **list of typed questions** (Choice / Score / Noul).
 - Returns **strictly typed values + calibrated probability distributions**.
@@ -12,9 +12,9 @@
 - Evaluates all questions in a **single unified batch** sharing the state's KV cache (vLLM Prefix Caching).
 - Schema/type errors are **guaranteed zero by construction** (Pydantic + option tokens, zero text parsing).
 
-## What sysone does not do (honestly)
+## What Kahn1 does not do (honestly)
 
-- **Does not match the intelligence of a frontier model** on ambiguous subjective judgments (an 8B model makes no such claim).
+- **Does not match the intelligence of a frontier model** on ambiguous subjective judgments (an 8B or 3B model makes no such claim).
 - **Does not use TypeSafe's proprietary sampler or architecture**.
 - **Calibration is valid only for the training distribution** — hence the `sysone calibrate` command to recalibrate on your domain.
 - **Latency gains stem from prefix caching and single-token output**, not an exotic architectural innovation.
@@ -83,18 +83,15 @@ source .venv/bin/activate     # .venv\Scripts\activate on Windows
 uv pip install -e ".[gpu]"    # installs vllm (requires CUDA GPU)
 ```
 
-### Validation & Logit Verification
+### Verification & Test Suite
 
 ```bash
-uv run python spike.py
+uv run pytest tests/ -q
 ```
 
-Empirically verifies that:
-1. Probabilities sum to ~1.0 over the restricted set.
-2. Permuting option order alters probabilities (positional bias).
-3. The raw model is overconfident ($p_{\max} > 0.8$ on an ambiguous case).
+Runs the complete suite of 104 deterministic unit and integration tests (validating token mapping, debiasing invariance, ordinal scoring, post-hoc calibration, and REST API endpoints).
 
-Results recorded in `reports/SPIKE.md`.
+Historical logit verification of Phase 0 is archived in [`reports/SPIKE.md`](reports/SPIKE.md).
 
 ### Build Dataset
 
@@ -219,24 +216,16 @@ On fine-grained ordinal scales like SST-5 (5 sentiment degrees from *Very Negati
 ## Project Structure
 
 ```
-sysone/
-├── src/sysone/
-│   ├── types.py      Pydantic schemas (Choice/Score/Noul, Query/Answer, JEV adapter)
-│   ├── tokens.py     Resolution & validation of option tokens (with BPE boundary fallback)
-│   ├── prompt.py     Templates, shared-prefix assembly
-│   ├── engine.py     vLLM wrapper, direct logit extraction, batching, two-stage
-│   ├── debias.py     Permutations, averaging in probability space
-│   ├── calibrate.py  Temperature scaling + isotonic regression
-│   ├── arena.py      Live 100-Item Benchmark Race (System 1 vs System 2)
-│   ├── server.py     FastAPI REST API
-│   └── cli.py        CLI entrypoints
-├── training/         build_dataset, on-the-fly augment, train_lora
-├── eval/             metrics, run_eval, baselines, benchmark_qwen, diagnostic plots
-├── web/              Interactive 10x10 Race UI
+kahn1/
+├── src/sysone/       Core engine package (types, tokens, prompt, debias, calibrate, arena, server)
+│   └── web/          Interactive Battle Arena UI (10x10 Race & Multi-Query Matrix)
+├── training/         Dataset building, augmentations, and LoRA training
+├── eval/             Metrics, evaluation harness, benchmarks, debiasing tests
+├── scripts/          Utilities (LoRA merge, val set prep, Hugging Face publication, arena launcher)
+│   └── scratch/      (gitignored) Local scratchpad & temporary investigation scripts
 ├── docs/             PLAYBOOK.md (step-by-step reproduction guide)
-├── tests/            Pytest unit & integration test suite (102/102 passing)
-├── spike.py          Logit verification script
-└── reports/          SPIKE.md, REPORT.md, DEBIAS.md, QWEN_FULL_EVAL_8260.md + plots
+├── tests/            Pytest unit & integration test suite (104/104 passing)
+└── reports/          Empirical benchmarks, calibration logs, and evaluation reports
 ```
 
 ## Design Principles

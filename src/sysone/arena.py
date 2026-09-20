@@ -28,11 +28,11 @@ import httpx
 SHOWCASE_PRESETS: list[dict[str, Any]] = [
     {
         "id": "banking_card_lost",
-        "title": "💳 Fraude & Carte Perdue (Banking77)",
+        "title": "Lost Card & Fraud Escalation (Banking77)",
         "dataset": "banking77",
-        "badge": "Service Client Critique",
+        "badge": "Critical Inbound",
         "state": "Someone just used my card in an ATM in London while I am at home in Paris! Block it right now!",
-        "prompt": "Quelle est la catégorie bancaire de cette demande ?",
+        "prompt": "What is the banking intent of this query?",
         "options": [
             "compromised_card",
             "lost_or_stolen_card",
@@ -44,15 +44,15 @@ SHOWCASE_PRESETS: list[dict[str, Any]] = [
             "contactless_not_working"
         ],
         "ground_truth": "compromised_card",
-        "comment": "Cas bancaire critique nécessitant un routage immédiat (< 50 ms) sans risque d'hallucination."
+        "comment": "Critical financial triage requiring immediate deterministic routing (< 50 ms)."
     },
     {
         "id": "massive_smarthome",
-        "title": "Commande Vocale IoT (MASSIVE)",
+        "title": "Smart Home Voice Command (MASSIVE)",
         "dataset": "massive",
-        "badge": "Smart Home / Edge AI",
+        "badge": "Edge IoT Automation",
         "state": "dim all living room lamps to thirty percent and turn off the terrace spotlights",
-        "prompt": "Quel est le domaine et l'intention de cette commande ?",
+        "prompt": "What is the domain and intent of this command?",
         "options": [
             "lighting_dimmer",
             "lighting_toggle",
@@ -63,32 +63,32 @@ SHOWCASE_PRESETS: list[dict[str, Any]] = [
             "weather_query"
         ],
         "ground_truth": "lighting_dimmer",
-        "comment": "Exécution domotique en temps réel. La moindre seconde de latence dégrade l'expérience utilisateur."
+        "comment": "Real-time edge automation execution with zero cloud network latency."
     },
     {
         "id": "sst5_sentiment",
-        "title": "Analyse de Sentiment Ordinale (SST-5)",
+        "title": "Ordinal Sentiment Analysis (SST-5)",
         "dataset": "sst5_eval",
-        "badge": "E-Commerce / Avis Client",
+        "badge": "Customer Review",
         "state": "The cinematography is gorgeous and the acting is decent, but the pacing is horribly dragged and the ending is utterly disappointing.",
-        "prompt": "Quel est le niveau de sentiment de cette critique ?",
+        "prompt": "What is the sentiment rating of this review?",
         "options": [
-            "1_très_négatif",
-            "2_négatif",
-            "3_neutre",
-            "4_positif",
-            "5_très_positif"
+            "1_very_negative",
+            "2_negative",
+            "3_neutral",
+            "4_positive",
+            "5_very_positive"
         ],
-        "ground_truth": "2_négatif",
-        "comment": "Avis mitigé complexe avec nuances positives et négatives. Requiert une distribution probabiliste fine."
+        "ground_truth": "2_negative",
+        "comment": "Mixed review nuance with positive and negative signals requiring probabilistic calibration."
     },
     {
         "id": "banking_delay",
-        "title": "Retard de Livraison Carte (Banking77)",
+        "title": "Card Delivery Delay (Banking77)",
         "dataset": "banking77",
-        "badge": "Requête Fréquente",
+        "badge": "Standard Inbound",
         "state": "I ordered my physical debit card 10 business days ago and still nothing in my mailbox.",
-        "prompt": "Quelle est la catégorie bancaire de cette demande ?",
+        "prompt": "What is the banking intent of this request?",
         "options": [
             "card_arrival",
             "card_delivery_estimate",
@@ -98,7 +98,7 @@ SHOWCASE_PRESETS: list[dict[str, Any]] = [
             "activate_my_card"
         ],
         "ground_truth": "card_arrival",
-        "comment": "Test de discrimination entre 'card_arrival' et 'card_delivery_estimate'."
+        "comment": "Fine distinction benchmark between card_arrival and card_delivery_estimate."
     }
 ]
 

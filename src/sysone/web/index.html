@@ -369,7 +369,7 @@
     let isRacing = false;
 
     // -----------------------------------------------------------------------
-    // Concurrence I/O (Requêtes Parallèles)
+    // Concurrent I/O (Parallel Streams)
     // -----------------------------------------------------------------------
     function setConcurrency(c) {
       if (isRacing) return;
@@ -741,8 +741,8 @@
       document.getElementById('score-gemini').textContent = `0 / ${batchSize}`;
       document.getElementById('timer-kahn1').textContent = '0.00s';
       document.getElementById('timer-gemini').textContent = '0.00s';
-      document.getElementById('status-kahn1').textContent = 'En attente';
-      document.getElementById('status-gemini').textContent = 'En attente';
+      document.getElementById('status-kahn1').textContent = 'Waiting';
+      document.getElementById('status-gemini').textContent = 'Waiting';
     }
 
     async function drawItems() {

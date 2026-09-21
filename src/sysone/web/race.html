@@ -303,10 +303,7 @@ function handle(ev) {
     const c = s.body.querySelector(".cursor");
     if (c) c.remove();
     if (ev.answered > 0) renderLine(s.body, "}", null);
-    const tok = ev.output_tokens
-      ? ev.input_tokens + " in / " + ev.output_tokens + " out tokens"
-      : "0 tokens generated";
-    s.meta.textContent = "p50 " + (ev.p50_ms / 1000).toFixed(3) + "s per item · " + tok;
+    s.meta.textContent = "p50 " + (ev.p50_ms / 1000).toFixed(3) + "s per item";
     s.time.textContent = "completed in " + (ev.total_ms / 1000).toFixed(2) + "s";
     s.score.textContent = ev.score.toFixed(1);
     const perKind = Object.entries(ev.by_kind || {})

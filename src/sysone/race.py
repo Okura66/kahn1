@@ -79,8 +79,6 @@ class EngineRun:
     correct: int = 0
     answered: int = 0
     latencies: list[float] = field(default_factory=list)
-    input_tokens: int = 0
-    output_tokens: int = 0
     started: float = field(default_factory=time.perf_counter)
     error: str | None = None
     # Per-primitive tally: a single accuracy figure hides which primitive fails.
@@ -112,8 +110,6 @@ class EngineRun:
             "correct": self.correct,
             "n_items": self.n_items,
             "score": round(self.score, 1),
-            "input_tokens": self.input_tokens,
-            "output_tokens": self.output_tokens,
             "by_kind": {k: {"correct": v[0], "total": v[1]}
                         for k, v in sorted(self.by_kind.items())},
             "error": self.error,
@@ -230,26 +226,32 @@ async def _run_jev(items, emit, model):
         await emit({"type": "done", **run.summary(0.0)})
         return
 
-    for idx, item in enumerate(items):
-        try:
-            result = await jev.evaluate(
-                item["state"], {"q": jev.question_payload(item)}, model=model
-            )
-            norm = jev.normalize(item, result.answers.get("q", {}))
-        except Exception as exc:
-            run.error = f"{type(exc).__name__}: {exc}"
-            await emit({"type": "error", "engine": "jev", "message": run.error})
-            break
-        ok = is_correct(item, norm["pick"])
-        run.record(item, ok, result.latency_ms)
-        run.input_tokens += result.input_tokens
-        run.output_tokens += result.output_tokens
-        await emit({
-            "type": "line", "engine": "jev", "index": idx,
-            "text": render_line(item, norm["json"], idx == len(items) - 1),
-            "correct": ok, "expected": None if ok else item["gold"],
-            "latency_ms": round(result.latency_ms, 1), "score": round(run.score, 1),
-        })
+    # One client for the whole run: paying a TCP+TLS handshake per item would
+    # inflate JEV's latency with costs a production caller does not pay.
+    client = jev.make_client()
+    try:
+        for idx, item in enumerate(items):
+            try:
+                result = await jev.evaluate(
+                    item["state"], {"q": jev.question_payload(item)},
+                    model=model, client=client,
+                )
+                norm = jev.normalize(item, result.answers.get("q", {}))
+            except Exception as exc:
+                run.error = f"{type(exc).__name__}: {exc}"
+                await emit({"type": "error", "engine": "jev", "message": run.error})
+                break
+            ok = is_correct(item, norm["pick"])
+            run.record(item, ok, result.latency_ms)
+            await emit({
+                "type": "line", "engine": "jev", "index": idx,
+                "text": render_line(item, norm["json"], idx == len(items) - 1),
+                "correct": ok, "expected": None if ok else item["gold"],
+                "latency_ms": round(result.latency_ms, 1),
+                "score": round(run.score, 1),
+            })
+    finally:
+        await client.aclose()
     total = (time.perf_counter() - run.started) * 1000.0
     await emit({"type": "done", **run.summary(total)})
 

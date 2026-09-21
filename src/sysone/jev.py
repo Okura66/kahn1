@@ -50,13 +50,11 @@ def has_key() -> bool:
 
 @dataclass
 class JevResult:
-    """One JEV round trip: the parsed answers plus what it cost to obtain them."""
+    """One JEV round trip: the parsed answers plus the measured wall-clock cost."""
 
     answers: dict[str, Any]
     latency_ms: float
     model: str = ""
-    input_tokens: int = 0
-    output_tokens: int = 0
     raw: dict[str, Any] = field(default_factory=dict)
 
 
@@ -81,11 +79,22 @@ def question_payload(item: dict) -> dict[str, Any]:
     raise ValueError(f"Unsupported item kind: {kind!r}")
 
 
+def make_client(timeout: float = 30.0):
+    """One shared HTTP client for a whole run, so connection setup is paid once.
+
+    Opening a fresh client per item re-runs the TCP+TLS handshake on every request
+    and inflates JEV's measured latency with costs a production caller would not pay.
+    """
+    import httpx
+    return httpx.AsyncClient(timeout=timeout)
+
+
 async def evaluate(
     state: str,
     questions: dict[str, dict[str, Any]],
     model: str = DEFAULT_MODEL,
     timeout: float = 30.0,
+    client=None,
 ) -> JevResult:
     """POST one state and its questions, and time the full round trip."""
     import httpx
@@ -98,8 +107,11 @@ async def evaluate(
 
     t0 = time.perf_counter()
     try:
-        async with httpx.AsyncClient(timeout=timeout) as client:
+        if client is not None:
             resp = await client.post(API_URL, headers=headers, json=payload)
+        else:
+            async with httpx.AsyncClient(timeout=timeout) as one_shot:
+                resp = await one_shot.post(API_URL, headers=headers, json=payload)
     except Exception as exc:  # network, DNS, timeout
         raise JevError(f"JEV request failed: {type(exc).__name__}: {exc}") from exc
     elapsed = (time.perf_counter() - t0) * 1000.0
@@ -108,13 +120,10 @@ async def evaluate(
         raise JevError(f"JEV returned HTTP {resp.status_code}: {resp.text[:300]}")
 
     body = resp.json()
-    usage = body.get("usage") or {}
     return JevResult(
         answers=body.get("answers", {}),
         latency_ms=elapsed,
         model=body.get("model", ""),
-        input_tokens=int(usage.get("input_tokens", 0)),
-        output_tokens=int(usage.get("output_tokens", 0)),
         raw=body,
     )
 

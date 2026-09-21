@@ -90,11 +90,11 @@ def build_prompt_for_training(aug, tokenizer) -> tuple[str, int]:
     the ground truth target token. All prior prefix tokens are masked (labels = -100).
     """
     from sysone.prompt import build_prompt_spec
-    from sysone.tokens import resolve_choice_tokens, resolve_noul_tokens
+    from sysone.tokens import noul_token_index, resolve_choice_tokens, resolve_noul_tokens
     from sysone.types import ChoiceQuestion, ScoreQuestion, NoulQuestion
 
     if aug.kind == "choice":
-        include_other = (aug.label == -1)
+        include_other = aug.include_other
         q = ChoiceQuestion(
             key="q",
             prompt=aug.prompt,
@@ -116,10 +116,11 @@ def build_prompt_for_training(aug, tokenizer) -> tuple[str, int]:
         resolved = resolve_choice_tokens(tokenizer, spec.suffix, len(aug.levels))
         label_token_id = resolved.token_ids[aug.label]
     elif aug.kind == "noul":
-        q = NoulQuestion(key="q", statement=aug.statement)
+        q = NoulQuestion(key="q", statement=aug.statement, prompt=aug.prompt)
         spec = build_prompt_spec(aug.state, q)
         resolved = resolve_noul_tokens(tokenizer, spec.suffix)
-        label_token_id = resolved.token_ids[aug.label]
+        # Dataset label 1 == yes, but NOUL_LABELS index 0 == 'yes': go through the helper.
+        label_token_id = resolved.token_ids[noul_token_index(aug.label)]
     else:
         raise ValueError(f"Unknown question kind: {aug.kind}")
 

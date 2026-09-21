@@ -48,6 +48,7 @@ def main():
                     "prompt": aug.prompt,
                     "options": aug.options,
                     "label": aug.label,
+                    "include_other": aug.include_other,
                     "source": aug.source,
                 })
                 count += 1
@@ -87,6 +88,7 @@ def main():
             val_examples.append({
                 "state": aug.state[:1500],
                 "kind": "noul",
+                "prompt": aug.prompt,
                 "statement": aug.statement,
                 "label": aug.label,
                 "source": aug.source,

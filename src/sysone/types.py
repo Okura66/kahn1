@@ -50,7 +50,7 @@ class ChoiceQuestion(BaseModel):
     @classmethod
     def _unique_options(cls, v: list[str]) -> list[str]:
         if len(set(v)) != len(v):
-            raise ValueError("Les options doivent être uniques.")
+            raise ValueError("Options must be unique.")
         return v
 
 
@@ -66,7 +66,7 @@ class ScoreQuestion(BaseModel):
     @classmethod
     def _unique_levels(cls, v: list[str]) -> list[str]:
         if len(set(v)) != len(v):
-            raise ValueError("Les niveaux doivent être uniques.")
+            raise ValueError("Levels must be unique.")
         return v
 
 
@@ -76,6 +76,9 @@ class NoulQuestion(BaseModel):
     kind: Literal["noul"] = "noul"
     key: str
     statement: str
+    # Empty falls back to prompt.NOUL_PROMPT. Set by the training augmenter to
+    # apply the bilingual NOUL_TEMPLATES framing.
+    prompt: str = ""
 
 
 Question = Union[ChoiceQuestion, ScoreQuestion, NoulQuestion]
@@ -91,7 +94,7 @@ class Query(BaseModel):
     def _unique_keys(self) -> "Query":
         keys = [q.key for q in self.questions]
         if len(set(keys)) != len(keys):
-            raise ValueError("Les clés de questions doivent être uniques.")
+            raise ValueError("Question keys must be unique.")
         return self
 
     @classmethod
@@ -111,7 +114,7 @@ class Query(BaseModel):
         for key, spec in schema.items():
             if not isinstance(spec, dict):
                 raise ValueError(
-                    f"Spécification invalide pour la clé {key!r} : attendu dict, reçu {type(spec).__name__}"
+                    f"Invalid specification for key {key!r}: expected dict, got {type(spec).__name__}"
                 )
 
             q_type = spec.get("type") or spec.get("kind")
@@ -126,7 +129,7 @@ class Query(BaseModel):
                 elif "options" in spec:
                     options = [str(opt) for opt in spec["options"]]
                 else:
-                    raise ValueError(f"La question choice {key!r} doit contenir 'criteria' ou 'options'.")
+                    raise ValueError(f"Choice question {key!r} must provide 'criteria' or 'options'.")
 
                 allow_other = spec.get("allow_other", True)
                 questions.append(
@@ -144,7 +147,7 @@ class Query(BaseModel):
                 elif "levels" in spec:
                     levels = [str(lvl) for lvl in spec["levels"]]
                 else:
-                    raise ValueError(f"La question score {key!r} doit contenir 'criteria' ou 'levels'.")
+                    raise ValueError(f"Score question {key!r} must provide 'criteria' or 'levels'.")
 
                 questions.append(
                     ScoreQuestion(
@@ -157,7 +160,7 @@ class Query(BaseModel):
             elif q_type == "noul":
                 statement = instructions or spec.get("statement", "")
                 if not statement:
-                    raise ValueError(f"La question noul {key!r} doit spécifier 'instructions' ou 'statement'.")
+                    raise ValueError(f"Noul question {key!r} must provide 'instructions' or 'statement'.")
                 questions.append(
                     NoulQuestion(
                         key=key,
@@ -167,7 +170,7 @@ class Query(BaseModel):
 
             else:
                 raise ValueError(
-                    f"Type de question JEV non supporté pour {key!r} : {q_type!r}. Attendu: choice, score, noul."
+                    f"Unsupported JEV question type for {key!r}: {q_type!r}. Expected: choice, score, noul."
                 )
 
         return cls(state=state, questions=questions)
@@ -189,7 +192,7 @@ def confidence_from_probs(probs: list[float]) -> float:
     """
     n = len(probs)
     if n == 0:
-        raise ValueError("La liste de probabilités est vide.")
+        raise ValueError("Probability list is empty.")
     if n == 1:
         return 0.0
     p_max = max(probs)
@@ -208,11 +211,11 @@ class ChoiceAnswer(BaseModel):
         s = sum(self.probabilities.values())
         if abs(s - 1.0) > 1e-3:
             raise ValueError(
-                f"Les probabilités doivent sommer à 1.0 (somme={s})."
+                f"Probabilities must sum to 1.0 (sum={s})."
             )
         if self.choice not in self.probabilities:
             raise ValueError(
-                f"choice={self.choice!r} absent des probabilités "
+                f"choice={self.choice!r} missing from probabilities "
                 f"{list(self.probabilities)}."
             )
         return self
@@ -232,11 +235,11 @@ class ScoreAnswer(BaseModel):
         s = sum(self.probabilities.values())
         if abs(s - 1.0) > 1e-3:
             raise ValueError(
-                f"Les probabilités doivent sommer à 1.0 (somme={s})."
+                f"Probabilities must sum to 1.0 (sum={s})."
             )
         if self.level not in self.probabilities:
             raise ValueError(
-                f"level={self.level!r} absent des probabilités."
+                f"level={self.level!r} missing from probabilities."
             )
         # Compute 1-based continuous expectation if unpopulated: sum(p_i * (i + 1))
         if self.expected_score == 0.0:
@@ -257,7 +260,7 @@ class NoulAnswer(BaseModel):
     @classmethod
     def _range(cls, v: float) -> float:
         if not (0.0 <= v <= 1.0):
-            raise ValueError(f"noul doit être dans [0,1] (valeur={v}).")
+            raise ValueError(f"noul must lie in [0,1] (got {v}).")
         return v
 
 

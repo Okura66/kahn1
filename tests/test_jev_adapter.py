@@ -110,7 +110,7 @@ def test_query_from_jev_invalid_type():
             "instructions": "test",
         }
     }
-    with pytest.raises(ValueError, match="non supporté"):
+    with pytest.raises(ValueError, match="Unsupported"):
         Query.from_jev(state="test", schema=schema)
 
 

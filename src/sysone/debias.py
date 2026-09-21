@@ -120,10 +120,10 @@ def average_distributions(
         w = [1.0 / len(remapped)] * len(remapped)
     else:
         if len(weights) != len(remapped):
-            raise ValueError("weights et remapped doivent avoir même longueur.")
+            raise ValueError("weights and remapped must have the same length.")
         s = sum(weights)
         if s <= 0:
-            raise ValueError("La somme des poids doit être > 0.")
+            raise ValueError("Weights must sum to > 0.")
         w = [x / s for x in weights]
     out = [0.0] * n
     for probs, wi in zip(remapped, w):
@@ -149,10 +149,10 @@ def geometric_mean_distributions(
         w = [1.0 / len(remapped)] * len(remapped)
     else:
         if len(weights) != len(remapped):
-            raise ValueError("weights et remapped doivent avoir même longueur.")
+            raise ValueError("weights and remapped must have the same length.")
         s = sum(weights)
         if s <= 0:
-            raise ValueError("La somme des poids doit être > 0.")
+            raise ValueError("Weights must sum to > 0.")
         w = [x / s for x in weights]
 
     import math

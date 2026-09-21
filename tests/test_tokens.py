@@ -35,6 +35,8 @@ class MockTokenizer:
             return [100, 203]
         if text.endswith("Answer:billing"):
             return [100, 300, 301, 302]  # multi-token
+        if text.endswith("Answer: billing"):
+            return [100, 300, 301, 302]  # multi-token under both separators
         if text.endswith("Answer:yes"):
             return [100, 400]
         if text.endswith("Answer:no"):
@@ -75,7 +77,7 @@ def test_multi_token_label_raises():
     """Multi-token label must raise an exception rather than silently degrading."""
     from sysone.tokens import resolve_option_tokens
     tok = MockTokenizer()
-    with pytest.raises(ValueError, match="tokens de continuation"):
+    with pytest.raises(ValueError, match="3 tokens"):
         resolve_option_tokens(tok, "Answer:", ["billing"])
 
 
@@ -89,7 +91,7 @@ def test_collision_raises():
                 return [100, 200]  # collision
             return super().encode(text, add_special_tokens)
     tok = CollisionTokenizer()
-    with pytest.raises(ValueError, match="Collision"):
+    with pytest.raises(ValueError, match="[Cc]ollision"):
         resolve_option_tokens(tok, "Answer:", ["A", "B"])
 
 
@@ -100,11 +102,11 @@ def test_empty_continuation_raises():
         def encode(self, text, add_special_tokens=False):
             if text.endswith("Answer:"):
                 return [100]
-            if text.endswith("Answer:X"):
-                return [100]  # appends nothing
+            if text.endswith("Answer:X") or text.endswith("Answer: X"):
+                return [100]  # appends nothing under either separator
             return super().encode(text, add_special_tokens)
     tok = EmptyTokenizer()
-    with pytest.raises(ValueError, match="n'ajoute aucun token"):
+    with pytest.raises(ValueError, match="0 tokens"):
         resolve_option_tokens(tok, "Answer:", ["X"])
 
 
@@ -118,7 +120,7 @@ def test_option_labels_26():
 
 def test_option_labels_over_26_raises():
     from sysone.tokens import option_labels
-    with pytest.raises(NotImplementedError, match="deux étages"):
+    with pytest.raises(NotImplementedError, match="two-stage"):
         option_labels(27)
 
 
@@ -132,7 +134,7 @@ def test_resolved_tokens_dataclass():
 
 def test_resolved_tokens_mismatch_raises():
     from sysone.tokens import ResolvedTokens
-    with pytest.raises(ValueError, match="même longueur"):
+    with pytest.raises(ValueError, match="same length"):
         ResolvedTokens(labels=["A", "B"], token_ids=[200])
 
 
@@ -157,3 +159,42 @@ def test_bpe_fusing_tokenizer():
     tok = FusingBpeTokenizer()
     ids = resolve_option_tokens(tok, "Answer:", ["A", "B"])
     assert ids == [301, 302]
+
+
+# --- Regression tests -------------------------------------------------------
+
+def test_mixed_separator_labels_resolve_homogeneously():
+    """All labels must resolve under one separator, never a bare/spaced mix.
+
+    Regression: Qwen merged ':no' but not ':yes', so 'yes' resolved bare while
+    'no' fell back to ' no'. Their logits then described different surface forms
+    and the comparison silently inverted Noul decisions.
+    """
+    from sysone.tokens import resolve_option_tokens
+
+    class PartialFusingTokenizer:
+        def encode(self, text, add_special_tokens=False):
+            table = {
+                "Answer:": [100],
+                "Answer:yes": [100, 400],        # bare 'yes' resolves cleanly
+                # ':no' merges into one token, replacing ':' -> the [100] prefix
+                # no longer survives, which is what real Qwen BPE does here.
+                "Answer:no": [177],
+                "Answer: yes": [100, 401],
+                "Answer: no": [100, 402],
+            }
+            return table.get(text, [100, 5000])
+
+    ids = resolve_option_tokens(PartialFusingTokenizer(), "Answer:", ["yes", "no"])
+    # The spaced pair is the only one where BOTH labels resolve.
+    assert ids == [401, 402]
+
+
+def test_noul_token_index_inverts_dataset_label():
+    """Dataset label 1 (yes/entailment) must select NOUL_LABELS[0] == 'yes'."""
+    from sysone.tokens import NOUL_LABELS, noul_token_index
+
+    assert NOUL_LABELS[noul_token_index(1)] == "yes"
+    assert NOUL_LABELS[noul_token_index(0)] == "no"
+    with pytest.raises(ValueError, match="Invalid noul label"):
+        noul_token_index(-1)

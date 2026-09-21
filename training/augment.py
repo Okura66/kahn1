@@ -115,6 +115,9 @@ class AugmentedExample:
     label: int
     lang: str
     source: str
+    # Whether the fallback option is displayed. Sampled independently of the label:
+    # tying it to (label == -1) taught the model 'fallback shown => fallback correct'.
+    include_other: bool = False
 
 
 def augment_choice(
@@ -124,6 +127,7 @@ def augment_choice(
     p_remove_correct: float = 0.07,
     min_options: int = 2,
     max_options: int = 16,
+    p_include_other: float = 0.5,
 ) -> AugmentedExample:
     """Apply dynamic augmentation transformations to a Choice task instance."""
     # 1, 5, 6: template + language variation
@@ -178,10 +182,15 @@ def augment_choice(
     else:
         new_label = -1
 
+    # The fallback option is mandatory when it IS the answer, and otherwise shown
+    # p_include_other of the time so that its presence carries no information.
+    include_other = True if new_label == -1 else (rng.random() < p_include_other)
+
     return AugmentedExample(
         state=ex["state"], kind="choice", prompt=prompt,
         options=new_options, levels=[], statement="",
         label=new_label, lang=lang, source=ex["source"],
+        include_other=include_other,
     )
 
 

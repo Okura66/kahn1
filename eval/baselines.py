@@ -20,6 +20,8 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
+from sysone.prompt import OTHER_LABEL_TEXT
+
 from eval.metrics import (
     MetricsBundle, compute_all, latency_stats, LatencyStats,
 )
@@ -50,8 +52,10 @@ def _prepare_choice_options(ex: dict, max_opts: int = 8) -> tuple[list[str], int
     """
     raw_options = ex["options"]
     label = ex.get("label", -1)
+    # Fall back to the legacy rule only for datasets predating the include_other field.
+    include_other = ex.get("include_other", label == -1)
     if len(raw_options) <= max_opts:
-        return list(raw_options), label, (label == -1)
+        return list(raw_options), label, include_other
 
     import hashlib
     import random
@@ -101,7 +105,8 @@ def run_baseline_raw(
             q = ScoreQuestion(key="q", prompt=ex["prompt"], levels=ex["levels"])
             label = ex["label"]
         elif ex["kind"] == "noul":
-            q = NoulQuestion(key="q", statement=ex["statement"])
+            q = NoulQuestion(key="q", statement=ex["statement"],
+                             prompt=ex.get("prompt", ""))
             label = ex["label"]
         else:
             continue
@@ -112,7 +117,7 @@ def run_baseline_raw(
         ans = resp.answers["q"]
         if ex["kind"] == "choice":
             probs_dict = ans.probabilities
-            all_opts = options + (["__other__"] if allow_other else [])
+            all_opts = options + ([OTHER_LABEL_TEXT] if allow_other else [])
             probs = [probs_dict.get(o, 0.0) for o in all_opts]
             all_probs.append(probs)
             lbl = label if label >= 0 else len(all_opts) - 1
@@ -263,7 +268,8 @@ def run_full_system(
             q = ScoreQuestion(key="q", prompt=ex["prompt"], levels=ex["levels"])
             label = ex["label"]
         elif ex["kind"] == "noul":
-            q = NoulQuestion(key="q", statement=ex["statement"])
+            q = NoulQuestion(key="q", statement=ex["statement"],
+                             prompt=ex.get("prompt", ""))
             label = ex["label"]
         else:
             continue
@@ -273,7 +279,7 @@ def run_full_system(
         latencies.append((time.perf_counter() - t0) * 1000.0)
         ans = resp.answers["q"]
         if ex["kind"] == "choice":
-            all_opts = options + (["__other__"] if allow_other else [])
+            all_opts = options + ([OTHER_LABEL_TEXT] if allow_other else [])
             probs = [ans.probabilities.get(o, 0.0) for o in all_opts]
             all_probs.append(probs)
             lbl = label if label >= 0 else len(all_opts) - 1

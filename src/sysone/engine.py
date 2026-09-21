@@ -96,8 +96,8 @@ def _detect_restrict_param(SamplingParams) -> str:
     if "logit_bias" in field_names:
         return "logit_bias"
     raise RuntimeError(
-        f"Aucun paramètre de restriction trouvé dans SamplingParams "
-        f"(champs connus: {sorted(field_names)}). Version vLLM inconnue."
+        f"No token-restriction parameter found on SamplingParams "
+        f"(known fields: {sorted(field_names)}). Unrecognized vLLM version."
     )
 
 
@@ -304,9 +304,9 @@ class Engine:
                 # evaluate_two_stage; here only direct Choice evaluation is supported.
                 if n_opts > self.config.two_stage_threshold:
                     raise NotImplementedError(
-                        f"Choice avec {n_opts} options > seuil "
+                        f"Choice with {n_opts} options exceeds threshold "
                         f"{self.config.two_stage_threshold}. "
-                        "Utiliser evaluate_two_stage ou augmenter le seuil."
+                        "Use evaluate_two_stage or raise the threshold."
                     )
                 # Effective options scored: base options + 'other' if allow_other
                 eff_options = list(base_options)
@@ -359,7 +359,7 @@ class Engine:
                     spec=spec, resolved=resolved,
                 ))
             else:
-                raise TypeError(f"Type de question non supporté : {type(question)}")
+                raise TypeError(f"Unsupported question type: {type(question)}")
         return entries
 
     # -- API principale --
@@ -538,7 +538,7 @@ class Engine:
                 for oi, opt in enumerate(question.options):
                     noul_q = NoulQuestion(
                         key=f"{question.key}__noul_{oi}",
-                        statement=f"L'option « {opt} » convient à cet état.",
+                        statement=f"The option “{opt}” fits this state.",
                     )
                     spec = build_prompt_spec(query.state, noul_q)
                     resolved = self._resolve(spec)

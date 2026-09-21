@@ -33,7 +33,7 @@ def test_choice_question_too_many_options():
 
 
 def test_choice_question_duplicate_options():
-    with pytest.raises(Exception, match="uniques"):
+    with pytest.raises(Exception, match="must be unique"):
         ChoiceQuestion(key="q", prompt="p", options=["a", "a", "b"])
 
 
@@ -50,7 +50,7 @@ def test_noul_question_validates():
 
 
 def test_query_unique_keys():
-    with pytest.raises(Exception, match="uniques"):
+    with pytest.raises(Exception, match="must be unique"):
         Query(state="x", questions=[
             ChoiceQuestion(key="k", prompt="p", options=["a", "b"]),
             ScoreQuestion(key="k", prompt="p2", levels=["x", "y"]),
@@ -64,13 +64,13 @@ def test_choice_answer_probs_sum_to_one():
 
 
 def test_choice_answer_bad_sum_raises():
-    with pytest.raises(Exception, match="sommer à 1"):
+    with pytest.raises(Exception, match="must sum to 1"):
         ChoiceAnswer(choice="a", probabilities={"a": 0.6, "b": 0.5},
                       confidence=0.2)
 
 
 def test_choice_answer_choice_not_in_probs_raises():
-    with pytest.raises(Exception, match="absent"):
+    with pytest.raises(Exception, match="missing from probabilities"):
         ChoiceAnswer(choice="z", probabilities={"a": 0.5, "b": 0.5},
                       confidence=0.0)
 

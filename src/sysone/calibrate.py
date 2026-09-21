@@ -25,8 +25,6 @@ from pathlib import Path
 from typing import Literal
 
 import numpy as np
-from scipy.optimize import minimize
-from sklearn.isotonic import IsotonicRegression
 
 
 @dataclass
@@ -56,7 +54,7 @@ class TemperatureConfig:
 def apply_temperature(logits: list[float], T: float) -> list[float]:
     """Apply temperature scaling (1/T) to raw logits followed by numerically stable softmax."""
     if T <= 0:
-        raise ValueError("T doit être > 0.")
+        raise ValueError("T must be > 0.")
     scaled = [l / T for l in logits]
     m = max(scaled)
     exps = [math.exp(s - m) for s in scaled]
@@ -98,6 +96,8 @@ def fit_temperature(
     Returns:
         Optimal temperature scalar T in range [1e-3, 100.0].
     """
+    from scipy.optimize import minimize
+
     if not all_logits:
         return 1.0
     res = minimize(
@@ -130,6 +130,13 @@ def fit_all(
 # Isotonic Regression Calibrator
 # ---------------------------------------------------------------------------
 
+def _new_isotonic():
+    """Build a clipped isotonic regressor, importing sklearn only when one is needed."""
+    from sklearn.isotonic import IsotonicRegression
+
+    return IsotonicRegression(out_of_bounds="clip")
+
+
 @dataclass
 class IsotonicCalibrator:
     """One-dimensional isotonic calibrator mapping raw confidence (p_max) to empirical accuracy.
@@ -137,7 +144,7 @@ class IsotonicCalibrator:
     Provides a non-parametric monotonic mapping used as a complementary calibration method.
     """
 
-    iso: IsotonicRegression = field(default_factory=lambda: IsotonicRegression(out_of_bounds="clip"))
+    iso: "IsotonicRegression" = field(default_factory=lambda: _new_isotonic())
 
     def fit(self, confidences: list[float], correct: list[int]):
         """Fit isotonic regression on confidence and binary correctness indicators."""
@@ -221,6 +228,7 @@ class CalibratedEngine:
 
 def collect_logits_from_dataset(engine, dataset_path: str | Path) -> dict[str, tuple[list[list[float]], list[int]]]:
     """Evaluate dataset examples in a single unified batch to harvest unnormalized candidate logits."""
+    from .tokens import noul_token_index
     from .types import Query, ChoiceQuestion, ScoreQuestion, NoulQuestion
 
     by_kind: dict[str, tuple[list, list]] = {"choice": ([], []), "score": ([], []), "noul": ([], [])}
@@ -239,15 +247,17 @@ def collect_logits_from_dataset(engine, dataset_path: str | Path) -> dict[str, t
                 key="q",
                 prompt=ex["prompt"],
                 options=ex["options"],
-                allow_other=(label == -1),
+                allow_other=ex.get("include_other", label == -1),
             )
             target_idx = label if label >= 0 else len(ex["options"])
         elif kind == "score":
             q = ScoreQuestion(key="q", prompt=ex["prompt"], levels=ex["levels"])
             target_idx = label
         elif kind == "noul":
-            q = NoulQuestion(key="q", statement=ex["statement"])
-            target_idx = label
+            q = NoulQuestion(key="q", statement=ex["statement"],
+                             prompt=ex.get("prompt", ""))
+            # Dataset label 1 == yes, NOUL_LABELS index 0 == 'yes'.
+            target_idx = noul_token_index(label)
         else:
             continue
 

@@ -125,6 +125,33 @@ source .venv/bin/activate     # .venv\Scripts\activate on Windows
 uv pip install -e ".[gpu]"    # installs vllm (requires CUDA GPU)
 ```
 
+### Running on CPU (no GPU required)
+
+vLLM is GPU-only. `sysone.cpu.CPUEngine` swaps the backend for a plain
+transformers forward pass and keeps every decision path identical — prompt
+construction, single-token resolution, permutation debiasing and calibration are
+the same code, so CPU and GPU results agree.
+
+```bash
+uv pip install -e ".[cpu]" --index-url https://download.pytorch.org/whl/cpu
+uv run python scripts/run_cpu_demo.py --model Okura66/Kahn1-Qwen2.5-3B
+```
+
+```python
+from sysone.calibrate import CalibratedEngine, TemperatureConfig
+from sysone.cpu import CPUEngine
+
+engine = CPUEngine("Okura66/Kahn1-Qwen2.5-3B", dtype="float32", num_threads=16)
+engine = CalibratedEngine(engine, TemperatureConfig.load("calibration.json"))
+response = engine.evaluate(query, n_permutations=3)
+```
+
+Expect seconds per prompt instead of the tens of milliseconds vLLM reaches on a
+GPU: there is no paged KV cache and no prefix caching. Keep `dtype="float32"` —
+`bfloat16` halves memory (6.2 GB vs 12.3 GB) but runs roughly 7x slower on CPUs
+without AMX, where bf16 matmuls fall back to emulation. Intended for local
+development, CI and debugging, not for production throughput.
+
 ### Verification & Test Suite
 
 ```bash
@@ -259,14 +286,13 @@ On fine-grained ordinal scales like SST-5 (5 sentiment degrees from *Very Negati
 
 ```
 kahn1/
-├── src/sysone/       Core engine package (types, tokens, prompt, debias, calibrate, arena, server)
-│   └── web/          Interactive Battle Arena UI (10x10 Race & Multi-Query Matrix)
+├── src/sysone/       Core engine package (types, tokens, prompt, debias, calibrate, cpu, server)
 ├── training/         Dataset building, augmentations, and LoRA training
 ├── eval/             Metrics, evaluation harness, benchmarks, debiasing tests
-├── scripts/          Utilities (LoRA merge, val set prep, Hugging Face publication, arena launcher)
+├── scripts/          Utilities (LoRA merge, val set prep, HF publication, CPU demo)
 │   └── scratch/      (gitignored) Local scratchpad & temporary investigation scripts
 ├── docs/             PLAYBOOK.md (step-by-step reproduction guide)
-├── tests/            Pytest unit & integration test suite (104/104 passing)
+├── tests/            Pytest unit & integration test suite
 └── reports/          Empirical benchmarks, calibration logs, and evaluation reports
 ```
 

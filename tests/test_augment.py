@@ -180,3 +180,47 @@ def test_augmenting_dataset_iteration(sample_pool):
     item0_call2 = ds[0]
     assert isinstance(item0_call1, AugmentedExample)
     assert isinstance(item0_call2, AugmentedExample)
+
+
+def test_include_other_is_independent_of_label(sample_pool):
+    """The fallback option's presence must not reveal whether it is the answer.
+
+    Regression: include_other was derived as (label == -1), so 'Aucune de ces
+    réponses' only ever appeared when it was correct. The model learned
+    'fallback shown => fallback correct' and collapsed onto it at inference.
+    """
+    rng = random.Random(0)
+    ex = {
+        "state": "some customer message",
+        "kind": "choice",
+        "prompt": "Intent?",
+        "options": ["billing", "delivery", "account"],
+        "label": 0,
+        "source": "unit",
+    }
+    # p_remove_correct=0 keeps every label >= 0, isolating the include_other draw.
+    augs = [
+        augment_choice(ex, sample_pool, rng, p_remove_correct=0.0, p_include_other=0.5)
+        for _ in range(200)
+    ]
+    assert all(a.label >= 0 for a in augs)
+    shown = sum(a.include_other for a in augs)
+    # Both branches must occur: presence carries no information about the label.
+    assert 0 < shown < len(augs)
+
+
+def test_include_other_forced_when_fallback_is_the_answer(sample_pool):
+    """When the correct option was withheld (label -1), the fallback must be shown."""
+    rng = random.Random(1)
+    ex = {
+        "state": "out of scope message",
+        "kind": "choice",
+        "prompt": "Intent?",
+        "options": [],
+        "label": -1,
+        "source": "unit",
+    }
+    for _ in range(20):
+        aug = augment_choice(ex, sample_pool, rng)
+        assert aug.label == -1
+        assert aug.include_other is True

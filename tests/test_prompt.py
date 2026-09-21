@@ -20,7 +20,7 @@ def test_shared_state_prefix_identical():
     p1 = shared_state_prefix(state)
     p2 = shared_state_prefix(state)
     assert p1 == p2
-    assert "## État" in p1
+    assert "## State" in p1
     assert state in p1
 
 
@@ -83,7 +83,7 @@ def test_choice_with_other_appends_option():
     state = "x"
     q = ChoiceQuestion(key="q", prompt="p", options=["a", "b"], allow_other=True)
     spec = build_prompt_spec(state, q)
-    assert "Aucune de ces réponses" in spec.full_text
+    assert "None of these answers" in spec.full_text
     # n_options accounts for the fallback option
     assert spec.n_options == 3
 
@@ -93,5 +93,5 @@ def test_choice_without_other():
     state = "x"
     q = ChoiceQuestion(key="q", prompt="p", options=["a", "b"], allow_other=False)
     spec = build_prompt_spec(state, q)
-    assert "Aucune de ces réponses" not in spec.full_text
+    assert "None of these answers" not in spec.full_text
     assert spec.n_options == 2

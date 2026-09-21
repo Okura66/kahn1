@@ -2,9 +2,9 @@
 
 Canonical prompt structure:
 
-    <system>Tu évalues un état et réponds par une seule lettre.</system>
+    <system>You assess a state and answer with a single letter.</system>
     <user>
-    ## État
+    ## State
     {state}
 
     ## Question
@@ -13,7 +13,7 @@ Canonical prompt structure:
     A. {option_0}
     B. {option_1}
     ...
-    Z. Aucune de ces réponses        <- appended if allow_other=True
+    Z. None of these answers         <- appended if allow_other=True
     </user>
     <assistant>Answer:
 
@@ -36,12 +36,17 @@ from dataclasses import dataclass
 from .types import ChoiceQuestion, NoulQuestion, ScoreQuestion
 
 
-SYSTEM_PROMPT = "Tu évalues un état et réponds par une seule lettre."
+SYSTEM_PROMPT = "You assess a state and answer with a single letter."
 
-# Fallback option label: 'Aucune de ces réponses' (None of these answers).
+# Fallback option label.
 # Appended at the end of the candidate list when allow_other=True for Choice questions.
 # Assigned the final sequential letter and scored as a first-class token candidate.
-OTHER_LABEL_TEXT = "Aucune de ces réponses"
+OTHER_LABEL_TEXT = "None of these answers"
+
+# Default framing for a Noul proposition. Overridable per question so that the
+# bilingual NOUL_TEMPLATES augmentation actually reaches the prompt; previously
+# this string was hardcoded here and every sampled template was discarded.
+NOUL_PROMPT = "Is the following statement true for this state?"
 
 
 def _format_options(options: list[str], offset: int = 0) -> str:
@@ -66,7 +71,7 @@ def shared_state_prefix(state: str) -> str:
     return (
         f"<system>{SYSTEM_PROMPT}</system>\n"
         f"<user>\n"
-        f"## État\n{state}\n"
+        f"## State\n{state}\n"
     )
 
 
@@ -121,7 +126,7 @@ def build_noul_prompt(state: str, question: NoulQuestion) -> str:
     """
     return (
         f"{shared_state_prefix(state)}"
-        f"\n## Question\nLa proposition suivante est-elle vraie pour cet état ?\n"
+        f"\n## Question\n{question.prompt or NOUL_PROMPT}\n"
         f"{question.statement}\n"
         f"</user>\n"
         f"<assistant>Answer:"
@@ -165,7 +170,7 @@ def build_prompt_spec(state: str, question, options: list[str] | None = None, in
         full = build_noul_prompt(state, question)
         return PromptSpec(full_text=full, suffix=full, kind="noul", n_options=2)
     else:
-        raise TypeError(f"Type de question non supporté : {type(question)}")
+        raise TypeError(f"Unsupported question type: {type(question)}")
 
 
 def common_prefix_length(token_ids_lists: list[list[int]]) -> int:

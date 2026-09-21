@@ -33,6 +33,12 @@ gpu = [
     # vLLM is GPU-only and heavy; install separately on the target box.
     "vllm>=0.4",
 ]
+cpu = [
+    # Backend for sysone.cpu.CPUEngine: no vLLM, no CUDA. Install torch from
+    # https://download.pytorch.org/whl/cpu to avoid pulling the CUDA wheels.
+    "torch>=2.1",
+    "transformers>=4.40",
+]
 
 [project.scripts]
 sysone = "sysone.cli:main"

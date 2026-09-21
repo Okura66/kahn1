@@ -34,15 +34,30 @@ def option_labels(n: int) -> list[str]:
     """
     if n > 26:
         raise NotImplementedError(
-            f"Cardinalité {n} > 26 non supportée en Choice direct. "
-            "Utiliser le système à deux étages (engine.evaluate_two_stage)."
+            f"Cardinality {n} > 26 is not supported for direct Choice. "
+            "Use the two-stage router (engine.evaluate_two_stage)."
         )
     if n < 1:
-        raise ValueError("n doit être >= 1")
+        raise ValueError("n must be >= 1")
     return [chr(ord("A") + i) for i in range(n)]
 
 
 NOUL_LABELS = ["yes", "no"]
+
+
+def noul_token_index(label: int) -> int:
+    """Map a Noul dataset label to its index in NOUL_LABELS.
+
+    The two conventions are deliberately opposite and must never be conflated:
+      - dataset label: 1 = yes / entailment, 0 = no  (see training/build_dataset.py)
+      - NOUL_LABELS index: 0 = 'yes', 1 = 'no'
+
+    Indexing NOUL_LABELS with the raw dataset label therefore trains and calibrates
+    on the inverted target. Always route Noul label -> token through this helper.
+    """
+    if label not in (0, 1):
+        raise ValueError(f"Invalid noul label: {label!r} (expected 0 or 1).")
+    return 0 if label == 1 else 1
 
 
 @dataclass
@@ -54,11 +69,11 @@ class ResolvedTokens:
 
     def __post_init__(self):
         if len(self.labels) != len(self.token_ids):
-            raise ValueError("labels et token_ids doivent avoir même longueur.")
+            raise ValueError("labels and token_ids must have the same length.")
         if len(set(self.token_ids)) != len(self.token_ids):
             raise ValueError(
-                f"Collision de tokens : ids={self.token_ids} "
-                f"pour labels={self.labels}."
+                f"Token collision: ids={self.token_ids} "
+                f"for labels={self.labels}."
             )
 
     def id_of(self, label: str) -> int:
@@ -78,45 +93,53 @@ def resolve_option_tokens(tokenizer, prompt_suffix: str, labels: list[str]) -> l
 
     Validates that:
       1. Each label appends exactly one continuation token to the prompt prefix.
-      2. Token IDs are strictly unique across all labels (no collisions).
+      2. All labels resolve under the SAME separator, so their logits are
+         comparable surface forms (all bare, or all whitespace-prefixed).
+      3. Token IDs are strictly unique across all labels (no collisions).
 
     Handles both direct prefix tokenizers (e.g., SentencePiece) and byte-level
     BPE tokenizers where prefix boundary bytes merge unless separated by whitespace (e.g., Qwen, Llama).
     """
     prefix_ids = tokenizer.encode(prompt_suffix, add_special_tokens=False)
+
+    def _continuation(label: str, sep: str) -> list[int] | None:
+        """Continuation tokens added by `sep + label`, or None if the prefix did not survive."""
+        full_ids = tokenizer.encode(prompt_suffix + sep + label, add_special_tokens=False)
+        if full_ids[:len(prefix_ids)] != prefix_ids:
+            return None
+        return full_ids[len(prefix_ids):]
+
+    # The whole label set must resolve under ONE separator. Resolving labels
+    # individually lets a byte-level BPE merge the boundary for some labels only
+    # (e.g. ':no' merges but ':yes' does not), yielding a mix of bare and
+    # space-prefixed tokens. Their logits then live on different surface forms
+    # and comparing them is meaningless — which silently inverted Noul decisions.
     token_ids: list[int] = []
-    for label in labels:
-        full_ids = tokenizer.encode(prompt_suffix + label, add_special_tokens=False)
-        if full_ids[:len(prefix_ids)] == prefix_ids:
-            cont = full_ids[len(prefix_ids):]
-        else:
-            # Handle tokenizers that merge boundary characters across the suffix colon (e.g. ':A').
-            # Test natural whitespace-prefixed tokenization (' A').
-            full_ids_sp = tokenizer.encode(prompt_suffix + " " + label, add_special_tokens=False)
-            if full_ids_sp[:len(prefix_ids)] == prefix_ids:
-                cont = full_ids_sp[len(prefix_ids):]
-            else:
-                cont = []
-
-        if len(cont) == 0:
-            raise ValueError(
-                f"Le label {label!r} n'ajoute aucun token au préfixe "
-                f"(prefix={len(prefix_ids)} ids, full={len(full_ids)}). "
-                f"Le tokenizer a peut-être fusionné le label."
-            )
-        if len(cont) != 1:
-            raise ValueError(
-                f"Le label {label!r} produit {len(cont)} tokens de "
-                f"continuation {cont!r}; attendu exactement 1. "
-                f"Choisir un label plus court (lettre majuscule). "
-                f"Ne JAMAIS scorer les options en toutes lettres."
-            )
-
-        token_ids.append(cont[0])
+    attempts: dict[str, list[list[int] | None]] = {}
+    for sep in ("", " "):
+        conts = [_continuation(label, sep) for label in labels]
+        attempts[sep] = conts
+        if all(c is not None and len(c) == 1 for c in conts):
+            token_ids = [c[0] for c in conts]
+            break
+    else:
+        details = []
+        for sep, conts in attempts.items():
+            for label, cont in zip(labels, conts):
+                if cont is None:
+                    details.append(f"{sep + label!r}: prefix merged")
+                elif len(cont) != 1:
+                    details.append(f"{sep + label!r}: {len(cont)} tokens {cont!r}")
+        raise ValueError(
+            f"Cannot resolve labels {labels!r} to a single token under a shared "
+            f"separator ('' or ' '). Details: {'; '.join(details)}. "
+            f"Use shorter labels (a single uppercase letter). "
+            f"NEVER score options as full text."
+        )
 
     if len(set(token_ids)) != len(token_ids):
         raise ValueError(
-            f"Collision de tokens entre labels {labels!r}: ids={token_ids!r}."
+            f"Token collision between labels {labels!r}: ids={token_ids!r}."
         )
     return token_ids
 

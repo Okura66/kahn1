@@ -171,11 +171,14 @@ def compute_nll(
     max_eval: int = 100,
     seed: int = 42,
     batch_size: int = 4,
-) -> float:
+    per_kind: bool = False,
+) -> float | tuple[float, dict[str, float]]:
     """Compute validation NLL over a deterministic, frozen evaluation set.
 
     Checkpoint selection is strictly driven by negative log-likelihood (log-loss),
-    rather than top-1 classification accuracy.
+    rather than top-1 classification accuracy. The sample is stratified across the
+    three primitives; per_kind additionally returns the breakdown, so a primitive
+    regressing behind a flat overall NLL is visible rather than averaged away.
     """
     import torch
     from torch.utils.data import DataLoader
@@ -184,40 +187,86 @@ def compute_nll(
     model.eval()
     val_rng = random.Random(seed)
 
+    # Stratified across primitives rather than a prefix of the file. A prefix measures
+    # whatever source happens to sit at the top, so checkpoint selection would be driven
+    # by one primitive while the other two drift unwatched.
+    by_kind: dict[str, list[dict]] = {"choice": [], "score": [], "noul": []}
+    for ex in eval_examples:
+        if ex.get("kind") in by_kind:
+            by_kind[ex["kind"]].append(ex)
+
+    present = [k for k, v in by_kind.items() if v]
+    if not present:
+        model.train()
+        return (float("nan"), {}) if per_kind else float("nan")
+
+    per_kind_quota = max(1, max_eval // len(present))
+    selected: list[tuple[str, dict]] = []
+    for k in present:
+        pool_k = list(by_kind[k])
+        random.Random(seed).shuffle(pool_k)
+        selected.extend((k, ex) for ex in pool_k[:per_kind_quota])
+
     # Deterministic generation of (prompt, label) pairs to eliminate sampling noise
     val_items: list[tuple[str, int]] = []
-    for ex in eval_examples[:max_eval]:
+    val_kinds: list[str] = []
+    for kind, ex in selected:
         try:
             aug = augment(ex, pool, val_rng)
             item = build_prompt_for_training(aug, tokenizer)
             val_items.append(item)
+            val_kinds.append(kind)
         except Exception:
             continue
 
     if not val_items:
         model.train()
-        return float("nan")
+        return (float("nan"), {}) if per_kind else float("nan")
 
     val_loader = DataLoader(
-        val_items,
+        list(zip(val_items, val_kinds)),
         batch_size=batch_size,
         shuffle=False,
-        collate_fn=lambda b: collate_fn(b, tokenizer),
+        collate_fn=lambda b: (collate_fn([x[0] for x in b], tokenizer),
+                              [x[1] for x in b]),
     )
 
     total_loss = 0.0
     total_tokens = 0
+    kind_loss: dict[str, float] = {}
+    kind_n: dict[str, int] = {}
     with torch.no_grad():
-        for batch in val_loader:
+        for batch, kinds in val_loader:
             batch = {k: v.to(model.device) for k, v in batch.items()}
             out = model(**batch)
             n_active = (batch["labels"] != -100).sum().item()
             if math.isfinite(out.loss.item()):
                 total_loss += out.loss.item() * n_active
                 total_tokens += n_active
+                # One target token per instance, so the batch mean applies uniformly.
+                for k in kinds:
+                    kind_loss[k] = kind_loss.get(k, 0.0) + out.loss.item()
+                    kind_n[k] = kind_n.get(k, 0) + 1
 
     model.train()
-    return total_loss / max(total_tokens, 1)
+    overall = total_loss / max(total_tokens, 1)
+    if not per_kind:
+        return overall
+    return overall, {k: kind_loss[k] / kind_n[k] for k in sorted(kind_loss) if kind_n[k]}
+
+
+def _fmt_by_kind(by_kind: dict[str, float],
+                 baseline: dict[str, float] | None = None) -> str:
+    """Render the per-primitive NLL breakdown, with the delta against step 0 when known."""
+    if not by_kind:
+        return "n/a"
+    parts = []
+    for k, v in sorted(by_kind.items()):
+        if baseline and k in baseline:
+            parts.append(f"{k}={v:.4f} ({v - baseline[k]:+.4f})")
+        else:
+            parts.append(f"{k}={v:.4f}")
+    return "  ".join(parts)
 
 
 def sample_stratified_mixture(
@@ -357,9 +406,15 @@ def train(
     # Baseline pre-training evaluation
     print(f"[train] Initial evaluation (step 0) on {eval_samples} reserved instances...")
     t0_val = time.time()
-    init_val_nll = compute_nll(model, eval_examples, tokenizer, pool, max_eval=eval_samples, seed=seed)
+    init_val_nll, init_by_kind = compute_nll(
+        model, eval_examples, tokenizer, pool,
+        max_eval=eval_samples, seed=seed, per_kind=True,
+    )
     print(f"[train] Initial VAL NLL (step 0): {init_val_nll:.4f} (computed in {time.time() - t0_val:.1f}s)")
-    metrics_history.append({"step": 0, "val_nll": init_val_nll, "train_loss": None, "lr": 0.0})
+    print(f"[train]   per primitive: {_fmt_by_kind(init_by_kind)}")
+    metrics_history.append({"step": 0, "val_nll": init_val_nll,
+                            "val_nll_by_kind": init_by_kind,
+                            "train_loss": None, "lr": 0.0})
 
     step = 0
     best_val_nll = init_val_nll
@@ -407,17 +462,19 @@ def train(
                     )
 
                 if step % val_every == 0:
-                    val_nll = compute_nll(
+                    val_nll, val_by_kind = compute_nll(
                         model, eval_examples, tokenizer, pool,
-                        max_eval=eval_samples, seed=seed,
+                        max_eval=eval_samples, seed=seed, per_kind=True,
                     )
                     delta_vs_init = val_nll - init_val_nll
                     delta_str = f"({delta_vs_init:+.4f} vs step 0)"
                     print(f"[train] >>> VAL NLL @ step {step}: {val_nll:.4f} {delta_str}")
+                    print(f"[train]     per primitive: {_fmt_by_kind(val_by_kind, init_by_kind)}")
 
                     metrics_entry = {
                         "step": step,
                         "val_nll": val_nll,
+                        "val_nll_by_kind": val_by_kind,
                         "train_loss": current_loss,
                         "lr": current_lr,
                     }
@@ -445,14 +502,15 @@ def train(
 
     # Final evaluation
     print("[train] Running final validation evaluation...")
-    final_val_nll = compute_nll(
+    final_val_nll, final_by_kind = compute_nll(
         model, eval_examples, tokenizer, pool,
-        max_eval=eval_samples, seed=seed,
+        max_eval=eval_samples, seed=seed, per_kind=True,
     )
     print(
         f"[train] Final VAL NLL: {final_val_nll:.4f} "
         f"(Initial: {init_val_nll:.4f}, Best: {best_val_nll:.4f})"
     )
+    print(f"[train]   per primitive: {_fmt_by_kind(final_by_kind, init_by_kind)}")
 
     final_path = out_dir_p / "final"
     model.save_pretrained(str(final_path))

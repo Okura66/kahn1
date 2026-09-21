@@ -1,18 +1,20 @@
-"""Build a labelled race set from the held-out evaluation datasets.
+"""Build a labelled race set by drawing from the reserved evaluation split.
 
-Draws items from the same public test splits the model card reports on, plus
-BoolQ for the Noul primitive, and writes them with their ground truth so the
-race can score both engines for real instead of comparing them to each other.
+Items are sampled from data/eval.jsonl, the same held-out file the benchmark reports
+on, so the race measures the engine on exactly the distribution the numbers describe.
+Every eval source is reserved: none of them appears in the training mixture (the
+isolation is enforced in training/build_dataset.py).
 
-    banking77 (choice, 77 classes) -> mteb/banking77 test      (3076 rows)
-    sst5      (score, 5 levels)    -> SetFit/sst5 test         (2210 rows)
-    boolq     (noul, binary)       -> google/boolq validation  (3270 rows)
+    choice -> banking77 (77 classes), massive (60 classes)
+    score  -> sst5 (5 ordinal levels)
+    noul   -> rte, scitail (binary entailment)
 
-Banking77 carries 77 classes while direct Choice evaluation caps at 26, so the
-option list is deterministically sub-sampled per item, always keeping the gold
-option. Both engines receive the identical list.
+Nine items per primitive by default, drawn with a fixed seed so the set is
+reproducible. Choice sources carry far more classes than direct Choice evaluation
+supports, so the option list is deterministically sub-sampled per item, always
+keeping the gold option. Both engines receive the identical list.
 
-    python scripts/build_race_set.py --total 27 --out data/race_set.json
+    python scripts/build_race_set.py --per-kind 9 --out data/race_set.json
 """
 
 from __future__ import annotations
@@ -29,9 +31,9 @@ for _p in (_ROOT, _ROOT / "src"):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
-CHOICE_PROMPT = "What is the customer's intent?"
-SCORE_PROMPT = "Rate the sentiment of this review:"
-SST5_LEVELS = ["very negative", "negative", "neutral", "positive", "very positive"]
+KINDS = ("choice", "score", "noul")
+# BoolQ-style passages run long; the race panel shows one line per item.
+MAX_STATE_CHARS = 900
 
 
 def _rng_for(item_key: str) -> random.Random:
@@ -40,89 +42,108 @@ def _rng_for(item_key: str) -> random.Random:
     return random.Random(seed)
 
 
-def build_choice(n: int, n_options: int) -> list[dict]:
-    from datasets import load_dataset
-
-    ds = load_dataset("mteb/banking77", split="test")
-    all_labels = sorted({row["label_text"] for row in ds})
-    picks = _rng_for("banking77-order").sample(range(len(ds)), n)
-
-    items = []
-    for i in picks:
-        row = ds[i]
-        gold = row["label_text"]
-        rng = _rng_for(f"banking77:{i}")
-        distractors = [l for l in all_labels if l != gold]
-        options = rng.sample(distractors, n_options - 1) + [gold]
-        rng.shuffle(options)
-        items.append({
-            "id": f"banking77:{i}",
-            "source": "banking77",
-            "kind": "choice",
-            "state": row["text"],
-            "prompt": CHOICE_PROMPT,
-            "options": options,
-            "gold": gold,
-        })
-    return items
+def load_eval(path: Path) -> list[dict]:
+    if not path.exists():
+        raise FileNotFoundError(
+            f"No evaluation set at {path}. Build one first: "
+            f"python training/build_dataset.py --eval-only --eval-out {path}"
+        )
+    rows = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            rows.append(json.loads(line))
+    return rows
 
 
-def build_score(n: int) -> list[dict]:
-    from datasets import load_dataset
+def to_choice(ex: dict, idx: int, n_options: int) -> dict:
+    """Sub-sample the option list around the gold option, then permute it."""
+    options = ex["options"]
+    gold = options[ex["label"]]
+    rng = _rng_for(f"{ex['source']}:{idx}")
+    distractors = [o for o in options if o != gold]
+    keep = min(max(n_options, 2), len(options)) - 1
+    shown = rng.sample(distractors, keep) + [gold]
+    rng.shuffle(shown)
+    return {
+        "id": f"{ex['source']}:{idx}",
+        "source": ex["source"],
+        "kind": "choice",
+        "state": ex["state"][:MAX_STATE_CHARS],
+        "prompt": ex["prompt"],
+        "options": shown,
+        "gold": gold,
+    }
 
-    ds = load_dataset("SetFit/sst5", split="test")
-    picks = _rng_for("sst5-order").sample(range(len(ds)), n)
-    return [{
-        "id": f"sst5:{i}",
-        "source": "sst5",
+
+def to_score(ex: dict, idx: int) -> dict:
+    return {
+        "id": f"{ex['source']}:{idx}",
+        "source": ex["source"],
         "kind": "score",
-        "state": ds[i]["text"],
-        "prompt": SCORE_PROMPT,
-        "levels": SST5_LEVELS,
-        "gold": SST5_LEVELS[int(ds[i]["label"])],
-    } for i in picks]
+        "state": ex["state"][:MAX_STATE_CHARS],
+        "prompt": ex["prompt"],
+        "levels": ex["levels"],
+        "gold": ex["levels"][ex["label"]],
+    }
 
 
-def build_noul(n: int) -> list[dict]:
-    from datasets import load_dataset
-
-    ds = load_dataset("google/boolq", split="validation")
-    picks = _rng_for("boolq-order").sample(range(len(ds)), n)
-    items = []
-    for i in picks:
-        row = ds[i]
-        statement = row["question"].strip()
-        statement = statement[0].upper() + statement[1:] + "?"
-        items.append({
-            "id": f"boolq:{i}",
-            "source": "boolq",
-            "kind": "noul",
-            # BoolQ passages run long; the race panel shows one line per item.
-            "state": row["passage"][:900],
-            "statement": statement,
-            "gold": bool(row["answer"]),
-        })
-    return items
+def to_noul(ex: dict, idx: int) -> dict:
+    statement = ex["statement"].strip()
+    if statement:
+        statement = statement[0].upper() + statement[1:]
+    return {
+        "id": f"{ex['source']}:{idx}",
+        "source": ex["source"],
+        "kind": "noul",
+        "state": ex["state"][:MAX_STATE_CHARS],
+        "statement": statement,
+        # Dataset label 1 == yes / entailment.
+        "gold": bool(ex["label"]),
+    }
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--total", type=int, default=27,
-                    help="total items, split across the three primitives")
+    ap.add_argument("--per-kind", type=int, default=9,
+                    help="items drawn per primitive (choice, score, noul)")
     ap.add_argument("--options", type=int, default=8,
-                    help="options shown per Choice item (banking77 has 77 classes)")
+                    help="options shown per Choice item (banking77 carries 77 classes)")
+    ap.add_argument("--eval", default="data/eval.jsonl",
+                    help="reserved evaluation split to draw from")
+    ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--out", default="data/race_set.json")
     args = ap.parse_args()
 
-    n_choice = args.total // 3
-    n_score = args.total // 3
-    n_noul = args.total - n_choice - n_score
+    rows = load_eval(Path(args.eval))
+    by_kind: dict[str, list[tuple[int, dict]]] = {k: [] for k in KINDS}
+    for i, ex in enumerate(rows):
+        if ex.get("kind") in by_kind:
+            by_kind[ex["kind"]].append((i, ex))
 
-    items = build_choice(n_choice, args.options)
-    items += build_score(n_score)
-    items += build_noul(n_noul)
+    empty = [k for k in KINDS if not by_kind[k]]
+    if empty:
+        raise RuntimeError(
+            f"{args.eval} carries no {', '.join(empty)} example, so the race cannot "
+            f"score that primitive. Rebuild it: python training/build_dataset.py --eval-only"
+        )
+
+    items: list[dict] = []
+    for kind in KINDS:
+        pool = by_kind[kind]
+        n = min(args.per_kind, len(pool))
+        if n < args.per_kind:
+            print(f"[race] only {n} {kind} items available (asked for {args.per_kind})")
+        picks = random.Random(f"{args.seed}:{kind}").sample(pool, n)
+        for idx, ex in picks:
+            if kind == "choice":
+                items.append(to_choice(ex, idx, args.options))
+            elif kind == "score":
+                items.append(to_score(ex, idx))
+            else:
+                items.append(to_noul(ex, idx))
+
     # Interleave so the race panel does not show three homogeneous blocks.
-    _rng_for(f"race-order-{args.total}").shuffle(items)
+    random.Random(args.seed).shuffle(items)
 
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -130,10 +151,13 @@ def main() -> None:
                    encoding="utf-8")
 
     counts: dict[str, int] = {}
+    sources: dict[str, int] = {}
     for it in items:
         counts[it["kind"]] = counts.get(it["kind"], 0) + 1
+        sources[it["source"]] = sources.get(it["source"], 0) + 1
     print(f"[race] wrote {len(items)} items to {out}: " +
           ", ".join(f"{k}={v}" for k, v in sorted(counts.items())))
+    print(f"[race] sources: " + ", ".join(f"{k}={v}" for k, v in sorted(sources.items())))
 
 
 if __name__ == "__main__":

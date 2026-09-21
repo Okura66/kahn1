@@ -8,7 +8,7 @@ in the prompt (analogous to taxonomic text encoding for open-vocabulary runtime 
 Six core transformations:
   1. Candidate option permutation (with exact label index remapping).
   2. Option cardinality sub-sampling: correct answer plus random subset
-     (cardinality drawn between 2 and 16).
+     (cardinality drawn between 2 and 25, i.e. up to 26 letters with the fallback).
   3. Cross-dataset distractor injection from a unified distractor pool.
   4. Correct answer omission mapping to the fallback 'other' label (-1)
      (5-10% of training instances) to ensure calibration of the rejection class.
@@ -89,10 +89,45 @@ SCORE_TEMPLATES = [
     ("How would you rate this item?", "EN"),
 ]
 
-NOUL_TEMPLATES = [
-    ("La proposition suivante est-elle vraie pour cet état ?", "FR"),
-    ("Is the following statement true for this state?", "EN"),
-]
+# Noul templates are grouped by the FORM of the ex["statement"] field, because the
+# sources are not interchangeable: mnli/anli/snli provide declarative hypotheses,
+# boolq provides yes/no questions, qnli provides wh-questions whose label means
+# "does the state contain the answer". A single "is this statement true" template
+# is semantically wrong for 40% of the mixture (see build_dataset._ex_noul).
+#
+# Each entry is (prompt, lang, flip). flip=True marks a negative-polarity framing
+# ("is it false?", "does the state contradict it?"): the training label is inverted
+# to match. This is the Noul analogue of Score's scale reversal — the answer cannot
+# be predicted without reading the prompt, so a polarity inversion like the one
+# that shipped in the first checkpoint would surface immediately at validation.
+NOUL_TEMPLATES = {
+    "statement": [
+        ("La proposition suivante est-elle vraie pour cet état ?", "FR", False),
+        ("Is the following statement true for this state?", "EN", False),
+        ("Cette affirmation est-elle exacte au vu de l'état ?", "FR", False),
+        ("Does the state support the following claim?", "EN", False),
+        ("L'état permet-il d'affirmer la proposition suivante ?", "FR", False),
+        ("Is the following claim consistent with the state?", "EN", False),
+        ("La proposition suivante est-elle fausse pour cet état ?", "FR", True),
+        ("Is the following statement false for this state?", "EN", True),
+        ("L'état contredit-il la proposition suivante ?", "FR", True),
+        ("Does the state contradict the following claim?", "EN", True),
+    ],
+    "yesno_question": [
+        ("La réponse à la question suivante est-elle « oui » ?", "FR", False),
+        ("Is the answer to the following question yes?", "EN", False),
+        ("D'après l'état, répond-on oui à la question suivante ?", "FR", False),
+        ("Based on the state, is the following question answered with yes?", "EN", False),
+        ("La réponse à la question suivante est-elle « non » ?", "FR", True),
+        ("Is the answer to the following question no?", "EN", True),
+    ],
+    "answerable_question": [
+        ("L'état contient-il la réponse à la question suivante ?", "FR", False),
+        ("Does the state contain the answer to the following question?", "EN", False),
+        ("Peut-on répondre à la question suivante à partir de cet état ?", "FR", False),
+        ("Can the following question be answered from this state?", "EN", False),
+    ],
+}
 
 
 # ---------------------------------------------------------------------------
@@ -126,7 +161,9 @@ def augment_choice(
     rng: random.Random,
     p_remove_correct: float = 0.07,
     min_options: int = 2,
-    max_options: int = 16,
+    # 25 + the fallback option = 26, the direct-evaluation ceiling: every letter A-Z
+    # is a training target. The previous cap of 16 left Q..Z tokens never trained.
+    max_options: int = 25,
     p_include_other: float = 0.5,
 ) -> AugmentedExample:
     """Apply dynamic augmentation transformations to a Choice task instance."""
@@ -217,12 +254,21 @@ def augment_score(ex: dict, rng: random.Random, reverse_prob: float = 0.0) -> Au
 
 
 def augment_noul(ex: dict, rng: random.Random) -> AugmentedExample:
-    """Augment a binary Noul instance with template and language diversification."""
-    prompt, lang = rng.choice(NOUL_TEMPLATES)
+    """Augment a binary Noul instance with form-aware templates and polarity flips.
+
+    The template family follows the statement's form (declarative hypothesis, yes/no
+    question, or answerability question); negative-polarity templates invert the label.
+    """
+    form = ex.get("form", "statement")
+    templates = NOUL_TEMPLATES.get(form, NOUL_TEMPLATES["statement"])
+    prompt, lang, flip = rng.choice(templates)
+    label = ex["label"]
+    if flip:
+        label = 1 - label
     return AugmentedExample(
         state=ex["state"], kind="noul", prompt=prompt,
         options=[], levels=[], statement=ex["statement"],
-        label=ex["label"], lang=lang, source=ex["source"],
+        label=label, lang=lang, source=ex["source"],
     )
 
 

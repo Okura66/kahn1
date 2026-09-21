@@ -2,7 +2,7 @@
 
 Validates the required transformations:
 1. Permutation of candidate option order with exact label remapping.
-2. Option cardinality sub-sampling (2 to 16 options).
+2. Option cardinality sub-sampling (2 to 25 options, 26 letters with the fallback).
 3. Distractor injection from the shared distractor pool.
 4. Random omission of correct answer mapping to fallback 'other' label (-1).
 5. Template framing variability (bilingual FR and EN support).
@@ -151,6 +151,74 @@ def test_augment_noul():
     assert aug.statement == "Il fait beau."
     assert aug.label == 1
     assert aug.lang in {"FR", "EN"}
+
+
+def test_augment_noul_flip_templates_invert_label():
+    """Negative-polarity templates ('is it false?') must invert the training label.
+
+    This is the Noul analogue of Score's scale reversal: the target cannot be
+    predicted without reading the prompt, so a polarity inversion in the pipeline
+    surfaces at validation instead of shipping.
+    """
+    ex = {
+        "state": "Le ciel est complètement bleu sans aucun nuage.",
+        "kind": "noul",
+        "statement": "Il fait beau.",
+        "label": 1,
+        "source": "mnli",
+    }
+    seen = set()
+    for seed in range(200):
+        aug = augment_noul(ex, random.Random(seed))
+        flip = next(f for p, _, f in NOUL_TEMPLATES["statement"] if p == aug.prompt)
+        assert aug.label == (0 if flip else 1)
+        seen.add(flip)
+    # Both polarities must actually be sampled.
+    assert seen == {True, False}
+
+
+def test_augment_noul_form_selects_template_family():
+    """Question-form sources must draw from their own template family.
+
+    boolq/qnli supply questions, not statements; framing them with 'is the following
+    statement true' mismatches 40% of the Noul mixture.
+    """
+    base = {"state": "Some passage.", "kind": "noul", "label": 1, "source": "x"}
+    for form, family in [("yesno_question", NOUL_TEMPLATES["yesno_question"]),
+                         ("answerable_question", NOUL_TEMPLATES["answerable_question"]),
+                         ("statement", NOUL_TEMPLATES["statement"])]:
+        ex = dict(base, statement="Is water wet?" if "question" in form else "Water is wet.",
+                  form=form)
+        prompts = {p for p, _, _ in family}
+        for seed in range(50):
+            aug = augment_noul(ex, random.Random(seed))
+            assert aug.prompt in prompts, (form, aug.prompt)
+
+
+def test_augment_noul_missing_form_defaults_to_statement():
+    """Rows built before the form field existed must keep the declarative framing."""
+    ex = {"state": "s", "kind": "noul", "statement": "h", "label": 0, "source": "old"}
+    prompts = {p for p, _, _ in NOUL_TEMPLATES["statement"]}
+    for seed in range(30):
+        assert augment_noul(ex, random.Random(seed)).prompt in prompts
+
+
+def test_augment_choice_default_cardinality_covers_all_letters(sample_pool):
+    """Default max_options must be 25: with the fallback that is 26 candidates,
+    so every letter A-Z is a possible training target (Q..Z were never trained
+    under the previous cap of 16)."""
+    # A pool large enough to reach the ceiling.
+    big_pool = DistractorPool(choice_options=[f"opt_{i}" for i in range(40)])
+    ex = {
+        "state": "s", "kind": "choice", "prompt": "p",
+        "options": ["gold"], "label": 0, "source": "unit",
+    }
+    max_seen = 0
+    for seed in range(300):
+        aug = augment_choice(ex, big_pool, random.Random(seed), p_remove_correct=0.0)
+        assert len(aug.options) <= 25
+        max_seen = max(max_seen, len(aug.options))
+    assert max_seen == 25
 
 
 def test_augmenting_dataset_iteration(sample_pool):

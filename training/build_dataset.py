@@ -5,15 +5,21 @@ Downloads Hugging Face datasets and serializes them to the intermediate JSONL sc
     {"state": "...", "kind": "choice", "prompt": "...",
      "options": ["...", "..."], "label": 2, "source": "clinc150"}
 
-Training sources (200k+ instances):
-  Choice : CLINC150 (including out-of-scope), AG News, DBpedia-14, GoEmotions
-  Score  : Yelp Review Full
-  Noul   : MNLI, QNLI, BoolQ, ANLI
+Training sources (300k+ instances):
+  Choice : CLINC150 (including out-of-scope), AG News, DBpedia-14, GoEmotions,
+           legal clause triage (synthetic)
+  Score  : Yelp Review Full (5), Amazon Reviews (5), TweetEval sentiment (3),
+           IMDB (2), medical triage / CSAT (synthetic) — deliberately mixed
+           cardinalities, since `levels` is arbitrary at inference time
+  Noul   : MNLI, SNLI, ANLI (entailment vs contradiction, neutral dropped),
+           QNLI (answerability), BoolQ (yes/no questions) — each balanced 50/50
 
 Reserved evaluation sources:
   Strict invariant: The evaluation split is partitioned at the DATASET LEVEL, not per row.
-  Banking77, MASSIVE, and SST-5 are strictly reserved for zero-shot generalization
-  benchmarking and never appear in training data mixtures.
+  Banking77 and MASSIVE (Choice), SST-5 (Score), RTE and SciTail (Noul) are strictly
+  reserved for zero-shot generalization benchmarking and never appear in training
+  data mixtures. Every primitive the engine answers must have at least one reserved
+  source — build() refuses to write an eval split with a missing primitive.
 
 Usage:
     python training/build_dataset.py --out data/train.jsonl --eval-out data/eval.jsonl --max-per-source 30000
@@ -38,7 +44,10 @@ EVAL_CHOICE_SOURCES = {
 EVAL_SCORE_SOURCES = {
     "sst5_eval",  # 5 unobserved sentence polarity levels (SetFit/sst5)
 }
-EVAL_NOUL_SOURCES: set[str] = set()
+EVAL_NOUL_SOURCES = {
+    "rte_eval",      # GLUE RTE validation: natively binary entailment, no 3-way collapse
+    "scitail_eval",  # SciTail test: science-domain entailment, unobserved domain
+}
 
 # Training dataset registry
 TRAIN_SOURCES = {
@@ -47,11 +56,14 @@ TRAIN_SOURCES = {
     "dbpedia_14",
     "go_emotions",
     "yelp_full",
+    "amazon_reviews",
+    "imdb",
     "tweet_sentiment",
     "medical_triage",
     "legal_triage",
     "csat_sentiment",
     "mnli",
+    "snli",
     "boolq",
     "qnli",
     "anli",
@@ -62,10 +74,20 @@ TRAIN_SOURCES = {
 # Primitive conversion helpers
 # ---------------------------------------------------------------------------
 
+# Unicode line separators that json.dumps(ensure_ascii=False) writes RAW: NEL, LS, PS.
+# str.splitlines() breaks a JSONL record at these, so any reader using
+# read_text().splitlines() sees an unterminated JSON string. Normalized to spaces.
+_LINE_SEPARATORS = str.maketrans({"\x85": " ", " ": " ", " ": " "})
+
+
+def _clean_text(text: str) -> str:
+    return text.translate(_LINE_SEPARATORS)
+
+
 def _ex_choice(state: str, prompt: str, options: list[str], label: int, source: str) -> dict:
     """Create a typed Choice instance. label = -1 indicates absence of valid options ('other')."""
     return {
-        "state": state,
+        "state": _clean_text(state),
         "kind": "choice",
         "prompt": prompt,
         "options": options,
@@ -77,7 +99,7 @@ def _ex_choice(state: str, prompt: str, options: list[str], label: int, source: 
 def _ex_score(state: str, prompt: str, levels: list[str], label: int, source: str) -> dict:
     """Create a typed Score instance (invariant natural semantic ordering)."""
     return {
-        "state": state,
+        "state": _clean_text(state),
         "kind": "score",
         "prompt": prompt,
         "levels": levels,
@@ -86,15 +108,41 @@ def _ex_score(state: str, prompt: str, levels: list[str], label: int, source: st
     }
 
 
-def _ex_noul(state: str, statement: str, label: int, source: str) -> dict:
-    """Create a typed Noul instance (binary: 1=yes/entailment, 0=no/contradiction/neutral)."""
+def _ex_noul(state: str, statement: str, label: int, source: str,
+             form: str = "statement") -> dict:
+    """Create a typed Noul instance (binary: 1=yes/entailment, 0=no/contradiction).
+
+    form describes what the statement field actually is, so augmentation can frame
+    the prompt truthfully (see training/augment.py NOUL_TEMPLATES):
+      - "statement": a declarative hypothesis (mnli, anli, snli, rte, scitail)
+      - "yesno_question": a question whose answer is yes/no (boolq)
+      - "answerable_question": a wh-question; label means the state answers it (qnli)
+    """
     return {
-        "state": state,
+        "state": _clean_text(state),
         "kind": "noul",
-        "statement": statement,
+        "statement": _clean_text(statement),
         "label": label,
         "source": source,
+        "form": form,
     }
+
+
+def _balance_noul(examples: list[dict], seed: int = 0) -> list[dict]:
+    """Subsample the majority class of a Noul source down to a 50/50 label balance.
+
+    The 3-way NLI sources collapse to binary at roughly 33% yes; left as-is the
+    mixture teaches a 'no' prior (40.6% yes overall in the first released training set).
+    """
+    rng = random.Random(seed)
+    pos = [e for e in examples if e["label"] == 1]
+    neg = [e for e in examples if e["label"] == 0]
+    n = min(len(pos), len(neg))
+    rng.shuffle(pos)
+    rng.shuffle(neg)
+    out = pos[:n] + neg[:n]
+    rng.shuffle(out)
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -229,12 +277,14 @@ def load_yelp_full(anti_midpoint: bool = True, max_total: int = 20000) -> list[d
 
 
 def load_tweet_sentiment(max_per_class: int = 4000) -> list[dict]:
-    """Tweet Sentiment Extraction: 3 polarity classes (negative, neutral, positive).
+    """TweetEval sentiment: 3 polarity classes (negative, neutral, positive).
 
     Applies anti-midpoint weighting: 40% negative, 20% neutral, 40% positive.
+    (cardiffnlp/tweet_eval: the previously referenced SetFit mirror stopped resolving,
+    which silently removed this source from the first released training mixture.)
     """
     from datasets import load_dataset
-    ds = load_dataset("SetFit/tweet_sentiment_extraction")
+    ds = load_dataset("cardiffnlp/tweet_eval", "sentiment")
     levels = ["négatif", "neutre", "positif"]
     # label mapping: 0=negative, 1=neutral, 2=positive
     quotas = {0: max_per_class, 1: max_per_class // 2, 2: max_per_class}
@@ -252,6 +302,62 @@ def load_tweet_sentiment(max_per_class: int = 4000) -> list[dict]:
             ))
             counts[lbl] += 1
         if all(counts[k] >= quotas[k] for k in quotas):
+            break
+    return examples
+
+
+def load_amazon_reviews(max_total: int = 20000) -> list[dict]:
+    """Amazon product reviews (English): 5 ordinal star levels, balanced per class.
+
+    Second large 5-level source next to Yelp, in a different register (product
+    reviews vs venue reviews) and with English level names next to Yelp's French ones.
+    """
+    from datasets import load_dataset
+    ds = load_dataset("SetFit/amazon_reviews_multi_en")
+    levels = ["1 star", "2 stars", "3 stars", "4 stars", "5 stars"]
+    per_class = max_total // 5
+    counts = {i: 0 for i in range(5)}
+    examples = []
+    for row in ds["train"]:
+        lbl = row["label"]
+        if counts.get(lbl, per_class) < per_class:
+            examples.append(_ex_score(
+                state=row["text"],
+                prompt="How many stars does this review give?",
+                levels=levels,
+                label=lbl,
+                source="amazon_reviews",
+            ))
+            counts[lbl] += 1
+        if all(c >= per_class for c in counts.values()):
+            break
+    return examples
+
+
+def load_imdb(max_total: int = 15000) -> list[dict]:
+    """IMDB movie reviews: 2 ordinal polarity levels.
+
+    The only 2-level Score source: levels is arbitrary at inference time, but every
+    other ordinal source carries 3 to 5 levels, so binary scales were never trained.
+    """
+    from datasets import load_dataset
+    ds = load_dataset("stanfordnlp/imdb")
+    levels = ["negative", "positive"]
+    per_class = max_total // 2
+    counts = {0: 0, 1: 0}
+    examples = []
+    for row in ds["train"]:
+        lbl = row["label"]
+        if counts.get(lbl, per_class) < per_class:
+            examples.append(_ex_score(
+                state=row["text"][:1500],
+                prompt="What is the overall sentiment of this review?",
+                levels=levels,
+                label=lbl,
+                source="imdb",
+            ))
+            counts[lbl] += 1
+        if all(c >= per_class for c in counts.values()):
             break
     return examples
 
@@ -388,18 +494,46 @@ def load_customer_satisfaction_csat() -> list[dict]:
 
 
 def load_mnli() -> list[dict]:
-    """MNLI: premise/hypothesis textual inference (entailment = 1, other = 0)."""
+    """MNLI: premise/hypothesis inference, entailment (1) vs contradiction (0).
+
+    Neutral rows (label 1) are dropped rather than collapsed into 'no': training a
+    hard, fully-confident 'no' on hypotheses the premise neither supports nor refutes
+    teaches certainty on genuinely uncertain inputs — the opposite of calibration.
+    """
     from datasets import load_dataset
     ds = load_dataset("nyu-mll/glue", "mnli")
     examples = []
     for row in ds["train"]:
+        if row["label"] == 1:  # neutral
+            continue
         examples.append(_ex_noul(
             state=row["premise"],
             statement=row["hypothesis"],
             label=1 if row["label"] == 0 else 0,
             source="mnli",
         ))
-    return examples
+    return _balance_noul(examples)
+
+
+def load_snli() -> list[dict]:
+    """SNLI: image-caption premise/hypothesis pairs, entailment vs contradiction.
+
+    Neutral rows dropped for the same reason as MNLI. Caption domain, disjoint from
+    every other Noul source (news/wiki/fiction) and from the SciTail eval domain.
+    """
+    from datasets import load_dataset
+    ds = load_dataset("stanfordnlp/snli")
+    examples = []
+    for row in ds["train"]:
+        if row["label"] != 0 and row["label"] != 2:  # keep entailment/contradiction; -1 = unlabelled
+            continue
+        examples.append(_ex_noul(
+            state=row["premise"],
+            statement=row["hypothesis"],
+            label=1 if row["label"] == 0 else 0,
+            source="snli",
+        ))
+    return _balance_noul(examples)
 
 
 def load_boolq() -> list[dict]:
@@ -413,12 +547,13 @@ def load_boolq() -> list[dict]:
             statement=row["question"],
             label=1 if row["answer"] else 0,
             source="boolq",
+            form="yesno_question",
         ))
-    return examples
+    return _balance_noul(examples)
 
 
 def load_qnli() -> list[dict]:
-    """QNLI: question/context sentence entailment (0=entailment, 1=not_entailment)."""
+    """QNLI: does the context sentence answer the question? (0=entailment, 1=not)."""
     from datasets import load_dataset
     ds = load_dataset("nyu-mll/glue", "qnli")
     examples = []
@@ -428,25 +563,28 @@ def load_qnli() -> list[dict]:
             statement=row["question"],
             label=1 if row["label"] == 0 else 0,
             source="qnli",
+            form="answerable_question",
         ))
-    return examples
+    return _balance_noul(examples)
 
 
 def load_anli() -> list[dict]:
-    """ANLI: Adversarial NLI benchmark rounds (Rounds 1, 2, 3)."""
+    """ANLI rounds 1-3: adversarial NLI, entailment vs contradiction (neutral dropped)."""
     from datasets import load_dataset
     ds = load_dataset("facebook/anli")
     examples = []
     for split in ["train_r1", "train_r2", "train_r3"]:
         if split in ds:
             for row in ds[split]:
+                if row["label"] == 1:  # neutral
+                    continue
                 examples.append(_ex_noul(
                     state=row["premise"],
                     statement=row["hypothesis"],
                     label=1 if row["label"] == 0 else 0,
                     source="anli",
                 ))
-    return examples
+    return _balance_noul(examples)
 
 
 # ---------------------------------------------------------------------------
@@ -508,6 +646,45 @@ def load_sst5_eval() -> list[dict]:
     return examples
 
 
+def load_rte_eval() -> list[dict]:
+    """RTE reserved for evaluation (binary entailment over an unobserved corpus).
+
+    RTE is labelled entailment / not_entailment at the source, so unlike the MNLI and
+    ANLI training sources it needs no 3-way collapse and stays near 50/50.
+    """
+    from datasets import load_dataset
+    ds = load_dataset("nyu-mll/glue", "rte")
+    examples = []
+    for row in ds["validation"]:
+        # GLUE RTE: 0 = entailment, 1 = not_entailment.
+        examples.append(_ex_noul(
+            state=row["sentence1"],
+            statement=row["sentence2"],
+            label=1 if row["label"] == 0 else 0,
+            source="rte_eval",
+        ))
+    return examples
+
+
+def load_scitail_eval() -> list[dict]:
+    """SciTail reserved for evaluation (science-domain entailment, unobserved domain).
+
+    Entailment pairs built from science exam questions: a domain none of the training
+    Noul sources (qnli, mnli, boolq, anli) covers.
+    """
+    from datasets import load_dataset
+    ds = load_dataset("allenai/scitail", "snli_format")
+    examples = []
+    for row in ds["test"]:
+        examples.append(_ex_noul(
+            state=row["sentence1"],
+            statement=row["sentence2"],
+            label=1 if row["gold_label"] == "entailment" else 0,
+            source="scitail_eval",
+        ))
+    return examples
+
+
 # ---------------------------------------------------------------------------
 # Unified Construction Pipeline
 # ---------------------------------------------------------------------------
@@ -517,8 +694,13 @@ def build(
     eval_out: str,
     max_per_source: int | None = 30000,
     seed: int = 42,
+    eval_only: bool = False,
 ) -> tuple[int, int]:
-    """Build train.jsonl and eval.jsonl dataset files with strict source isolation."""
+    """Build train.jsonl and eval.jsonl dataset files with strict source isolation.
+
+    eval_only rebuilds just the evaluation file, leaving an existing train.jsonl
+    untouched: the eval registry gains sources more often than the training mixture does.
+    """
     rng = random.Random(seed)
     train: list[dict] = []
     eval_: list[dict] = []
@@ -535,11 +717,14 @@ def build(
         "dbpedia_14": load_dbpedia,
         "go_emotions": load_go_emotions,
         "yelp_full": load_yelp_full,
+        "amazon_reviews": load_amazon_reviews,
+        "imdb": load_imdb,
         "tweet_sentiment": load_tweet_sentiment,
         "medical_triage": load_enterprise_medical_triage,
         "legal_triage": load_enterprise_legal_triage,
         "csat_sentiment": load_customer_satisfaction_csat,
         "mnli": load_mnli,
+        "snli": load_snli,
         "boolq": load_boolq,
         "qnli": load_qnli,
         "anli": load_anli,
@@ -549,54 +734,78 @@ def build(
         "banking77": load_banking77_eval,
         "massive": load_massive_eval,
         "sst5_eval": load_sst5_eval,
+        "rte_eval": load_rte_eval,
+        "scitail_eval": load_scitail_eval,
     }
 
+    if eval_only:
+        train_loaders = {}
+
     print("[build] Loading training sources...")
+    # Deliberately fatal: a swallowed loader failure silently shrinks the mixture
+    # (the first released training set lost tweet_sentiment and the synthetic
+    # enterprise sources this way, with only a log line to show for it).
     for name, fn in train_loaders.items():
-        try:
-            exs = fn()
-            if max_per_source and len(exs) > max_per_source:
-                rng.shuffle(exs)
-                exs = exs[:max_per_source]
-            train.extend(exs)
-            print(f"  + TRAIN : {name} -> {len(exs)} instances")
-        except Exception as e:
-            print(f"  ! TRAIN failure for {name}: {e}")
+        exs = fn()
+        if max_per_source and len(exs) > max_per_source:
+            rng.shuffle(exs)
+            exs = exs[:max_per_source]
+        train.extend(exs)
+        print(f"  + TRAIN : {name} -> {len(exs)} instances")
 
     print("\n[build] Loading reserved evaluation sources...")
     for name, fn in eval_loaders.items():
-        try:
-            exs = fn()
-            eval_.extend(exs)
-            print(f"  + EVAL RESERVED : {name} -> {len(exs)} instances")
-        except Exception as e:
-            print(f"  ! EVAL failure for {name}: {e}")
+        # Deliberately fatal, unlike the training loop: a silently skipped eval source
+        # produces a benchmark with a whole primitive missing, which is how the
+        # published numbers came to cover 0 Noul examples.
+        exs = fn()
+        eval_.extend(exs)
+        print(f"  + EVAL RESERVED : {name} -> {len(exs)} instances")
 
-    # Strict empirical leak check
-    train_srcs = {ex["source"] for ex in train}
+    missing = {"choice", "score", "noul"} - {ex["kind"] for ex in eval_}
+    if missing:
+        raise RuntimeError(
+            f"Evaluation set covers no {sorted(missing)} example. Every primitive the "
+            f"engine answers must be measured; add a reserved source for it."
+        )
+
+    # Strict empirical leak check. Compared against the declared training registry
+    # rather than the loaded instances, so it still holds under eval_only.
     eval_srcs = {ex["source"] for ex in eval_}
-    leak = train_srcs.intersection(eval_srcs)
+    leak = (TRAIN_SOURCES | {ex["source"] for ex in train}).intersection(eval_srcs)
     if leak:
         raise RuntimeError(f"DATASET LEAK DETECTED BETWEEN TRAIN AND EVAL: {leak}")
 
     # Shuffle training instances to break consecutive blocks
     rng.shuffle(train)
+    # Shuffle the eval set for the same reason: written in source order, any consumer
+    # taking a prefix (validation NLL, --max-examples) silently measures one source.
+    random.Random(seed).shuffle(eval_)
 
-    Path(out).parent.mkdir(parents=True, exist_ok=True)
     Path(eval_out).parent.mkdir(parents=True, exist_ok=True)
 
-    with open(out, "w", encoding="utf-8") as f:
-        for ex in train:
-            f.write(json.dumps(ex, ensure_ascii=False) + "\n")
+    if not eval_only:
+        Path(out).parent.mkdir(parents=True, exist_ok=True)
+        with open(out, "w", encoding="utf-8") as f:
+            for ex in train:
+                f.write(json.dumps(ex, ensure_ascii=False) + "\n")
 
     with open(eval_out, "w", encoding="utf-8") as f:
         for ex in eval_:
             f.write(json.dumps(ex, ensure_ascii=False) + "\n")
 
+    by_kind: dict[str, int] = {}
+    for ex in eval_:
+        by_kind[ex["kind"]] = by_kind.get(ex["kind"], 0) + 1
+
     print(f"\n=======================================================")
     print(f"Datasets generated successfully:")
-    print(f"  TRAIN : {len(train):,} instances written to {out}")
+    if eval_only:
+        print(f"  TRAIN : untouched (eval-only build)")
+    else:
+        print(f"  TRAIN : {len(train):,} instances written to {out}")
     print(f"  EVAL  : {len(eval_):,} instances written to {eval_out}")
+    print(f"          " + ", ".join(f"{k}={v:,}" for k, v in sorted(by_kind.items())))
     print(f"  Strict isolation guaranteed: 0 source overlap")
     print(f"=======================================================")
 
@@ -610,6 +819,8 @@ def main():
     ap.add_argument("--max-per-source", type=int, default=30000,
                     help="Maximum instances per data source to balance classes")
     ap.add_argument("--seed", type=int, default=42, help="Random seed")
+    ap.add_argument("--eval-only", action="store_true",
+                    help="Rebuild only the evaluation file, leaving train.jsonl untouched")
     args = ap.parse_args()
 
     build(
@@ -617,6 +828,7 @@ def main():
         eval_out=args.eval_out,
         max_per_source=args.max_per_source,
         seed=args.seed,
+        eval_only=args.eval_only,
     )
 
 

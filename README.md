@@ -159,17 +159,20 @@ in the same order, and scores each against ground truth.
 
 ```bash
 export JEV_API_KEY=...                       # https://api.typesafe.ai
-uv run python scripts/build_race_set.py --total 27
+uv run python scripts/build_race_set.py --per-kind 9
 
 SYSONE_BACKEND=cpu SYSONE_MODEL=Okura66/Kahn1-Qwen2.5-3B \
   uv run uvicorn sysone.server:app --port 8000
 # open http://127.0.0.1:8000/race
 ```
 
-`scripts/build_race_set.py` draws items from the public test splits — banking77
-for Choice, SST-5 for Score, BoolQ for Noul — so TOTAL SCORE is measured
-accuracy, not a rating, and the panels break it down per primitive. The set
-lands in the gitignored `data/`, and the script regenerates it identically.
+`scripts/build_race_set.py` draws 9 items per primitive at random (seeded) from
+`data/eval.jsonl`, the same reserved holdout the benchmark reports on — banking77
+and MASSIVE for Choice, SST-5 for Score, RTE and SciTail for Noul — so TOTAL
+SCORE is measured accuracy, not a rating, and the panels break it down per
+primitive. The set lands in the gitignored `data/`, and the script regenerates
+it identically (build the eval split first:
+`python training/build_dataset.py --eval-only --eval-out data/eval.jsonl`).
 
 Both sides are System 1: neither generates text, and each answers one request
 per item. What the race actually measures is local CPU inference against a

@@ -135,7 +135,9 @@ def run_baseline_raw(
             corrects.append(1 if pred == label else 0)
         elif ex["kind"] == "noul":
             p_yes = ans.noul
-            all_probs.append([p_yes, 1.0 - p_yes])
+            # Index i must be the probability of label i (0=no, 1=yes): with the
+            # previous [p_yes, p_no] order, NLL/Brier/ECE scored the wrong class.
+            all_probs.append([1.0 - p_yes, p_yes])
             all_labels.append(label)
             confidences.append(max(p_yes, 1.0 - p_yes))
             pred = 1 if p_yes > 0.5 else 0
@@ -297,7 +299,9 @@ def run_full_system(
             corrects.append(1 if pred == label else 0)
         elif ex["kind"] == "noul":
             p_yes = ans.noul
-            all_probs.append([p_yes, 1.0 - p_yes])
+            # Index i must be the probability of label i (0=no, 1=yes): with the
+            # previous [p_yes, p_no] order, NLL/Brier/ECE scored the wrong class.
+            all_probs.append([1.0 - p_yes, p_yes])
             all_labels.append(label)
             confidences.append(max(p_yes, 1.0 - p_yes))
             pred = 1 if p_yes > 0.5 else 0

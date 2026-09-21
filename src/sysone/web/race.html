@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kahn1 vs JEV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf8f5;
+    --ink: #17150f;
+    --muted: #4a463e;
+    --faint: #8c877c;
+    --rule: #cdc7ba;
+    --dot: #b5afa2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    overflow: hidden;
+  }
+  @keyframes blink { 0%,49% { opacity: 1 } 50%,100% { opacity: 0 } }
+
+  .viewport {
+    width: 100vw; height: 100vh; display: flex;
+    align-items: center; justify-content: center; overflow: hidden;
+  }
+  .stage {
+    width: 1920px; height: 1080px; flex: none; transform-origin: center center;
+    background: var(--bg); padding: 46px 40px 34px;
+    display: flex; flex-direction: column; gap: 26px;
+  }
+
+  .head { display: flex; flex-direction: column; align-items: center; gap: 9px; flex: none; }
+  .head h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.2px; }
+  .facts {
+    display: flex; align-items: center; gap: 18px;
+    font-size: 16px; letter-spacing: 2px; color: var(--muted);
+  }
+  .facts i { color: var(--dot); font-style: normal; }
+
+  .lanes { display: flex; justify-content: center; gap: 40px; flex: none; }
+  .lane { position: relative; width: 900px; height: 840px; flex: none; }
+  .chip {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    background: var(--bg); padding: 0 14px; white-space: nowrap; z-index: 2;
+  }
+  .chip.top { top: -10px; font-size: 15px; font-weight: 700; letter-spacing: 2.4px; }
+  .chip.bot { bottom: -11px; font-size: 15px; color: var(--muted); }
+
+  .panel {
+    border: 1px solid var(--ink); width: 100%; height: 100%;
+    padding: 22px 24px; overflow: hidden; display: flex; flex-direction: column;
+  }
+  .cmd { font-size: 15px; font-weight: 700; line-height: 1.6; margin-bottom: 14px; flex: none; }
+  .status { font-size: 15px; line-height: 1.6; color: var(--muted); margin-bottom: 14px; flex: none; }
+  .body { flex: 1; min-height: 0; overflow: hidden; }
+
+  .ln {
+    font-size: 15px; line-height: 21px; white-space: pre;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  /* Answers that missed ground truth. Marked, never hidden. */
+  .ln.miss { border-left: 2px solid var(--dot); margin-left: -8px; padding-left: 6px; }
+  .expected { color: var(--dot); }
+  .k { color: var(--ink); font-weight: 700; }
+  .v { color: var(--faint); }
+  .p { color: var(--ink); }
+
+  .cursor {
+    display: inline-block; width: 9px; height: 17px; background: var(--ink);
+    animation: blink 1s steps(1) infinite; vertical-align: text-bottom;
+  }
+
+  .foot { flex: none; height: 96px; padding-top: 14px; }
+  .foot .m { font-size: 15px; line-height: 21px; font-weight: 700; }
+  .total {
+    margin-top: 8px; display: flex; align-items: baseline; gap: 10px;
+    border-top: 1px solid var(--rule); padding-top: 8px;
+  }
+  .total .lbl { font-size: 14px; letter-spacing: 2px; color: var(--muted); }
+  .total .val { font-size: 20px; font-weight: 700; }
+  .total .max { font-size: 14px; color: var(--faint); }
+  .hidden { visibility: hidden; }
+
+  .controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex: none; }
+  button {
+    font-family: inherit; font-size: 14px; letter-spacing: 2px;
+    padding: 11px 20px; background: transparent; color: var(--ink);
+    border: 1px solid var(--rule); cursor: pointer;
+  }
+  button.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); padding: 11px 24px; }
+  button:hover:not(:disabled) { border-color: var(--ink); }
+  button.primary:hover:not(:disabled) { background: var(--bg); color: var(--ink); }
+  button:disabled { opacity: 0.35; cursor: default; }
+  .clock { font-size: 14px; letter-spacing: 2px; color: var(--faint); margin-left: 10px; width: 90px; }
+  .warn { font-size: 14px; letter-spacing: 1px; color: var(--muted); margin-left: 8px; }
+</style>
+</head>
+<body>
+<div class="viewport">
+  <div class="stage" id="stage">
+
+    <div class="head">
+      <h1 id="title">Same held-out items. Same order.</h1>
+      <div class="facts" id="facts">
+        <span>LOADING SET</span>
+      </div>
+    </div>
+
+    <div class="lanes">
+      <div class="lane">
+        <span class="chip top">&mdash; KAHN1 &mdash;</span>
+        <span class="chip bot" id="footL">kahn1</span>
+        <div class="panel">
+          <div class="cmd">$ uv run sysone race ask kahn1</div>
+          <div class="status" id="statusL">Idle. Press RUN to start.</div>
+          <div class="body" id="bodyL"></div>
+          <div class="foot hidden" id="footerL">
+            <div class="m" id="metaL"></div>
+            <div class="m" id="timeL"></div>
+            <div class="total">
+              <span class="lbl">TOTAL SCORE</span>
+              <span class="val" id="scoreL">&mdash;</span>
+              <span class="max">/ 100</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lane">
+        <span class="chip top">&mdash; JEV &mdash;</span>
+        <span class="chip bot" id="footR">jev</span>
+        <div class="panel">
+          <div class="cmd">$ uv run sysone race ask jev</div>
+          <div class="status" id="statusR">Idle. Press RUN to start.</div>
+          <div class="body" id="bodyR"></div>
+          <div class="foot hidden" id="footerR">
+            <div class="m" id="metaR"></div>
+            <div class="m" id="timeR"></div>
+            <div class="total">
+              <span class="lbl">TOTAL SCORE</span>
+              <span class="val" id="scoreR">&mdash;</span>
+              <span class="max">/ 100</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="primary" id="run">RUN</button>
+      <button id="stop" disabled>STOP</button>
+      <button id="reset">RESET</button>
+      <button id="perm">k = 1</button>
+      <span class="clock" id="clock">0.00s</span>
+      <span class="warn" id="warn"></span>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const DARK = "p", MUTED = "v", KEY = "k";
+
+/* Same tokenizer as the mockup: a string followed by ':' is a key (bold, dark);
+   every other string and number is a value (muted); punctuation stays dark. */
+function tokenize(text) {
+  const out = [];
+  const re = /"(?:[^"\\]|\\.)*"|[0-9]+(?:\.[0-9]+)?|[^"0-9]+/g;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    const s = m[0];
+    let cls;
+    if (s[0] === '"') {
+      cls = /^\s*:/.test(text.slice(m.index + s.length)) ? KEY : MUTED;
+    } else if (/^[0-9]/.test(s)) {
+      cls = MUTED;
+    } else {
+      cls = DARK;
+    }
+    out.push([cls, s]);
+  }
+  return out;
+}
+
+function renderLine(parent, text, ev) {
+  const div = document.createElement("div");
+  div.className = "ln" + (ev && ev.correct === false ? " miss" : "");
+  for (const [cls, s] of tokenize(text)) {
+    const span = document.createElement("span");
+    span.className = cls;
+    span.textContent = s;
+    div.appendChild(span);
+  }
+  if (ev && ev.expected !== null && ev.expected !== undefined) {
+    const exp = document.createElement("span");
+    exp.className = "expected";
+    exp.textContent = "   expected " + JSON.stringify(ev.expected);
+    div.appendChild(exp);
+  }
+  parent.appendChild(div);
+}
+
+const el = (id) => document.getElementById(id);
+
+const side = {
+  kahn1: { body: el("bodyL"), status: el("statusL"), footer: el("footerL"),
+           meta: el("metaL"), time: el("timeL"), score: el("scoreL"), foot: el("footL") },
+  jev:   { body: el("bodyR"), status: el("statusR"), footer: el("footerR"),
+           meta: el("metaR"), time: el("timeR"), score: el("scoreR"), foot: el("footR") },
+};
+
+let es = null, t0 = 0, timer = null, nPerm = 1, opened = { kahn1: false, jev: false };
+
+function fit() {
+  const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+  const st = el("stage");
+  st.style.transform = "scale(" + s + ")";
+  st.style.marginLeft = st.style.marginRight = ((1920 * s) - 1920) / 2 + "px";
+  st.style.marginTop = st.style.marginBottom = ((1080 * s) - 1080) / 2 + "px";
+}
+window.addEventListener("resize", fit);
+fit();
+
+function resetPanels() {
+  for (const k of ["kahn1", "jev"]) {
+    side[k].body.innerHTML = "";
+    side[k].footer.classList.add("hidden");
+    side[k].status.textContent = "Idle. Press RUN to start.";
+    opened[k] = false;
+  }
+  el("clock").textContent = "0.00s";
+  el("warn").textContent = "";
+}
+
+function cursor(k) {
+  const old = side[k].body.querySelector(".cursor");
+  if (old) old.remove();
+  const c = document.createElement("span");
+  c.className = "cursor";
+  side[k].body.appendChild(c);
+}
+
+function openBrace(k) {
+  if (opened[k]) return;
+  opened[k] = true;
+  renderLine(side[k].body, "{", null);
+}
+
+async function loadMeta() {
+  try {
+    const r = await fetch("/api/race/items");
+    if (!r.ok) throw new Error((await r.json()).detail || r.statusText);
+    const d = await r.json();
+    const kinds = Object.entries(d.kinds).filter(([, v]) => v > 0)
+      .map(([k, v]) => v + " " + k.toUpperCase()).join("  ·  ");
+    el("facts").innerHTML =
+      "<span>" + d.n_items + " HELD-OUT ITEMS</span><i>&bull;</i>" +
+      "<span>" + kinds + "</span><i>&bull;</i>" +
+      "<span>SCORED ON GROUND TRUTH</span>";
+    el("footL").textContent = "kahn1 · " + (d.backend || "vllm") + " · local";
+    if (!d.jev_configured) {
+      el("warn").textContent = "JEV_API_KEY not set on the server";
+    }
+  } catch (e) {
+    el("facts").innerHTML = "<span>" + String(e.message).toUpperCase() + "</span>";
+  }
+}
+
+function start() {
+  resetPanels();
+  el("run").disabled = true;
+  el("stop").disabled = false;
+  el("perm").disabled = true;
+  side.kahn1.status.textContent = "Loading the local model, then scoring items one by one…";
+  side.jev.status.textContent = "Sending one request per item to the JEV System 1 API…";
+
+  t0 = performance.now();
+  timer = setInterval(() => {
+    el("clock").textContent = ((performance.now() - t0) / 1000).toFixed(2) + "s";
+  }, 50);
+
+  es = new EventSource("/api/race/stream?n_permutations=" + nPerm);
+  es.onmessage = (m) => handle(JSON.parse(m.data));
+  es.onerror = () => { side.kahn1.status.textContent += "  [stream closed]"; finish(); };
+}
+
+function handle(ev) {
+  if (ev.type === "line") {
+    const s = side[ev.engine];
+    openBrace(ev.engine);
+    const c = s.body.querySelector(".cursor");
+    if (c) c.remove();
+    renderLine(s.body, ev.text, ev);
+    s.score.textContent = ev.score.toFixed(1);
+    cursor(ev.engine);
+  } else if (ev.type === "done") {
+    const s = side[ev.engine];
+    const c = s.body.querySelector(".cursor");
+    if (c) c.remove();
+    if (ev.answered > 0) renderLine(s.body, "}", null);
+    const tok = ev.output_tokens
+      ? ev.input_tokens + " in / " + ev.output_tokens + " out tokens"
+      : "0 tokens generated";
+    s.meta.textContent = "p50 " + (ev.p50_ms / 1000).toFixed(3) + "s per item · " + tok;
+    s.time.textContent = "completed in " + (ev.total_ms / 1000).toFixed(2) + "s";
+    s.score.textContent = ev.score.toFixed(1);
+    const perKind = Object.entries(ev.by_kind || {})
+      .map(([k, v]) => k + " " + v.correct + "/" + v.total).join("  ·  ");
+    s.status.textContent = ev.error
+      ? ev.error
+      : ev.correct + " of " + ev.answered + " matched ground truth." +
+        (perKind ? "   " + perKind : "");
+    s.footer.classList.remove("hidden");
+  } else if (ev.type === "ready") {
+    side[ev.engine].status.textContent =
+      "Model loaded in " + (ev.load_ms / 1000).toFixed(1) + "s. Scoring items…";
+  } else if (ev.type === "error") {
+    side[ev.engine].status.textContent = ev.message;
+  } else if (ev.type === "fatal") {
+    el("warn").textContent = ev.message;
+    finish();
+  }
+  if (ev.type === "done" &&
+      !side.kahn1.footer.classList.contains("hidden") &&
+      !side.jev.footer.classList.contains("hidden")) {
+    finish();
+  }
+}
+
+function finish() {
+  if (es) { es.close(); es = null; }
+  if (timer) { clearInterval(timer); timer = null; }
+  el("run").disabled = false;
+  el("stop").disabled = true;
+  el("perm").disabled = false;
+}
+
+el("run").onclick = start;
+el("stop").onclick = () => { finish(); };
+el("reset").onclick = () => { finish(); resetPanels(); };
+el("perm").onclick = () => { nPerm = nPerm === 1 ? 3 : 1; el("perm").textContent = "k = " + nPerm; };
+
+loadMeta();
+</script>
+</body>
+</html>

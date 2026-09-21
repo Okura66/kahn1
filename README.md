@@ -152,6 +152,39 @@ GPU: there is no paged KV cache and no prefix caching. Keep `dtype="float32"` �
 without AMX, where bf16 matmuls fall back to emulation. Intended for local
 development, CI and debugging, not for production throughput.
 
+### Race: local Kahn1 vs the TypeSafe JEV API
+
+A side-by-side interface that runs both engines over the same held-out items,
+in the same order, and scores each against ground truth.
+
+```bash
+export JEV_API_KEY=...                       # https://api.typesafe.ai
+uv run python scripts/build_race_set.py --total 27
+
+SYSONE_BACKEND=cpu SYSONE_MODEL=Okura66/Kahn1-Qwen2.5-3B \
+  uv run uvicorn sysone.server:app --port 8000
+# open http://127.0.0.1:8000/race
+```
+
+`scripts/build_race_set.py` draws items from the public test splits — banking77
+for Choice, SST-5 for Score, BoolQ for Noul — so TOTAL SCORE is measured
+accuracy, not a rating, and the panels break it down per primitive. The set
+lands in the gitignored `data/`, and the script regenerates it identically.
+
+Both sides are System 1: neither generates text, and each answers one request
+per item. What the race actually measures is local CPU inference against a
+hosted service, so read the wall clock accordingly — the model card's sub-100ms
+figures describe this same engine on vLLM/GPU. Without `JEV_API_KEY` the JEV
+panel says so rather than showing invented numbers.
+
+| variable | meaning |
+|---|---|
+| `SYSONE_BACKEND` | `vllm` (default) or `cpu` |
+| `SYSONE_MODEL` | model id or local path |
+| `SYSONE_THREADS` | torch CPU threads |
+| `SYSONE_CALIBRATION` | temperature config (default `calibration.json`) |
+| `JEV_API_KEY` | TypeSafe credentials, also read as `TYPESAFE_API_KEY` |
+
 ### Verification & Test Suite
 
 ```bash
@@ -286,10 +319,11 @@ On fine-grained ordinal scales like SST-5 (5 sentiment degrees from *Very Negati
 
 ```
 kahn1/
-├── src/sysone/       Core engine package (types, tokens, prompt, debias, calibrate, cpu, server)
+├── src/sysone/       Core engine package (types, tokens, prompt, debias, calibrate, cpu, jev, race, server)
+│   └── web/          Race interface (Kahn1 vs JEV, scored on ground truth)
 ├── training/         Dataset building, augmentations, and LoRA training
 ├── eval/             Metrics, evaluation harness, benchmarks, debiasing tests
-├── scripts/          Utilities (LoRA merge, val set prep, HF publication, CPU demo)
+├── scripts/          Utilities (LoRA merge, val set prep, HF publication, CPU demo, race set)
 │   └── scratch/      (gitignored) Local scratchpad & temporary investigation scripts
 ├── docs/             PLAYBOOK.md (step-by-step reproduction guide)
 ├── tests/            Pytest unit & integration test suite

@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google Tag Manager, loaded only once the visitor accepts analytics cookies
+     (ePrivacy / CNIL: no non-essential cookie before consent). See the consent banner. -->
+<script>
+function loadGTM() {
+  if (window.__gtmLoaded) return;
+  window.__gtmLoaded = true;
+  (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-TTC5WPRN');
+}
+try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); } catch (e) {}
+</script>
+<!-- End Google Tag Manager -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kahn1 Playground</title>
+<meta name="description" content="Ask typed questions about any text. Kahn1 reads the answer from option-token logits — zero tokens generated.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf8f5;
+    --ink: #17150f;
+    --muted: #4a463e;
+    --faint: #8c877c;
+    --rule: #cdc7ba;
+    --dot: #b5afa2;
+    --track: #ebe6dd;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    overflow: hidden;
+  }
+  @keyframes blink { 0%,49% { opacity: 1 } 50%,100% { opacity: 0 } }
+
+  .viewport {
+    width: 100vw; height: 100vh; display: flex;
+    align-items: center; justify-content: center; overflow: hidden;
+  }
+  .stage {
+    width: 1920px; height: 1080px; flex: none; transform-origin: center center;
+    background: var(--bg); padding: 46px 40px 34px;
+    display: flex; flex-direction: column; gap: 26px; position: relative;
+  }
+
+  .links { position: absolute; top: 40px; right: 40px; display: flex; gap: 6px; }
+  .links a {
+    width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
+    color: var(--muted); border: 1px solid transparent; text-decoration: none;
+  }
+  .links a:hover, .links a:focus-visible { color: var(--ink); border-color: var(--rule); outline: none; }
+  .links svg { width: 18px; height: 18px; fill: currentColor; }
+  .links .hf { font-size: 19px; line-height: 1; filter: grayscale(1) contrast(1.1); opacity: 0.8; }
+  .links a:hover .hf { opacity: 1; }
+
+  .head { display: flex; flex-direction: column; align-items: center; gap: 9px; flex: none; }
+  .head h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.2px; }
+  .facts {
+    display: flex; align-items: center; gap: 18px;
+    font-size: 16px; letter-spacing: 2px; color: var(--muted);
+  }
+  .facts i { color: var(--dot); font-style: normal; }
+
+  .lanes { display: flex; justify-content: center; gap: 40px; flex: none; }
+  .lane { position: relative; width: 900px; height: 840px; flex: none; }
+  .chip {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    background: var(--bg); padding: 0 14px; white-space: nowrap; z-index: 2;
+  }
+  .chip.top { top: -10px; font-size: 15px; font-weight: 700; letter-spacing: 2.4px; }
+  .chip.bot { bottom: -11px; font-size: 15px; color: var(--muted); }
+
+  .panel {
+    border: 1px solid var(--ink); width: 100%; height: 100%;
+    padding: 22px 24px; overflow: hidden; display: flex; flex-direction: column;
+  }
+  .cmd { font-size: 15px; font-weight: 700; line-height: 1.6; margin-bottom: 14px; flex: none; }
+  .status { font-size: 15px; line-height: 1.6; color: var(--muted); margin-bottom: 14px; flex: none; }
+  .body { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
+
+  /* -- input lane -- */
+  .presets { display: flex; gap: 8px; margin-bottom: 18px; flex: none; }
+  .presets button { font-size: 13px; padding: 7px 12px; letter-spacing: 1.5px; }
+  .presets button.on { border-color: var(--ink); }
+  .field { display: flex; flex-direction: column; min-height: 0; }
+  .field.state { flex: 0 0 230px; margin-bottom: 18px; }
+  .field.schema { flex: 1; }
+  .label {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 13px; letter-spacing: 2px; color: var(--muted);
+    border-bottom: 1px solid var(--rule); padding-bottom: 6px; margin-bottom: 8px;
+  }
+  .label .hint { color: var(--faint); letter-spacing: 1px; }
+  textarea {
+    flex: 1; min-height: 0; width: 100%; resize: none; border: none; outline: none;
+    background: transparent; color: var(--ink); padding: 0;
+    font-family: inherit; font-size: 15px; line-height: 21px;
+    scrollbar-width: thin;
+  }
+  textarea::placeholder { color: var(--dot); }
+  .gold { font-size: 13px; letter-spacing: 1px; color: var(--faint); margin-top: 10px; flex: none; min-height: 18px; }
+
+  /* -- output lane (same line grammar as /race) -- */
+  .ln {
+    font-size: 15px; line-height: 21px; white-space: pre;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .ln.miss { border-left: 2px solid var(--dot); margin-left: -8px; padding-left: 6px; }
+  .expected { color: var(--dot); }
+  .k { color: var(--ink); font-weight: 700; }
+  .v { color: var(--faint); }
+  .p { color: var(--ink); }
+
+  .dist { margin: 4px 0 14px 32px; }
+  .row {
+    display: grid; grid-template-columns: 380px 280px 64px; gap: 14px; align-items: center;
+    font-size: 13px; line-height: 20px; color: var(--faint);
+  }
+  .row .opt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .bar { height: 8px; background: var(--track); position: relative; }
+  .row .bar b { position: absolute; left: 0; top: 0; bottom: 0; background: var(--dot); width: 0; transition: width 380ms ease-out; }
+  .row .pct { text-align: right; font-variant-numeric: tabular-nums; }
+  .row.win { color: var(--ink); font-weight: 500; }
+  .row.win .bar b { background: var(--ink); }
+
+  .cursor {
+    display: inline-block; width: 9px; height: 17px; background: var(--ink);
+    animation: blink 1s steps(1) infinite; vertical-align: text-bottom;
+  }
+
+  .foot { flex: none; height: 96px; padding-top: 14px; }
+  .foot .m { font-size: 15px; line-height: 21px; font-weight: 700; }
+  .total {
+    margin-top: 8px; display: flex; align-items: baseline; gap: 10px;
+    border-top: 1px solid var(--rule); padding-top: 8px;
+  }
+  .total .lbl { font-size: 14px; letter-spacing: 2px; color: var(--muted); }
+  .total .val { font-size: 20px; font-weight: 700; }
+  .total .max { font-size: 14px; color: var(--faint); }
+  .hidden { visibility: hidden; }
+
+  .controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex: none; }
+  button {
+    font-family: inherit; font-size: 14px; letter-spacing: 2px;
+    padding: 11px 20px; background: transparent; color: var(--ink);
+    border: 1px solid var(--rule); cursor: pointer;
+  }
+  button.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); padding: 11px 24px; }
+  button:hover:not(:disabled) { border-color: var(--ink); }
+  button.primary:hover:not(:disabled) { background: var(--bg); color: var(--ink); }
+  button:disabled { opacity: 0.35; cursor: default; }
+  button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 1px dashed var(--ink); outline-offset: 3px; }
+  .url {
+    font-family: inherit; font-size: 14px; letter-spacing: 1px; color: var(--muted);
+    background: transparent; border: none; border-bottom: 1px solid var(--rule);
+    padding: 10px 2px; width: 240px; outline: none;
+  }
+  .url:disabled { opacity: 0.35; }
+  select.url { width: 260px; cursor: pointer; }
+  [hidden] { display: none !important; }
+
+  /* Consent banner: outside the scaled stage, so it keeps a readable size. */
+  .consent {
+    position: fixed; right: 16px; bottom: 16px; z-index: 10; max-width: 400px;
+    background: var(--bg); border: 1px solid var(--ink); padding: 16px 18px;
+    font-size: 13px; line-height: 19px; color: var(--muted);
+  }
+  .consent p { margin: 0 0 12px; }
+  .consent .row2 { display: flex; gap: 8px; }
+  .consent button { font-size: 12px; padding: 8px 14px; flex: 1; }
+  @media (max-width: 1099px) {
+    body { overflow: auto; }
+    .viewport { width: auto; height: auto; display: block; overflow: visible; }
+    .stage { width: auto; height: auto; padding: 16px 16px 28px; gap: 22px; }
+    .links { position: static; justify-content: flex-end; margin-bottom: -10px; }
+    .head h1 { font-size: 18px; text-align: center; }
+    .facts { flex-wrap: wrap; justify-content: center; gap: 4px 10px; font-size: 11px; letter-spacing: 1px; }
+    /* Input, then the controls, then the answer: RUN sits right under what it runs. */
+    .lanes { display: contents; }
+    .links { order: 1; } .head { order: 2; }
+    .lane:first-child { order: 3; } .controls { order: 4; } .lane:last-child { order: 5; margin-top: 8px; }
+    .lane { width: auto; height: auto; }
+    .panel { height: auto; padding: 20px 14px 18px; }
+    .cmd { font-size: 13px; overflow-wrap: anywhere; }
+    .status { font-size: 13px; }
+    .presets { flex-wrap: wrap; }
+    .field.state { flex: none; height: 150px; }
+    .field.schema { flex: none; height: 340px; }
+    textarea { font-size: 16px; line-height: 22px; }  /* 16px: no zoom-on-focus on iOS */
+    .body { overflow: visible; min-height: 60px; }
+    .ln { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; line-height: 19px; }
+    .dist { margin: 4px 0 12px 10px; }
+    .row { grid-template-columns: minmax(0, 1fr) 28% 52px; gap: 8px; font-size: 12px; }
+    .foot { height: auto; }
+    .controls { flex-wrap: wrap; gap: 8px; }
+    .controls .url { flex: 1 1 100%; width: auto; order: 5; }
+    .clock { width: auto; margin-left: 4px; }
+    .warn { flex: 1 1 100%; max-width: none; white-space: normal; margin: 0; text-align: center; order: 6; }
+    .chip.top, .chip.bot { font-size: 13px; }
+    .consent { left: 16px; right: 16px; max-width: none; }
+  }
+  .links .cookies { width: auto; padding: 0 8px; font-size: 12px; letter-spacing: 1px; font-family: inherit; }
+  .clock { font-size: 14px; letter-spacing: 2px; color: var(--faint); margin-left: 10px; width: 90px; }
+  .warn { font-size: 14px; letter-spacing: 1px; color: var(--muted); margin-left: 8px; max-width: 520px;
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+</style>
+</head>
+<body>
+<div class="consent" id="consent" role="dialog" aria-labelledby="consentText" hidden>
+  <p id="consentText">Can Google Analytics count this visit? It sets cookies. Nothing you type
+     is sent: the model runs in your browser or on your own server.</p>
+  <div class="row2">
+    <button class="primary" id="consentYes">ACCEPT</button>
+    <button id="consentNo">REFUSE</button>
+  </div>
+</div>
+<div class="viewport">
+  <div class="stage" id="stage">
+
+    <nav class="links" aria-label="Author links">
+      <a href="https://www.linkedin.com/in/amontzamir/" target="_blank" rel="noopener" title="LinkedIn" aria-label="LinkedIn">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 1 1 0-4.125 2.062 2.062 0 0 1 0 4.125zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+      </a>
+      <a href="https://github.com/Okura66" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+      </a>
+      <a href="#" class="cookies" id="cookiesLink" title="Change your cookie choice">cookies</a>
+      <a href="https://huggingface.co/Okura66" target="_blank" rel="noopener" title="Hugging Face" aria-label="Hugging Face">
+        <span class="hf" aria-hidden="true">🤗</span>
+      </a>
+    </nav>
+
+    <div class="head">
+      <h1>Any text in. Typed answers out.</h1>
+      <div class="facts">
+        <span>CHOICE · SCORE · NOUL</span><i>&bull;</i>
+        <span>READ FROM OPTION LOGITS</span><i>&bull;</i>
+        <span>ZERO TOKENS GENERATED</span>
+      </div>
+    </div>
+
+    <div class="lanes">
+      <div class="lane">
+        <span class="chip top">&mdash; INPUT &mdash;</span>
+        <span class="chip bot">ctrl + enter to run</span>
+        <div class="panel">
+          <div class="cmd">$ kahn1 eval --state - --schema -</div>
+          <div class="presets" id="presets"></div>
+          <div class="field state">
+            <div class="label"><span>STATE</span><span class="hint">any text</span></div>
+            <textarea id="state" spellcheck="false" placeholder="Paste a message, a review, a paragraph…"></textarea>
+          </div>
+          <div class="field schema">
+            <div class="label"><span>SCHEMA</span><span class="hint">JEV · choice / score / noul</span></div>
+            <textarea id="schema" spellcheck="false"></textarea>
+          </div>
+          <div class="gold" id="gold"></div>
+        </div>
+      </div>
+
+      <div class="lane">
+        <span class="chip top">&mdash; KAHN1 &mdash;</span>
+        <span class="chip bot" id="chipBackend">kahn1</span>
+        <div class="panel">
+          <div class="cmd">$ kahn1 answer</div>
+          <div class="status" id="status">Idle. Press RUN to start.</div>
+          <div class="body" id="out"></div>
+          <div class="foot hidden" id="footer">
+            <div class="m" id="meta"></div>
+            <div class="m" id="time"></div>
+            <div class="total">
+              <span class="lbl">LATENCY</span>
+              <span class="val" id="latency">&mdash;</span>
+              <span class="max">ms</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="primary" id="run">RUN</button>
+      <button id="reset">RESET</button>
+      <button id="perm" title="Permutations per Choice question (position debiasing)">k = 1</button>
+      <button id="backend" title="Where the model runs">server</button>
+      <input class="url" id="url" spellcheck="false" aria-label="Server URL">
+      <select class="url" id="quant" aria-label="GGUF quantization" hidden></select>
+      <button id="purge" title="Unload the model and delete downloaded weights from this browser" hidden>CLEAR CACHE</button>
+      <span class="clock" id="clock">0.00s</span>
+      <span class="warn" id="warn"></span>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ------------------------------------------------------------------------ *
+ * Presets. JEV schema: choice takes criteria (list or {label: description}),
+ * score takes ordered criteria, noul takes the statement as instructions.
+ * ------------------------------------------------------------------------ */
+const PRESETS = {
+  TICKET: {
+    state: "Bonjour, j'ai été débité deux fois pour ma commande #48213 passée le 12 septembre. " +
+           "Cela fait une semaine que j'attends une réponse du service client. Je veux être remboursé " +
+           "au plus vite, sinon je fais opposition auprès de ma banque et je ferme mon compte.",
+    schema: {
+      intent: { type: "choice", instructions: "Quelle est la demande principale du client ?",
+                criteria: { remboursement: "le client veut être remboursé",
+                            livraison: "question sur une livraison",
+                            compte: "problème d'accès au compte",
+                            information: "demande d'information produit" } },
+      urgency: { type: "score", instructions: "Quel est le niveau d'urgence de ce message ?",
+                 criteria: ["faible", "moyen", "élevé", "critique"] },
+      churn_risk: { type: "noul", instructions: "Le client menace de quitter le service ou d'escalader." },
+    },
+  },
+  REVIEW: {
+    state: "Used to love this app but since the last update it crashes every time I open the camera. " +
+           "Support never answered. The new dark theme is nice though.",
+    schema: {
+      stars: { type: "score", instructions: "How many stars would this user give?",
+               criteria: ["1", "2", "3", "4", "5"] },
+      topic: { type: "choice", instructions: "What is the review mainly about?",
+               criteria: ["stability", "design", "pricing", "customer support", "features"] },
+      reports_bug: { type: "noul", instructions: "The review reports a bug or a crash." },
+    },
+  },
+  "FACT CHECK": {
+    state: "The Eiffel Tower was completed in 1889 for the World's Fair in Paris. It was the tallest " +
+           "man-made structure in the world until the Chrysler Building was finished in New York in 1930.",
+    schema: {
+      built_1889: { type: "noul", instructions: "The Eiffel Tower was finished in the 19th century." },
+      still_tallest: { type: "noul", instructions: "The Eiffel Tower is still the tallest structure in the world." },
+      in_london: { type: "noul", instructions: "The Chrysler Building is in London." },
+    },
+  },
+};
+
+/* ------------------------------------------------------------------------ *
+ * Backends. Each one: { label, chip, ready(), evaluate({state, schema, k}) }
+ * and evaluate resolves to { answers, kinds, latency_ms, load_ms }.
+ * "server" is the sysone FastAPI server (WSL / vLLM). "webgpu" runs the model
+ * in this tab and is wired once the quantized weights are published.
+ * ------------------------------------------------------------------------ */
+const store = {
+  get(k, d) { try { return localStorage.getItem("kahn1-demo:" + k) ?? d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("kahn1-demo:" + k, v); } catch {} },
+};
+const sameOrigin = location.protocol.startsWith("http") && /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+const serverUrl = () => el("url").value.trim().replace(/\/+$/, "");
+
+const BACKENDS = {
+  server: {
+    label: "server",
+    info: null,
+    chip() {
+      const i = this.info;
+      if (!i) return "kahn1 · server · " + serverUrl().replace(/^https?:\/\//, "");
+      const name = String(i.model || "").split("/").pop();
+      return "kahn1 · " + name + " · " + i.backend + (i.calibrated ? " · calibrated" : "");
+    },
+    async ready() {
+      const r = await fetch(serverUrl() + "/api/demo/info");
+      if (!r.ok) throw new Error("server answered " + r.status);
+      this.info = await r.json();
+      return this.info.loaded ? "Server ready, model loaded." : "Server ready. The model loads on the first run.";
+    },
+    async evaluate({ state, schema, k }) {
+      const r = await fetch(serverUrl() + "/api/demo/evaluate", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ state, schema, n_permutations: k }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(typeof d.detail === "string" ? d.detail : JSON.stringify(d.detail || r.statusText));
+      if (this.info) this.info.loaded = true;
+      return d;
+    },
+  },
+  webgpu: {
+    label: "webgpu",
+    wl: null,       // Wllama instance once a model is loaded
+    loadedQuant: null,
+    gpu: false,
+    chip() {
+      const q = GGUF.quants[el("quant").value];
+      return "kahn1 · gguf " + el("quant").value + " · " +
+             (this.wl ? (this.gpu ? "webgpu" : "wasm cpu") : (navigator.gpu ? "webgpu" : "wasm cpu")) +
+             " · " + q.mb + " MB";
+    },
+    async ready() {
+      const q = el("quant").value;
+      const where = navigator.gpu ? "WebGPU" : "CPU (no WebGPU in this browser — slow)";
+      if (this.wl && this.loadedQuant === q) return "Model loaded in this tab on " + where + ".";
+      return "Runs in this tab on " + where + ". First RUN downloads " + GGUF.quants[q].mb +
+             " MB from Hugging Face, cached for next visits.";
+    },
+    /* Weights live in the browser's origin-private storage (OPFS), per site. */
+    async cache() {
+      if (!this.wl) {
+        const { Wllama } = await import(WLLAMA + "/esm/index.js");
+        this.idle = this.idle || new Wllama({ default: WLLAMA + "/esm/wasm/wllama.wasm" }, { suppressNativeLog: true });
+      }
+      return (this.wl || this.idle).cacheManager;
+    },
+    async cachedBytes() {
+      return (await (await this.cache()).list()).reduce((a, e) => a + e.size, 0);
+    },
+    async purge() {
+      const cm = await this.cache();
+      if (this.wl) { await this.wl.exit(); this.wl = null; this.loadedQuant = null; }
+      await cm.clear();
+    },
+    async load(q) {
+      if (this.wl && this.loadedQuant === q) return 0;
+      if (this.wl) { await this.wl.exit(); this.wl = null; this.loadedQuant = null; }
+      const t = performance.now();
+      el("status").textContent = "Loading wllama…";
+      const { Wllama } = await import(WLLAMA + "/esm/index.js");
+      const wl = new Wllama({ default: WLLAMA + "/esm/wasm/wllama.wasm" },
+                            { suppressNativeLog: true });
+      await wl.loadModelFromHF({ repo: GGUF.repo, file: GGUF.file(q) }, {
+        n_ctx: 2048,
+        progressCallback: ({ loaded, total }) => {
+          el("status").textContent = "Downloading the model: " + Math.round(loaded / 1e6) + " / " +
+            Math.round(total / 1e6) + " MB (" + Math.round(100 * loaded / total) + "%)…";
+        },
+      });
+      this.gpu = wl.isSupportWebGPU();
+      this.wl = wl;
+      this.loadedQuant = q;
+      el("chipBackend").textContent = this.chip();
+      el("status").textContent = "Scoring…";
+      return performance.now() - t;
+    },
+    /* Next-token logprobs of the option labels. top_logprobs are the full-vocab
+       log-softmax, so renormalizing over the labels is the same restricted softmax
+       vLLM computes with allowed_token_ids. */
+    async labelLogprobs(prompt, labels) {
+      const r = await this.wl.createCompletion({
+        prompt, max_tokens: 1, temperature: 0, logprobs: TOP_LOGPROBS, cache_prompt: true,
+      });
+      // wllama answers in the chat shape (content[0].top_logprobs: [{token, logprob}]);
+      // accept the legacy completions dict (top_logprobs[0]: {token: logprob}) too.
+      const lps = r.choices[0].logprobs || {};
+      const top = {};
+      for (const t of lps.content?.[0]?.top_logprobs || []) top[t.token] = t.logprob;
+      Object.assign(top, lps.top_logprobs?.[0] || {});
+      // Marginalize each label over its two surface forms (" A" + "A"). The v1
+      // checkpoint on the Hub was trained on mixed forms ("yes" bare, " no"
+      // spaced — the old Noul inversion bug); reading one form only inverts it.
+      // On later checkpoints the unused form is ~0 and this is a no-op.
+      const lse = (a, b) => (a === -Infinity ? b : b === -Infinity ? a : Math.max(a, b) + Math.log1p(Math.exp(-Math.abs(a - b))));
+      const get = (t) => (t in top ? top[t] : -Infinity);
+      const lp = labels.map((l) => lse(get(l), get(l.trimStart())));
+      if (lp.every((x) => x === -Infinity)) {
+        const seen = Object.keys(top).slice(0, 5).map((t) => JSON.stringify(t)).join(" ");
+        console.error("kahn1: unexpected logprobs payload", r.choices[0]);
+        throw new Error("No option token in the top " + TOP_LOGPROBS + " (" + labels.join("/") + "). Got: " +
+                        (seen || "no logprobs — see console"));
+      }
+      return { lp, timings: r.timings };
+    },
+    async evaluate({ state, schema, k }) {
+      const questions = fromJev(schema);   // validate before a 2 GB download
+      const load_ms = await this.load(el("quant").value);
+      const t = performance.now();
+      const entries = buildEntries(state, questions, k);
+      let cached = 0, total = 0;
+      for (const e of entries) {
+        const { lp, timings } = await this.labelLogprobs(e.prompt, e.labels);
+        e.probs = softmax(lp.map((x) => x / CALIBRATION[e.q.kind]));
+        if (e.q.kind === "noul" && GGUF.noulInverted) e.probs.reverse();
+        if (timings) { cached += timings.cache_n || 0; total += (timings.cache_n || 0) + (timings.prompt_n || 0); }
+      }
+      return {
+        answers: compose(questions, entries),
+        kinds: Object.fromEntries(questions.map((q) => [q.key, q.kind])),
+        latency_ms: performance.now() - t,
+        cache_hit_rate: total ? cached / total : 0,
+        load_ms,
+      };
+    },
+  },
+};
+
+/* ------------------------------------------------------------------------ *
+ * In-browser port of sysone's prompt + answer synthesis (prompt.py, types.py
+ * from_jev, engine._build_batch / _compose_*, debias.py). Keep in sync.
+ * ------------------------------------------------------------------------ */
+const WLLAMA = "https://cdn.jsdelivr.net/npm/@wllama/wllama@3.6.1";
+const TOP_LOGPROBS = 100;
+const GGUF = {
+  // Kahn1 v1 (the checkpoint the Hub had when it was quantized), quantized by mradermacher.
+  repo: "mradermacher/Kahn1-Qwen2.5-3B-GGUF",
+  file: (q) => "Kahn1-Qwen2.5-3B." + q + ".gguf",
+  // v1 was trained on inverted Noul targets (dataset label 1 -> 'no'): it says
+  // "no" for true statements. Measured on the held-out Noul items: 7/9 right
+  // when flipped, 2/9 as-is. Set to false for a checkpoint trained after the fix.
+  noulInverted: true,
+  // Only single files under wllama's 2 GB ArrayBuffer limit. Q2_K is left out:
+  // it outputs noise (checked on both WebGPU and CPU), 2 bits is too few for 3B.
+  quants: { Q4_K_M: { mb: 1930 }, IQ4_XS: { mb: 1753 }, Q3_K_M: { mb: 1591 } },
+};
+// Temperature scaling only (calibration_temponly.json). The isotonic stage is
+// off: fit on the v3 checkpoint, and it raised ECE in the ablation anyway.
+const CALIBRATION = { choice: 1.1903007727373394, score: 0.9629625021378685, noul: 1.026405512405134 };
+
+const SYSTEM_PROMPT = "You assess a state and answer with a single letter.";
+const OTHER_LABEL_TEXT = "None of these answers";
+const NOUL_PROMPT = "Is the following statement true for this state?";
+// Qwen's BPE merges ":A", so sysone resolves labels with a space separator.
+const letterLabels = (n) => Array.from({ length: n }, (_, i) => " " + String.fromCharCode(65 + i));
+const NOUL_LABELS = [" yes", " no"];
+
+function fromJev(schema) {
+  if (!schema || typeof schema !== "object" || Array.isArray(schema)) throw new Error("Schema must be a JSON object.");
+  const out = [];
+  for (const [key, spec] of Object.entries(schema)) {
+    if (!spec || typeof spec !== "object") throw new Error("Invalid specification for key " + JSON.stringify(key) + ".");
+    const type = spec.type || spec.kind;
+    const instructions = spec.instructions || spec.prompt || "";
+    const c = spec.criteria;
+    if (type === "choice") {
+      let options;
+      if (c && typeof c === "object" && !Array.isArray(c)) options = Object.entries(c).map(([l, d]) => (d ? l + ": " + d : l));
+      else if (Array.isArray(c)) options = c.map(String);
+      else if (Array.isArray(spec.options)) options = spec.options.map(String);
+      else throw new Error("Choice question " + JSON.stringify(key) + " must provide 'criteria' or 'options'.");
+      if (options.length < 2 || new Set(options).size !== options.length) throw new Error("Choice " + JSON.stringify(key) + " needs 2+ unique options.");
+      out.push({ key, kind: "choice", prompt: instructions, options, allowOther: spec.allow_other ?? true });
+    } else if (type === "score") {
+      const levels = Array.isArray(c) ? c.map(String) : Array.isArray(spec.levels) ? spec.levels.map(String) : null;
+      if (!levels) throw new Error("Score question " + JSON.stringify(key) + " must provide 'criteria' or 'levels'.");
+      if (levels.length < 2 || new Set(levels).size !== levels.length) throw new Error("Score " + JSON.stringify(key) + " needs 2+ unique levels.");
+      out.push({ key, kind: "score", prompt: instructions, levels });
+    } else if (type === "noul") {
+      const statement = instructions || spec.statement || "";
+      if (!statement) throw new Error("Noul question " + JSON.stringify(key) + " must provide 'instructions' or 'statement'.");
+      out.push({ key, kind: "noul", statement });
+    } else {
+      throw new Error("Unsupported question type for " + JSON.stringify(key) + ": " + JSON.stringify(type) + ". Expected: choice, score, noul.");
+    }
+  }
+  if (!out.length) throw new Error("Schema has no questions.");
+  return out;
+}
+
+const statePrefix = (state) => "<system>" + SYSTEM_PROMPT + "</system>\n<user>\n## State\n" + state + "\n";
+const lettered = (opts) => opts.map((o, i) => String.fromCharCode(65 + i) + ". " + o).join("\n");
+const listPrompt = (state, prompt, opts) =>
+  statePrefix(state) + "\n## Question\n" + prompt + "\n" + lettered(opts) + "\n</user>\n<assistant>Answer:";
+const noulPrompt = (state, statement) =>
+  statePrefix(state) + "\n## Question\n" + NOUL_PROMPT + "\n" + statement + "\n</user>\n<assistant>Answer:";
+
+/* k-1 distinct seeded shuffles after the identity. Same scheme as
+   debias.generate_permutations, but a JS PRNG, so not the same draws. */
+function permutations(n, k, seed) {
+  const id = [...Array(n).keys()];
+  const perms = [id], seen = new Set([id.join()]);
+  let s = (seed + 1) * 2654435761 >>> 0;
+  const rand = () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  for (let a = 0; perms.length < k && a < k * 20; a++) {
+    const o = [...id];
+    for (let i = n - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [o[i], o[j]] = [o[j], o[i]]; }
+    if (!seen.has(o.join())) { seen.add(o.join()); perms.push(o); }
+  }
+  return perms;
+}
+
+function buildEntries(state, questions, k) {
+  const entries = [];
+  questions.forEach((q, qi) => {
+    if (q.kind === "choice") {
+      const eff = q.allowOther ? [...q.options, OTHER_LABEL_TEXT] : [...q.options];
+      if (eff.length > 26) throw new Error("Choice " + JSON.stringify(q.key) + " has more than 26 options.");
+      for (const order of permutations(eff.length, k, qi)) {
+        entries.push({ q, qi, order, eff, labels: letterLabels(eff.length),
+                       prompt: listPrompt(state, q.prompt, order.map((i) => eff[i])) });
+      }
+    } else if (q.kind === "score") {
+      const n = q.levels.length, id = [...Array(n).keys()];
+      for (const order of k >= 2 ? [id, [...id].reverse()] : [id]) {
+        entries.push({ q, qi, order, labels: letterLabels(n),
+                       prompt: listPrompt(state, q.prompt, order.map((i) => q.levels[i])) });
+      }
+    } else {
+      entries.push({ q, qi, order: [0, 1], labels: NOUL_LABELS, prompt: noulPrompt(state, q.statement) });
+    }
+  });
+  return entries;
+}
+
+function softmax(xs) {
+  const m = Math.max(...xs);
+  if (m === -Infinity) return xs.map(() => 1 / xs.length);
+  const e = xs.map((x) => Math.exp(x - m)), s = e.reduce((a, b) => a + b, 0);
+  return e.map((x) => x / s);
+}
+const remap = (order, pos) => { const out = new Array(pos.length).fill(0); order.forEach((orig, p) => { out[orig] = pos[p]; }); return out; };
+const normalize = (p) => { const s = p.reduce((a, b) => a + b, 0); return s > 0 ? p.map((x) => x / s) : p; };
+const mean = (ds) => normalize(ds[0].map((_, i) => ds.reduce((a, d) => a + d[i], 0) / ds.length));
+const geoMean = (ds) => softmax(ds[0].map((_, i) => ds.reduce((a, d) => a + Math.log(Math.max(d[i], 1e-12)), 0) / ds.length));
+const confidence = (p) => p.length < 2 ? 0 : Math.max(0, Math.min(1, (Math.max(...p) - 1 / p.length) / (1 - 1 / p.length)));
+const argmax = (p) => p.reduce((b, x, i) => (x > p[b] ? i : b), 0);
+
+function compose(questions, entries) {
+  const answers = {};
+  questions.forEach((q, qi) => {
+    const items = entries.filter((e) => e.qi === qi);
+    if (q.kind === "choice") {
+      const p = mean(items.map((e) => remap(e.order, e.probs)));
+      const eff = items[0].eff;
+      answers[q.key] = { choice: eff[argmax(p)], confidence: confidence(p),
+                         probabilities: Object.fromEntries(eff.map((o, i) => [o, p[i]])) };
+    } else if (q.kind === "score") {
+      const p = normalize(items.length > 1 ? geoMean(items.map((e) => remap(e.order, e.probs))) : items[0].probs);
+      answers[q.key] = { level: q.levels[argmax(p)], confidence: confidence(p),
+                         score: p.reduce((a, x, i) => a + x * i, 0),
+                         expected_score: p.reduce((a, x, i) => a + x * (i + 1), 0),
+                         probabilities: Object.fromEntries(q.levels.map((l, i) => [l, p[i]])) };
+    } else {
+      const p = normalize(items[0].probs);
+      answers[q.key] = { noul: Math.max(0, Math.min(1, p[0])) };
+    }
+  });
+  return answers;
+}
+
+/* ------------------------------------------------------------------------ *
+ * Rendering — same line grammar as /race.
+ * ------------------------------------------------------------------------ */
+const DARK = "p", MUTED = "v", KEY = "k";
+const el = (id) => document.getElementById(id);
+
+function tokenize(text) {
+  const out = [];
+  const re = /"(?:[^"\\]|\\.)*"|[0-9]+(?:\.[0-9]+)?|[^"0-9]+/g;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    const s = m[0];
+    let cls;
+    if (s[0] === '"') cls = /^\s*:/.test(text.slice(m.index + s.length)) ? KEY : MUTED;
+    else if (/^[0-9]/.test(s)) cls = MUTED;
+    else cls = DARK;
+    out.push([cls, s]);
+  }
+  return out;
+}
+
+function line(text, miss, expected) {
+  const div = document.createElement("div");
+  div.className = "ln" + (miss ? " miss" : "");
+  for (const [cls, s] of tokenize(text)) {
+    const span = document.createElement("span");
+    span.className = cls;
+    span.textContent = s;
+    div.appendChild(span);
+  }
+  if (expected !== undefined) {
+    const exp = document.createElement("span");
+    exp.className = "expected";
+    exp.textContent = "   expected " + JSON.stringify(expected);
+    div.appendChild(exp);
+  }
+  return div;
+}
+
+function distribution(probs) {
+  const box = document.createElement("div");
+  box.className = "dist";
+  const entries = Object.entries(probs);
+  const top = Math.max(...entries.map(([, p]) => p));
+  for (const [label, p] of entries) {
+    const row = document.createElement("div");
+    row.className = "row" + (p === top ? " win" : "");
+    row.innerHTML = '<span class="opt"></span><span class="bar"><b></b></span><span class="pct"></span>';
+    row.querySelector(".opt").textContent = label;
+    row.querySelector(".opt").title = label;
+    row.querySelector(".pct").textContent = (100 * p).toFixed(1) + "%";
+    box.appendChild(row);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      row.querySelector("b").style.width = (100 * p).toFixed(2) + "%";
+    }));
+  }
+  return box;
+}
+
+const r4 = (x) => Math.round(x * 1e4) / 1e4;
+
+/* Answer -> the compact JSON shown on the line, the pick and its distribution. */
+function view(kind, a) {
+  if (kind === "choice") {
+    return { json: { choice: a.choice, confidence: r4(a.confidence) }, pick: a.choice, probs: a.probabilities };
+  }
+  if (kind === "score") {
+    return { json: { score: r4(a.score), level: a.level, confidence: r4(a.confidence) },
+             pick: a.level, probs: a.probabilities };
+  }
+  return { json: { noul: r4(a.noul) }, pick: a.noul > 0.5, probs: { yes: a.noul, no: 1 - a.noul } };
+}
+
+/* ------------------------------------------------------------------------ *
+ * State & wiring
+ * ------------------------------------------------------------------------ */
+let backend = store.get("backend", "server") === "webgpu" ? "webgpu" : "server";
+let nPerm = 1, t0 = 0, timer = null, busy = false, gold = null, samples = null;
+
+/* Wide screens: the fixed 1920x1080 stage scaled to fit, as on /race.
+   Narrow screens: fluid layout from the CSS media query, no scaling. */
+const FLUID = window.matchMedia("(max-width: 1099px)");
+function fit() {
+  const st = el("stage");
+  if (FLUID.matches) { st.removeAttribute("style"); return; }
+  const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+  st.style.transform = "scale(" + s + ")";
+  st.style.marginLeft = st.style.marginRight = ((1920 * s) - 1920) / 2 + "px";
+  st.style.marginTop = st.style.marginBottom = ((1080 * s) - 1080) / 2 + "px";
+}
+window.addEventListener("resize", fit);
+FLUID.addEventListener("change", fit);
+fit();
+
+function setGold(g) {
+  gold = g;
+  el("gold").textContent = g ? "held-out · " + g.source + " · " + g.id + " · ground truth hidden until run" : "";
+}
+
+function load(state, schema, g = null, name = null) {
+  el("state").value = state;
+  el("schema").value = JSON.stringify(schema, null, 2);
+  setGold(g);
+  for (const b of el("presets").children) b.classList.toggle("on", b.dataset.name === name);
+}
+
+async function heldOut() {
+  if (!samples) {
+    const r = await fetch("samples.json");
+    if (!r.ok) throw new Error("samples.json: " + r.status);
+    samples = (await r.json()).items;
+  }
+  const it = samples[Math.floor(Math.random() * samples.length)];
+  const spec = it.kind === "choice"
+    ? { type: "choice", instructions: it.prompt, criteria: it.options, allow_other: false }
+    : it.kind === "score"
+      ? { type: "score", instructions: it.prompt, criteria: it.levels }
+      : { type: "noul", instructions: it.statement };
+  load(it.state, { answer: spec }, { key: "answer", value: it.gold, source: it.source, id: it.id }, "HELD-OUT");
+}
+
+function buildPresets() {
+  const box = el("presets");
+  for (const name of [...Object.keys(PRESETS), "HELD-OUT"]) {
+    const b = document.createElement("button");
+    b.textContent = name === "HELD-OUT" ? "HELD-OUT ↻" : name;
+    b.dataset.name = name;
+    b.onclick = () => {
+      if (name === "HELD-OUT") heldOut().catch((e) => { el("warn").textContent = e.message; });
+      else load(PRESETS[name].state, PRESETS[name].schema, null, name);
+      resetOut();
+    };
+    box.appendChild(b);
+  }
+}
+
+function resetOut() {
+  el("out").innerHTML = "";
+  el("footer").classList.add("hidden");
+  el("status").textContent = "Idle. Press RUN to start.";
+  el("clock").textContent = "0.00s";
+  el("warn").textContent = "";
+}
+
+async function connect() {
+  const b = BACKENDS[backend];
+  el("backend").textContent = b.label;
+  el("url").hidden = backend !== "server";
+  el("quant").hidden = backend !== "webgpu";
+  el("purge").hidden = backend !== "webgpu";
+  if (backend === "webgpu") refreshPurge();
+  el("chipBackend").textContent = b.chip();
+  el("status").textContent = "Connecting…";
+  el("warn").textContent = "";
+  try {
+    el("status").textContent = await b.ready();
+    el("chipBackend").textContent = b.chip();
+  } catch (e) {
+    el("status").textContent = "Backend unavailable.";
+    el("warn").textContent = backend === "server"
+      ? "No server at " + serverUrl() + " — start sysone in WSL (see docs/demo/README.md)"
+      : e.message;
+  }
+}
+
+async function refreshPurge() {
+  try {
+    const bytes = await BACKENDS.webgpu.cachedBytes();
+    el("purge").textContent = bytes ? "CLEAR " + (bytes / 1e9).toFixed(1) + " GB" : "CACHE EMPTY";
+    el("purge").disabled = !bytes && !BACKENDS.webgpu.wl;
+  } catch { el("purge").textContent = "CLEAR CACHE"; }
+}
+
+function tick() { el("clock").textContent = ((performance.now() - t0) / 1000).toFixed(2) + "s"; }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function run() {
+  if (busy) return;
+  let schema;
+  try { schema = JSON.parse(el("schema").value); }
+  catch (e) { el("warn").textContent = "Schema is not valid JSON: " + e.message; return; }
+  const state = el("state").value.trim();
+  if (!state) { el("warn").textContent = "State is empty."; return; }
+
+  busy = true;
+  resetOut();
+  el("run").disabled = true;
+  const b = BACKENDS[backend];
+  const firstLoad = backend === "server" && b.info && !b.info.loaded;
+  el("status").textContent = firstLoad
+    ? "Loading the model on the server (first run only), then scoring…"
+    : backend === "webgpu"
+      ? "Scoring " + Object.keys(schema).length + " question(s) in this tab…"
+      : "Scoring " + Object.keys(schema).length + " question(s) in one batch…";
+  const out = el("out");
+  const cur = document.createElement("span");
+  cur.className = "cursor";
+  out.appendChild(cur);
+  t0 = performance.now();
+  timer = setInterval(tick, 50);
+
+  try {
+    const d = await b.evaluate({ state, schema, k: nPerm });
+    const wall = performance.now() - t0;
+    clearInterval(timer); tick();
+    cur.remove();
+
+    out.appendChild(line("{"));
+    const keys = Object.keys(d.answers);
+    let hits = 0, graded = 0;
+    for (const [i, key] of keys.entries()) {
+      const kind = d.kinds?.[key] || schema[key]?.type;
+      const v = view(kind, d.answers[key]);
+      const text = '  "' + key + '": ' + JSON.stringify(v.json).replace(/":/g, '": ').replace(/,"/g, ', "') +
+                   (i < keys.length - 1 ? "," : "");
+      let miss = false, expected;
+      if (gold && gold.key === key) {
+        graded++;
+        miss = kind === "noul" ? Boolean(v.pick) !== Boolean(gold.value) : v.pick !== gold.value;
+        if (miss) expected = gold.value; else hits++;
+      }
+      out.appendChild(line(text, miss, expected));
+      out.appendChild(distribution(v.probs));
+      out.appendChild(cur);
+      await sleep(70);
+    }
+    cur.remove();
+    out.appendChild(line("}"));
+
+    el("latency").textContent = d.latency_ms.toFixed(1);
+    el("meta").textContent = keys.length + " question(s) · k = " + nPerm +
+      (d.cache_hit_rate ? " · prefix cache " + Math.round(100 * d.cache_hit_rate) + "%" : "");
+    el("time").textContent = d.load_ms > 50
+      ? "model loaded in " + (d.load_ms / 1000).toFixed(1) + "s · round trip " + (wall / 1000).toFixed(2) + "s"
+      : "round trip " + (wall / 1000).toFixed(3) + "s";
+    el("footer").classList.remove("hidden");
+    el("status").textContent = graded
+      ? (hits ? "Matched ground truth." : "Missed ground truth.") + "   " + gold.source + " · " + gold.id
+      : "Done. Each value is read from one forward pass over the option tokens.";
+  } catch (e) {
+    clearInterval(timer);
+    cur.remove();
+    el("status").textContent = "Failed.";
+    el("warn").textContent = backend === "server" && e.message === "Failed to fetch"
+      ? "No server at " + serverUrl() + " — start sysone in WSL (see docs/demo/README.md)"
+      : e.message;
+  } finally {
+    busy = false;
+    el("run").disabled = false;
+    if (backend === "webgpu") refreshPurge();
+  }
+}
+
+for (const q of Object.keys(GGUF.quants)) {
+  const o = document.createElement("option");
+  o.value = q;
+  o.textContent = "gguf " + q + " · " + (GGUF.quants[q].mb / 1000).toFixed(2) + " GB";
+  el("quant").appendChild(o);
+}
+el("quant").value = GGUF.quants[store.get("quant", "")] ? store.get("quant") : "Q4_K_M";
+el("quant").addEventListener("change", () => { store.set("quant", el("quant").value); connect(); });
+el("url").value = store.get("server", sameOrigin ? location.origin : "http://localhost:8000");
+el("url").addEventListener("change", () => { store.set("server", serverUrl()); BACKENDS.server.info = null; connect(); });
+el("run").onclick = run;
+el("reset").onclick = () => { resetOut(); setGold(null); };
+el("perm").onclick = () => { nPerm = nPerm === 1 ? 3 : 1; el("perm").textContent = "k = " + nPerm; };
+el("purge").onclick = async () => {
+  if (busy) return;
+  el("purge").disabled = true;
+  try {
+    await BACKENDS.webgpu.purge();
+    el("status").textContent = "Model unloaded and downloaded weights deleted from this browser.";
+  } catch (e) { el("warn").textContent = e.message; }
+  refreshPurge();
+  el("chipBackend").textContent = BACKENDS.webgpu.chip();
+};
+el("backend").onclick = () => {
+  backend = backend === "server" ? "webgpu" : "server";
+  store.set("backend", backend);
+  resetOut();
+  connect();
+};
+for (const id of ["state", "schema"]) {
+  el(id).addEventListener("input", () => { if (gold) setGold(null); });
+}
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); run(); }
+});
+
+/* Consent. The choice itself is stored locally (strictly necessary, no consent needed). */
+function setConsent(granted) {
+  store.set("consent", granted ? "granted" : "denied");
+  el("consent").hidden = true;
+  if (granted) { loadGTM(); return; }
+  // Refusing after accepting: drop the Google Analytics cookies already set.
+  for (const c of document.cookie.split(";")) {
+    const name = c.split("=")[0].trim();
+    if (/^_ga|^_gid|^_gat/.test(name)) {
+      for (const domain of ["", location.hostname, "." + location.hostname.split(".").slice(-2).join(".")]) {
+        document.cookie = name + "=; Max-Age=0; path=/" + (domain ? "; domain=" + domain : "");
+      }
+    }
+  }
+  if (window.__gtmLoaded) location.reload();  // stop the tags already running
+}
+el("consentYes").onclick = () => setConsent(true);
+el("consentNo").onclick = () => setConsent(false);
+el("cookiesLink").onclick = (e) => { e.preventDefault(); el("consent").hidden = false; el("consentYes").focus(); };
+if (!["granted", "denied"].includes(store.get("consent", ""))) el("consent").hidden = false;
+
+buildPresets();
+load(PRESETS.TICKET.state, PRESETS.TICKET.schema, null, "TICKET");
+connect();
+</script>
+</body>
+</html>

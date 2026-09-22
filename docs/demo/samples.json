@@ -1,0 +1,374 @@
+{
+ "note": "Held-out items from public test splits (scripts/build_race_set.py). Never seen in training.",
+ "items": [
+  {
+   "id": "sst5_eval:364",
+   "source": "sst5_eval",
+   "kind": "score",
+   "state": "the movie is well shot and very tragic , and one to ponder after the credits roll .",
+   "prompt": "Quelle est la polarité de cette phrase ?",
+   "levels": [
+    "très négatif",
+    "négatif",
+    "neutre",
+    "positif",
+    "très positif"
+   ],
+   "gold": "positif"
+  },
+  {
+   "id": "massive:4225",
+   "source": "massive",
+   "kind": "choice",
+   "state": "what time have you set the alarm",
+   "prompt": "What is the user's intent?",
+   "options": [
+    "audio_volume_other",
+    "email_sendemail",
+    "iot_hue_lightchange",
+    "alarm_set",
+    "alarm_query",
+    "recommendation_events",
+    "datetime_query",
+    "iot_wemo_off"
+   ],
+   "gold": "alarm_query"
+  },
+  {
+   "id": "rte_eval:8739",
+   "source": "rte_eval",
+   "kind": "noul",
+   "state": "Blair has sympathy for anyone who has lost their lives in Iraq.",
+   "statement": "Blair is sorry for anyone who has lost their lives in Iraq.",
+   "gold": true
+  },
+  {
+   "id": "massive:6911",
+   "source": "massive",
+   "kind": "choice",
+   "state": "what are some restaurants near me",
+   "prompt": "What is the user's intent?",
+   "options": [
+    "weather_query",
+    "social_post",
+    "transport_query",
+    "recommendation_locations",
+    "iot_wemo_on",
+    "lists_remove",
+    "general_quirky",
+    "datetime_query"
+   ],
+   "gold": "recommendation_locations"
+  },
+  {
+   "id": "banking77:689",
+   "source": "banking77",
+   "kind": "choice",
+   "state": "Is there a charge for a foreign currency exchange?",
+   "prompt": "Quelle est la catégorie bancaire de cette demande ?",
+   "options": [
+    "top_up_by_bank_transfer_charge",
+    "get_physical_card",
+    "transfer_not_received_by_recipient",
+    "card_acceptance",
+    "request_refund",
+    "exchange_charge",
+    "why_verify_identity",
+    "pending_transfer"
+   ],
+   "gold": "exchange_charge"
+  },
+  {
+   "id": "rte_eval:7109",
+   "source": "rte_eval",
+   "kind": "noul",
+   "state": "Ssangyong Motor was taken over by creditors after it collapsed under heavy debts during the 1997-98 Asian financial crisis.",
+   "statement": "Asian financial crisis takes over Ssangyong Motor",
+   "gold": false
+  },
+  {
+   "id": "sst5_eval:748",
+   "source": "sst5_eval",
+   "kind": "score",
+   "state": "it 's as close as we 'll ever come to looking through a photographer 's viewfinder as he works .",
+   "prompt": "Quelle est la polarité de cette phrase ?",
+   "levels": [
+    "très négatif",
+    "négatif",
+    "neutre",
+    "positif",
+    "très positif"
+   ],
+   "gold": "très positif"
+  },
+  {
+   "id": "rte_eval:356",
+   "source": "rte_eval",
+   "kind": "noul",
+   "state": "Oqueli was to fly to Nicaragua to join an international Socialist delegation, which will observe the Nicaraguan electoral campaign.",
+   "statement": "An electoral campaign is being held in Nicaragua.",
+   "gold": true
+  },
+  {
+   "id": "rte_eval:5034",
+   "source": "rte_eval",
+   "kind": "noul",
+   "state": "Egypt on Thursday strongly criticized Israeli new Foreign Minister Avigdor Lieberman for his remarks that he refused to recognize the peace efforts initiated in 2007 in the U.S. city of Annapolis to restore the peace talks with the Palestinians, reported the state MENA news agency. Lieberman's remarks is \"regrettable,\" Egyptian Foreign Ministry spokesman Hossam Zaki was quoted as saying, adding \"his remarks are the first blow to the peace efforts to come from the Israeli new government.\"",
+   "statement": "Hossam Zaki is the new Foreign Minister of Israel.",
+   "gold": false
+  },
+  {
+   "id": "rte_eval:9750",
+   "source": "rte_eval",
+   "kind": "noul",
+   "state": "It appears that the super-conducting maglev system is technically ready to be used commercially as a very high-speed, large-capacity transportation system.",
+   "statement": "Maglev is commercially used.",
+   "gold": false
+  },
+  {
+   "id": "sst5_eval:3956",
+   "source": "sst5_eval",
+   "kind": "score",
+   "state": "no more .",
+   "prompt": "Quelle est la polarité de cette phrase ?",
+   "levels": [
+    "très négatif",
+    "négatif",
+    "neutre",
+    "positif",
+    "très positif"
+   ],
+   "gold": "négatif"
+  },
+  {
+   "id": "rte_eval:8854",
+   "source": "rte_eval",
+   "kind": "noul",
+   "state": "Released in 1995, Tyson returned to boxing, winning the World Boxing Council title in 1996. The same year, however, he lost to Evander Holyfield, and in a 1997 rematch bit Holyfield's ear, for which he was temporarily banned from boxing.",
+   "statement": "In 1996 Mike Tyson bit Holyfield's ear.",
+   "gold": false
+  },
+  {
+   "id": "sst5_eval:4531",
+   "source": "sst5_eval",
+   "kind": "score",
+   "state": "the movie is saved from unbearable lightness by the simplicity of the storytelling and the authenticity of the performances .",
+   "prompt": "Quelle est la polarité de cette phrase ?",
+   "levels": [
+    "très négatif",
+    "négatif",
+    "neutre",
+    "positif",
+    "très positif"
+   ],
+   "gold": "neutre"
+  },
+  {
+   "id": "rte_eval:2296",
+   "source": "rte_eval",
+   "kind": "noul",
+   "state": "The United Kingdom, Turkey, \"Old\" British commonwealth forces ( New Zealand, Aussies, Canadians, Gurkhas, India), Germany, Poland, Vietnam, some units from USA, Russia, France, China (but only some) Japan would be included but I'm uncomfortable about using the word respected for Japanese soldiers for obvious reasons.",
+   "statement": "The Gurkhas come from Nepal.",
+   "gold": false
+  },
+  {
+   "id": "massive:1347",
+   "source": "massive",
+   "kind": "choice",
+   "state": "turn off sockets",
+   "prompt": "What is the user's intent?",
+   "options": [
+    "iot_wemo_off",
+    "weather_query",
+    "music_likeness",
+    "music_settings",
+    "general_quirky",
+    "general_joke",
+    "iot_hue_lightoff",
+    "alarm_set"
+   ],
+   "gold": "iot_wemo_off"
+  },
+  {
+   "id": "massive:4509",
+   "source": "massive",
+   "kind": "choice",
+   "state": "show me events in sacramento",
+   "prompt": "What is the user's intent?",
+   "options": [
+    "play_radio",
+    "play_music",
+    "recommendation_events",
+    "general_quirky",
+    "email_querycontact",
+    "audio_volume_other",
+    "qa_factoid",
+    "lists_createoradd"
+   ],
+   "gold": "recommendation_events"
+  },
+  {
+   "id": "sst5_eval:2011",
+   "source": "sst5_eval",
+   "kind": "score",
+   "state": "... too gory to be a comedy and too silly to be an effective horror film .",
+   "prompt": "Quelle est la polarité de cette phrase ?",
+   "levels": [
+    "très négatif",
+    "négatif",
+    "neutre",
+    "positif",
+    "très positif"
+   ],
+   "gold": "négatif"
+  },
+  {
+   "id": "rte_eval:1958",
+   "source": "rte_eval",
+   "kind": "noul",
+   "state": "Hodler claimed there were also irregularities in the campaigns organized by Atlanta for the 1996 Summer Games, Sydney for the Summer Olympics in 2000 and Salt Lake City for the 2002 Winter Games.",
+   "statement": "Before Salt Lake City, Winter Olympic Games took place in Nagano.",
+   "gold": false
+  },
+  {
+   "id": "sst5_eval:3390",
+   "source": "sst5_eval",
+   "kind": "score",
+   "state": "finds a way to tell a simple story , perhaps the simplest story of all , in a way that seems compelling and even original .",
+   "prompt": "Quelle est la polarité de cette phrase ?",
+   "levels": [
+    "très négatif",
+    "négatif",
+    "neutre",
+    "positif",
+    "très positif"
+   ],
+   "gold": "très positif"
+  },
+  {
+   "id": "massive:4674",
+   "source": "massive",
+   "kind": "choice",
+   "state": "cut the songs in this musics",
+   "prompt": "What is the user's intent?",
+   "options": [
+    "iot_hue_lightchange",
+    "play_audiobook",
+    "music_settings",
+    "music_query",
+    "alarm_remove",
+    "iot_wemo_on",
+    "cooking_query",
+    "iot_coffee"
+   ],
+   "gold": "music_settings"
+  },
+  {
+   "id": "sst5_eval:9382",
+   "source": "sst5_eval",
+   "kind": "score",
+   "state": "... with the candy-like taste of it fading faster than 25-cent bubble gum , i realized this is a throwaway movie that wo n't stand the test of time .",
+   "prompt": "Quelle est la polarité de cette phrase ?",
+   "levels": [
+    "très négatif",
+    "négatif",
+    "neutre",
+    "positif",
+    "très positif"
+   ],
+   "gold": "très négatif"
+  },
+  {
+   "id": "banking77:2299",
+   "source": "banking77",
+   "kind": "choice",
+   "state": "Can I exchange currencies with this app?",
+   "prompt": "Quelle est la catégorie bancaire de cette demande ?",
+   "options": [
+    "top_up_failed",
+    "lost_or_stolen_phone",
+    "top_up_by_card_charge",
+    "balance_not_updated_after_bank_transfer",
+    "disposable_card_limits",
+    "exchange_via_app",
+    "getting_spare_card",
+    "Refund_not_showing_up"
+   ],
+   "gold": "exchange_via_app"
+  },
+  {
+   "id": "massive:3532",
+   "source": "massive",
+   "kind": "choice",
+   "state": "add toothpaste to my shopping list",
+   "prompt": "What is the user's intent?",
+   "options": [
+    "lists_createoradd",
+    "play_radio",
+    "email_querycontact",
+    "iot_hue_lightup",
+    "takeaway_order",
+    "calendar_remove",
+    "email_sendemail",
+    "iot_hue_lightoff"
+   ],
+   "gold": "lists_createoradd"
+  },
+  {
+   "id": "rte_eval:9668",
+   "source": "rte_eval",
+   "kind": "noul",
+   "state": "Primary prevention of Alzheimer's disease is not possible at present.",
+   "statement": "Alzheimer's disease is treated using drugs.",
+   "gold": false
+  },
+  {
+   "id": "sst5_eval:4464",
+   "source": "sst5_eval",
+   "kind": "score",
+   "state": "everything that has to do with yvan and charlotte , and everything that has to do with yvan 's rambunctious , jewish sister and her non-jew husband , feels funny and true .",
+   "prompt": "Quelle est la polarité de cette phrase ?",
+   "levels": [
+    "très négatif",
+    "négatif",
+    "neutre",
+    "positif",
+    "très positif"
+   ],
+   "gold": "très positif"
+  },
+  {
+   "id": "banking77:7872",
+   "source": "banking77",
+   "kind": "choice",
+   "state": "I need a few more physical cards.",
+   "prompt": "Quelle est la catégorie bancaire de cette demande ?",
+   "options": [
+    "declined_cash_withdrawal",
+    "card_about_to_expire",
+    "direct_debit_payment_not_recognised",
+    "top_up_reverted",
+    "request_refund",
+    "getting_spare_card",
+    "balance_not_updated_after_bank_transfer",
+    "lost_or_stolen_card"
+   ],
+   "gold": "getting_spare_card"
+  },
+  {
+   "id": "sst5_eval:9058",
+   "source": "sst5_eval",
+   "kind": "score",
+   "state": "there is a refreshing absence of cynicism in stuart little 2 -- quite a rarity , even in the family film market .",
+   "prompt": "Quelle est la polarité de cette phrase ?",
+   "levels": [
+    "très négatif",
+    "négatif",
+    "neutre",
+    "positif",
+    "très positif"
+   ],
+   "gold": "très positif"
+  }
+ ]
+}

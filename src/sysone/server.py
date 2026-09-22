@@ -158,13 +158,17 @@ async def load_calibration(path: str):
 # Race: local Kahn1 vs the TypeSafe JEV cloud API
 # ---------------------------------------------------------------------------
 
+def _web_page(name: str) -> HTMLResponse:
+    page = Path(__file__).parent / "web" / name
+    if not page.exists():
+        return HTMLResponse(f"<h1>{name} not found</h1>", status_code=404)
+    return HTMLResponse(page.read_text(encoding="utf-8"))
+
+
 @app.get("/race", response_class=HTMLResponse)
 async def race_page():
     """Serve the side-by-side race interface."""
-    page = Path(__file__).parent / "web" / "race.html"
-    if not page.exists():
-        return HTMLResponse("<h1>race.html not found</h1>", status_code=404)
-    return HTMLResponse(page.read_text(encoding="utf-8"))
+    return _web_page("race.html")
 
 
 @app.get("/api/race/items")
@@ -222,3 +226,93 @@ async def race_stream(path: str | None = None, n_permutations: int = 1,
     return StreamingResponse(events(), media_type="text/event-stream",
                              headers={"Cache-Control": "no-cache",
                                       "X-Accel-Buffering": "no"})
+
+
+# ---------------------------------------------------------------------------
+# Demo: interactive playground
+#
+# The page itself is static (docs/demo, published on GitHub Pages) and talks to
+# this server over CORS, or runs the model in the browser with WebGPU. /demo
+# serves the same files locally so the page also works without Pages.
+# ---------------------------------------------------------------------------
+
+DEMO_DIR = Path(__file__).resolve().parents[2] / "docs" / "demo"
+
+# Origins allowed to call the API from a browser: local pages and GitHub Pages.
+# Override with SYSONE_CORS_ORIGIN_REGEX.
+_CORS_REGEX = os.environ.get(
+    "SYSONE_CORS_ORIGIN_REGEX",
+    r"https?://(localhost|127\.0\.0\.1)(:\d+)?|https://[\w-]+\.github\.io",
+)
+
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+
+app.add_middleware(CORSMiddleware, allow_origin_regex=_CORS_REGEX,
+                   allow_methods=["GET", "POST"], allow_headers=["*"])
+
+
+@app.middleware("http")
+async def _private_network_access(request, call_next):
+    """Chrome asks before a public https page (GitHub Pages) may reach localhost."""
+    response = await call_next(request)
+    if request.headers.get("access-control-request-private-network") == "true":
+        response.headers["Access-Control-Allow-Private-Network"] = "true"
+    if request.url.path.startswith("/demo"):
+        # Revalidate on every load so an edited page is never served stale.
+        response.headers["Cache-Control"] = "no-cache"
+    return response
+
+
+class DemoRequest(BaseModel):
+    state: str
+    schema_jev: dict[str, Any] = Field(..., alias="schema")
+    n_permutations: int = 1
+
+    model_config = {"populate_by_name": True}
+
+
+@app.get("/api/demo/info")
+async def demo_info():
+    """Which model the server backend runs, without loading it."""
+    engine = get_engine()
+    return {
+        "backend": os.environ.get("SYSONE_BACKEND", "vllm"),
+        "model": engine.config.model,
+        "calibrated": Path(os.environ.get("SYSONE_CALIBRATION", "calibration.json")).exists(),
+        "loaded": engine._llm is not None,
+    }
+
+
+@app.post("/api/demo/evaluate")
+def demo_evaluate(req: DemoRequest):
+    """Evaluate one playground query. Sync on purpose: FastAPI runs it in a thread,
+    so a multi-second first model load does not block the event loop."""
+    import time
+
+    from fastapi import HTTPException
+
+    try:
+        query = Query.from_jev(state=req.state, schema=req.schema_jev)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+    runner = get_runner()
+    engine = getattr(runner, "engine", runner)  # unwrap CalibratedEngine
+    t0 = time.perf_counter()
+    try:
+        engine._ensure_loaded()
+    except ModuleNotFoundError as exc:
+        raise HTTPException(status_code=503, detail=f"{type(exc).__name__}: {exc}")
+    load_ms = (time.perf_counter() - t0) * 1000.0
+    try:
+        resp = runner.evaluate(query, n_permutations=req.n_permutations)
+    except (ValueError, NotImplementedError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    return {**resp.model_dump(), "load_ms": round(load_ms, 1),
+            "kinds": {q.key: q.kind for q in query.questions}}
+
+
+if DEMO_DIR.exists():
+    from fastapi.staticfiles import StaticFiles
+
+    app.mount("/demo", StaticFiles(directory=DEMO_DIR, html=True), name="demo")

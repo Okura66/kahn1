@@ -1,7 +1,8 @@
 # Kahn1 playground
 
-Static page (`index.html` + `samples.json`), publishable as-is on GitHub Pages
-(Settings → Pages → branch `main`, folder `/docs` → `https://okura66.github.io/kahn1/demo/`).
+Static page (`index.html` + `samples.json`), published by GitHub Pages
+(branch `main`, folder `/docs`) on https://demo.kahn1.com/. `demo/` only redirects
+old links to the root.
 
 Two backends, toggled from the page:
 
@@ -25,5 +26,5 @@ SYSONE_MODEL=checkpoints/qwen_merged PYTHONPATH=src \
 For the webgpu backend alone, any static server works:
 `python -m http.server 8000 --directory docs`.
 
-Then open `http://localhost:8000/demo/` (served by the server itself) or the
-GitHub Pages URL. The model loads on the first run.
+Then open `http://localhost:8000/demo/` (the sysone server serves `docs/` there),
+`http://localhost:8000/` (static server), or https://demo.kahn1.com/. The model loads on the first run.

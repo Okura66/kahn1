@@ -231,12 +231,12 @@ async def race_stream(path: str | None = None, n_permutations: int = 1,
 # ---------------------------------------------------------------------------
 # Demo: interactive playground
 #
-# The page itself is static (docs/demo, published on GitHub Pages) and talks to
+# The page itself is static (docs/, published on GitHub Pages) and talks to
 # this server over CORS, or runs the model in the browser with WebGPU. /demo
 # serves the same files locally so the page also works without Pages.
 # ---------------------------------------------------------------------------
 
-DEMO_DIR = Path(__file__).resolve().parents[2] / "docs" / "demo"
+DEMO_DIR = Path(__file__).resolve().parents[2] / "docs"
 
 # Origins allowed to call the API from a browser: local pages, GitHub Pages and
 # the playground's own domain. Override with SYSONE_CORS_ORIGIN_REGEX.

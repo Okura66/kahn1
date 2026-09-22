@@ -3,9 +3,12 @@
 <head>
 <meta charset="utf-8">
 <title>Kahn1 Playground</title>
-<meta http-equiv="refresh" content="0; url=../">
+<!-- Old links to /demo/ land on the root. The query string gives a URL no browser
+     has cached, so a stale copy of the former root (which redirected here) cannot
+     bounce back and loop. The page strips the parameter. -->
+<meta http-equiv="refresh" content="0; url=../?from=demo">
 <link rel="canonical" href="../">
-<script>location.replace("../" + location.search + location.hash);</script>
+<script>location.replace("../?from=demo" + location.hash);</script>
 </head>
 <body><a href="../">Kahn1 Playground</a></body>
 </html>

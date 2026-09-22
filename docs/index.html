@@ -967,9 +967,11 @@ el("consentNo").onclick = () => setConsent(false);
 el("cookiesLink").onclick = (e) => { e.preventDefault(); el("consent").hidden = false; el("consentYes").focus(); };
 if (!["granted", "denied"].includes(store.get("consent", ""))) el("consent").hidden = false;
 
-/* Public view count for this page. Needs "Allow adding visitor counts on your
-   website" in the GoatCounter site settings; stays hidden otherwise. */
-fetch("https://kahn1.goatcounter.com/counter/" + encodeURIComponent(location.pathname) + ".json")
+/* Public view count, site-wide (TOTAL also covers visits made under the old /demo/
+   path). Needs "Allow adding visitor counts on your website" in the GoatCounter
+   settings; stays hidden otherwise. GoatCounter caches this answer for up to 4 h,
+   so it trails the dashboard. */
+fetch("https://kahn1.goatcounter.com/counter/TOTAL.json")
   .then((r) => (r.ok || r.status === 404 ? r.json() : Promise.reject()))
   .then((d) => {
     el("views").textContent = d.count + (d.count === "1" ? " view" : " views");

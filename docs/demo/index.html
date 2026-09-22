@@ -22,6 +22,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kahn1 Playground</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2317150f'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='20' font-weight='700' fill='%23faf8f5' text-anchor='middle'%3EK%3C/text%3E%3C/svg%3E">
 <meta name="description" content="Ask typed questions about any text. Kahn1 reads the answer from option-token logits — zero tokens generated.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -206,10 +207,14 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     .controls { flex-wrap: wrap; gap: 8px; }
     .controls .url { flex: 1 1 100%; width: auto; order: 5; }
     .clock { width: auto; margin-left: 4px; }
+    .credit { flex: 1 1 100%; text-align: center; order: 6; white-space: normal; }
     .warn { flex: 1 1 100%; max-width: none; white-space: normal; margin: 0; text-align: center; order: 6; }
     .chip.top, .chip.bot { font-size: 13px; }
     .consent { left: 16px; right: 16px; max-width: none; }
   }
+  .credit { font-size: 12px; letter-spacing: 1px; color: var(--faint); white-space: nowrap; }
+  .credit a { color: var(--muted); text-decoration: none; border-bottom: 1px solid var(--rule); }
+  .credit a:hover, .credit a:focus-visible { color: var(--ink); border-color: var(--ink); outline: none; }
   .links .views { align-self: center; margin-right: 6px; font-size: 12px; letter-spacing: 1px; color: var(--faint); }
   .links .cookies { width: auto; padding: 0 8px; font-size: 12px; letter-spacing: 1px; font-family: inherit; }
   .clock { font-size: 14px; letter-spacing: 2px; color: var(--faint); margin-left: 10px; width: 90px; }
@@ -298,6 +303,8 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
       <button id="backend" title="Where the model runs">server</button>
       <input class="url" id="url" spellcheck="false" aria-label="Server URL">
       <select class="url" id="quant" aria-label="GGUF quantization" hidden></select>
+      <span class="credit" id="credit" hidden>quantized by
+        <a href="https://huggingface.co/mradermacher" target="_blank" rel="noopener">mradermacher</a>, thanks!</span>
       <button id="purge" title="Unload the model and delete downloaded weights from this browser" hidden>CLEAR CACHE</button>
       <span class="clock" id="clock">0.00s</span>
       <span class="warn" id="warn"></span>
@@ -716,7 +723,7 @@ function view(kind, a) {
 /* ------------------------------------------------------------------------ *
  * State & wiring
  * ------------------------------------------------------------------------ */
-let backend = store.get("backend", "server") === "webgpu" ? "webgpu" : "server";
+let backend = store.get("backend", "webgpu") === "server" ? "server" : "webgpu";
 let nPerm = 1, t0 = 0, timer = null, busy = false, gold = null, samples = null;
 
 /* Wide screens: the fixed 1920x1080 stage scaled to fit, as on /race.
@@ -790,6 +797,7 @@ async function connect() {
   el("url").hidden = backend !== "server";
   el("quant").hidden = backend !== "webgpu";
   el("purge").hidden = backend !== "webgpu";
+  el("credit").hidden = backend !== "webgpu";
   if (backend === "webgpu") refreshPurge();
   el("chipBackend").textContent = b.chip();
   el("status").textContent = "Connecting…";
@@ -953,8 +961,11 @@ if (!["granted", "denied"].includes(store.get("consent", ""))) el("consent").hid
 /* Public view count for this page. Needs "Allow adding visitor counts on your
    website" in the GoatCounter site settings; stays hidden otherwise. */
 fetch("https://kahn1.goatcounter.com/counter/" + encodeURIComponent(location.pathname) + ".json")
-  .then((r) => (r.ok ? r.json() : Promise.reject()))
-  .then((d) => { el("views").textContent = d.count + " views"; el("views").hidden = false; })
+  .then((r) => (r.ok || r.status === 404 ? r.json() : Promise.reject()))
+  .then((d) => {
+    el("views").textContent = d.count + (d.count === "1" ? " view" : " views");
+    el("views").hidden = false;
+  })
   .catch(() => {});
 
 buildPresets();

@@ -196,6 +196,10 @@ class Engine:
             gpu_memory_utilization=self.config.gpu_memory_utilization,
             max_model_len=self.config.max_model_len,
             enforce_eager=self.config.enforce_eager,
+            # Direct Choice evaluation requests one logprob per candidate, up to 26
+            # letters plus the fallback. vLLM's default cap is 20, which rejected any
+            # query with more than 20 candidates (VLLMValidationError on `logprobs`).
+            max_logprobs=self.config.two_stage_threshold + 2,
         )
         if self.config.quantization is not None:
             llm_kwargs["quantization"] = self.config.quantization

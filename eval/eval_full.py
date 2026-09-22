@@ -1,4 +1,4 @@
-"""Exhaustive evaluation across the full 8,260-instance holdout dataset.
+"""Exhaustive evaluation across the full holdout dataset (all three primitives).
 
 Evaluates the full production pipeline (merged checkpoint + cyclic debiasing k=3 + temperature calibration)
 across the entire held-out test split, reporting per-subdataset metrics (Banking77, MASSIVE, SST-5).
@@ -96,36 +96,49 @@ def evaluate_full_dataset(
     print(f"  - Total Elapsed     : {t_elapsed / 60:.1f} minutes")
     print("=" * 60 + "\n")
 
-    # Metrics by dataset source
+    # Metrics by dataset source. Results are gathered by each example's position in
+    # the (shuffled) eval file: contiguous slicing assumed source-ordered input and
+    # silently mixed sources once the eval split was shuffled at build time.
+    positions: dict[str, list[int]] = {}
+    for i, ex in enumerate(examples):
+        positions.setdefault(ex.get("source", "unknown"), []).append(i)
+
     per_dataset_metrics = {}
-    idx_cursor = 0
     for s, s_exs in sources.items():
-        n = len(s_exs)
-        sub_probs = all_probs[idx_cursor : idx_cursor + n]
-        sub_labels = all_labels[idx_cursor : idx_cursor + n]
-        sub_conf = confidences[idx_cursor : idx_cursor + n]
-        sub_corr = corrects[idx_cursor : idx_cursor + n]
-        idx_cursor += n
+        idxs = positions[s]
+        sub_probs = [all_probs[i] for i in idxs]
+        sub_labels = [all_labels[i] for i in idxs]
+        sub_conf = [confidences[i] for i in idxs]
+        sub_corr = [corrects[i] for i in idxs]
 
         m_sub = compute_all(sub_probs, sub_labels, sub_conf, sub_corr)
         per_dataset_metrics[s] = m_sub
-        print(f"[{s.upper()}] ({n} instances) -> Acc: {m_sub.accuracy * 100:.2f}% | ECE: {m_sub.ece:.4f} | Brier: {m_sub.brier:.4f}")
+        print(f"[{s.upper()}] ({len(idxs)} instances) -> Acc: {m_sub.accuracy * 100:.2f}% | ECE: {m_sub.ece:.4f} | Brier: {m_sub.brier:.4f}")
+
+    # Per-primitive aggregates: the benchmark must state how each primitive fares.
+    kind_positions: dict[str, list[int]] = {}
+    for i, ex in enumerate(examples):
+        kind_positions.setdefault(ex.get("kind", "?"), []).append(i)
+    per_kind_metrics = {}
+    for k, idxs in sorted(kind_positions.items()):
+        m_k = compute_all([all_probs[i] for i in idxs], [all_labels[i] for i in idxs],
+                          [confidences[i] for i in idxs], [corrects[i] for i in idxs])
+        per_kind_metrics[k] = m_k
+        print(f"[KIND {k.upper()}] ({len(idxs)} instances) -> Acc: {m_k.accuracy * 100:.2f}% | ECE: {m_k.ece:.4f} | Brier: {m_k.brier:.4f}")
 
     # Ordinal metrics for Score tasks (e.g. sst5_eval)
     ordinal_reports = {}
-    idx_cursor = 0
     for s, s_exs in sources.items():
-        n = len(s_exs)
         if s_exs[0].get("kind") == "score":
-            sub_probs = all_probs[idx_cursor : idx_cursor + n]
-            sub_labels = all_labels[idx_cursor : idx_cursor + n]
+            idxs = positions[s]
+            sub_probs = [all_probs[i] for i in idxs]
+            sub_labels = [all_labels[i] for i in idxs]
             ord_m = compute_ordinal_metrics(sub_probs, sub_labels)
             ordinal_reports[s] = ord_m
             print(f"[{s.upper()} ORDINAL] -> Off-by-1: {ord_m.off_by_one_acc * 100:.2f}% | MAE: {ord_m.mae_continuous:.3f} | Spearman rho: {ord_m.spearman_rho:.3f} | Midpoint Bias: {ord_m.midpoint_bias * 100:.2f}%")
-        idx_cursor += n
 
     # Markdown report formatting
-    report_md = f"""# Comprehensive Evaluation Report — 8,260 Holdout Instances
+    report_md = f"""# Comprehensive Evaluation Report — {total_ex:,} Holdout Instances
 
 Evaluated Model: `{model}`
 Timestamp: {time.strftime("%Y-%m-%d %H:%M:%S")}
@@ -133,7 +146,7 @@ Mode: Full Pipeline (Merged LoRA + debiasing $k={n_permutations}$ + post-hoc cal
 
 ---
 
-## 1. Overall Metrics (All 8,260 Unseen Instances)
+## 1. Overall Metrics (All {total_ex:,} Unseen Instances)
 
 | Metric | Value | Description |
 |---|:---:|---|
@@ -159,6 +172,17 @@ Mode: Full Pipeline (Merged LoRA + debiasing $k={n_permutations}$ + post-hoc cal
     for s, m in per_dataset_metrics.items():
         report_md += f"| **{s}** | {ex_type(sources[s][0])} | {len(sources[s])} | **{m.accuracy * 100:.2f} %** | {m.ece:.4f} | {m.brier:.4f} |\n"
 
+    report_md += """
+---
+
+## 2b. Breakdown by Primitive
+
+| Primitive | Instances | Accuracy | ECE | Brier | NLL |
+|---|:---:|:---:|:---:|:---:|:---:|
+"""
+    for k, m in per_kind_metrics.items():
+        report_md += f"| **{k}** | {len(kind_positions[k])} | **{m.accuracy * 100:.2f} %** | {m.ece:.4f} | {m.brier:.4f} | {m.nll:.4f} |\n"
+
     if ordinal_reports:
         report_md += f"""
 ---
@@ -176,7 +200,7 @@ Mode: Full Pipeline (Merged LoRA + debiasing $k={n_permutations}$ + post-hoc cal
 
 ## 4. Key Takeaways
 
-- **Scaling Performance**: Accuracy reached **{m_global.accuracy * 100:.2f}%** on the full held-out test split when trained on the balanced mixture (compared to 15.67% on an initial small-scale run).
+- **Scaling Performance**: Accuracy reached **{m_global.accuracy * 100:.2f}%** on the full held-out test split when trained on the balanced mixture.
 - **API Determinism & Schema Conformance**: Out-of-schema error rate = **0.0%** (zero risk of JSON malformation or syntax hallucination).
 - **Inference Speed**: {lat_stats.p50:.1f} ms vs ~300 ms for standard autoregressive JSON decoding (**~{300 / max(lat_stats.p50, 1):.1f}x faster**).
 """

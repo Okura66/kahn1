@@ -294,22 +294,23 @@ The codebase is **model-agnostic** via `EngineConfig.model` / `--model` / `SYSON
 
 - **Default Backbone**: `Qwen/Qwen2.5-3B-Instruct` (and `checkpoints/qwen_merged`)
   - **Memory Footprint**: Only **1.26 GB VRAM** in inference (leaves >14.5 GB for KV cache on 16GB GPUs, enabling massive batch concurrency).
-  - **Exhaustive Holdout Results (8,260 samples)**:
-    - **Global Accuracy**: **80.12 %** across all unseen tasks.
-    - **Banking77 (3,076 samples)**: **91.48 %** accuracy, **0.0147 ECE**, **0.1298 Brier**.
-    - **MASSIVE (2,974 samples)**: **91.49 %** accuracy, **0.0157 ECE**, **0.1253 Brier**.
-    - **SST-5 (2,210 samples)**: **49.00 %** exact match, **95.79 %** off-by-one ($\pm 1$), **Spearman $\rho = 0.841$**, **MAE = 0.582**.
-    - **Latency**: p50 = **58.6 ms**, p95 = **96.5 ms** (14.1 q/s with $k=3$ debiasing).
+  - **Exhaustive Holdout Results (10,663 samples — first benchmark covering all three primitives)**:
+    - **Global Accuracy**: **77.60 %** across all unseen tasks (ECE **0.0537**, NLL **0.5714**).
+    - **Choice (6,050 samples)**: **90.79 %** accuracy, **0.0167 ECE** — Banking77 **90.73 %**, MASSIVE **90.85 %**.
+    - **Score / SST-5 (2,210 samples)**: **52.22 %** exact match, **95.20 %** off-by-one ($\pm 1$), **Spearman $\rho = 0.839$**, **MAE = 0.572**.
+    - **Noul (2,403 samples)**: **67.71 %** — RTE **84.12 %**, SciTail **65.57 %** (out-of-domain science entailment; the honest number, not a cherry-pick).
+    - **Latency**: p50 = **35.2 ms**, p95 = **86.5 ms** (21.5 q/s with $k=3$ debiasing).
+    - Calibration temperatures fitted on a split **disjoint from training**.
   - **Architectural Depth**: 28 layers, 16 heads, trained on 18T multi-lingual tokens.
-  - Full empirical report: 👉 **[`reports/QWEN_FULL_EVAL_8260.md`](reports/QWEN_FULL_EVAL_8260.md)**.
+  - Full empirical report: 👉 **[`reports/QWEN_FULL_EVAL_10663.md`](reports/QWEN_FULL_EVAL_10663.md)**.
 - **Also Supported**: `meta-llama/Llama-3.2-3B-Instruct`.
 
 ### Understanding Ordinal Scoring & Human Agreement (SST-5)
 
-On fine-grained ordinal scales like SST-5 (5 sentiment degrees from *Very Negative* to *Very Positive*), discrete exact-match accuracy is **49.00 %**. This represents near-ceiling performance:
+On fine-grained ordinal scales like SST-5 (5 sentiment degrees from *Very Negative* to *Very Positive*), discrete exact-match accuracy is **52.22 %**. This represents near-ceiling performance:
 1. **Human Inter-Annotator Ceiling**: Human agreement on 5-way SST-5 is only **~55% - 60%** due to the natural subjectivity of nuances (e.g. distinguishing *Positive* from *Very Positive*). SOTA foundation models consistently plateau at 50% - 54%.
-2. **Zero Catastrophic Inversion**: With **95.79 % off-by-one accuracy**, the model's prediction is either exact or immediately adjacent in 96% of cases. It virtually never confuses opposite polarities.
-3. **Monotonic Ranking ($\rho = 0.841$)**: The high Spearman correlation proves strong ordering fidelity across continuous latent sentiment.
+2. **Zero Catastrophic Inversion**: With **95.20 % off-by-one accuracy**, the model's prediction is either exact or immediately adjacent in 95% of cases. It virtually never confuses opposite polarities.
+3. **Monotonic Ranking ($\rho = 0.839$)**: The high Spearman correlation proves strong ordering fidelity across continuous latent sentiment.
 4. **Continuous Expectation**: In production, `sysone` consumes ordinal answers via expected value:
    $$\mathbb{E}[\text{Score}] = \sum_{i=0}^{K-1} i \cdot p_i$$
    This yields continuous scores (e.g. $3.65 / 4.0$) avoiding artificial discrete boundary clipping.

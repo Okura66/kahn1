@@ -96,6 +96,8 @@ def publish_model(
     model_dir: str = "checkpoints/qwen_merged",
     private: bool = False,
     token: str | None = None,
+    card_file: str | None = None,
+    commit_message: str | None = None,
 ) -> None:
     """Téléverse le dossier du modèle vers Hugging Face Hub."""
     try:
@@ -105,14 +107,21 @@ def publish_model(
         sys.exit(1)
 
     m_path = Path(model_dir)
-    if not m_path.exists() or not (m_path / "config.json").exists():
-        print(f"[publish_model] ERREUR: Le dossier '{model_dir}' n'existe pas ou ne contient pas 'config.json'.")
+    # Un adapter LoRA porte adapter_config.json, un checkpoint fusionné config.json.
+    if not m_path.exists() or not ((m_path / "config.json").exists()
+                                   or (m_path / "adapter_config.json").exists()):
+        print(f"[publish_model] ERREUR: Le dossier '{model_dir}' n'existe pas ou ne contient "
+              f"ni 'config.json' ni 'adapter_config.json'.")
         print("Avez-vous exécuté 'scripts/merge_qwen_lora.py' au préalable ?")
         sys.exit(1)
 
-    # Création du README.md (Model Card) s'il n'existe pas
+    # Model Card : --card-file remplace toujours le README.md du dossier ;
+    # sinon l'ancienne génération automatique ne s'applique qu'en son absence.
     card_path = m_path / "README.md"
-    if not card_path.exists():
+    if card_file:
+        print(f"[publish_model] Model Card fournie: {card_file} -> {card_path}")
+        card_path.write_text(Path(card_file).read_text(encoding="utf-8"), encoding="utf-8")
+    elif not card_path.exists():
         print(f"[publish_model] Génération de la Model Card dans {card_path}...")
         card_content = generate_model_card(repo_name=repo_id.split("/")[-1])
         card_path.write_text(card_content, encoding="utf-8")
@@ -127,6 +136,7 @@ def publish_model(
         folder_path=str(m_path),
         repo_id=repo_id,
         repo_type="model",
+        commit_message=commit_message or f"Upload {repo_id.split('/')[-1]}",
     )
     print(f"[publish_model] Succès ! Modèle publié avec succès sur : https://huggingface.co/{repo_id}")
 
@@ -138,6 +148,10 @@ def main():
     parser.add_argument("--model-dir", default="checkpoints/qwen_merged", help="Chemin vers le modèle fusionné")
     parser.add_argument("--private", action="store_true", help="Créer un dépôt privé")
     parser.add_argument("--token", default=None, help="Token API Hugging Face (optionnel si présent dans HF_TOKEN)")
+    parser.add_argument("--card-file", default=None,
+                        help="Model Card Markdown à publier comme README.md (remplace celle du dossier)")
+    parser.add_argument("--commit-message", default=None,
+                        help="Message du commit Hugging Face (ex: description du fix)")
     args = parser.parse_args()
 
     publish_model(
@@ -145,6 +159,8 @@ def main():
         model_dir=args.model_dir,
         private=args.private,
         token=args.token or os.environ.get("HF_TOKEN"),
+        card_file=args.card_file,
+        commit_message=args.commit_message,
     )
 
 

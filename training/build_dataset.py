@@ -13,14 +13,15 @@ Training sources (300k+ instances):
            cardinalities, since `levels` is arbitrary at inference time
   Noul   : MNLI, SNLI, ANLI (entailment vs contradiction, neutral dropped),
            QNLI (answerability), BoolQ (yes/no questions), FEVER (fact
-           verification, unsupported = no) — each balanced 50/50
+           verification, unsupported = no), ProofWriter (rule-application
+           reasoning, engine-verified labels) — each balanced 50/50
 
 Reserved evaluation sources:
   Strict invariant: The evaluation split is partitioned at the DATASET LEVEL, not per row.
-  Banking77 and MASSIVE (Choice), SST-5 and app_reviews (Score), RTE and SciTail (Noul)
-  are strictly reserved for zero-shot generalization benchmarking and never appear in
-  training data mixtures. Every primitive the engine answers must have at least one
-  reserved source — build() refuses to write an eval split with a missing primitive.
+  Banking77 and MASSIVE (Choice), SST-5 and app_reviews (Score), RTE / SciTail / FOLIO
+  (Noul) are strictly reserved for zero-shot generalization benchmarking and never
+  appear in training mixtures. FOLIO is a held-out reasoning measure. Every primitive
+  the engine answers must have a reserved source — build() refuses otherwise.
 
 Usage:
     python training/build_dataset.py --out data/train.jsonl --eval-out data/eval.jsonl --max-per-source 30000
@@ -50,6 +51,7 @@ EVAL_SCORE_SOURCES = {
 EVAL_NOUL_SOURCES = {
     "rte_eval",      # GLUE RTE validation: natively binary entailment, no 3-way collapse
     "scitail_eval",  # SciTail test: science-domain entailment, unobserved domain
+    "folio_eval",    # FOLIO: human-authored FOL reasoning, held-out reasoning measure
 }
 
 # Training dataset registry
@@ -71,6 +73,7 @@ TRAIN_SOURCES = {
     "qnli",
     "anli",
     "nli_fever",
+    "proofwriter",
 }
 
 
@@ -572,6 +575,33 @@ def load_qnli() -> list[dict]:
     return _balance_noul(examples)
 
 
+def load_proofwriter(max_total: int = 30000) -> list[dict]:
+    """ProofWriter (RuleTaker): rule-application reasoning with engine-verified labels.
+
+    Each item gives a `theory` (facts + rules) and a `question` (a statement to
+    derive); the answer is computed by a logic engine, so labels are correct by
+    construction. This is the reasoning signal the NLI/fact-check sources lack:
+    "apply these rules to this case -> yes/no", the JevBench-hard 'policy' pattern.
+
+    True -> yes; False and Unknown -> no. Unknown ("not derivable from the theory")
+    is kept as 'no' on purpose — the same not-affirmable = no convention as FEVER.
+    """
+    from datasets import load_dataset
+    ds = load_dataset("tasksource/proofwriter", split="train")
+    examples = []
+    for row in ds:
+        ans = row["answer"]
+        examples.append(_ex_noul(
+            state=row["theory"],
+            statement=row["question"],
+            label=1 if ans == "True" else 0,
+            source="proofwriter",
+        ))
+        if len(examples) >= max_total * 3:  # oversample before balancing
+            break
+    return _balance_noul(examples)[:max_total]
+
+
 def load_nli_fever() -> list[dict]:
     """FEVER (NLI form): claim verified against Wikipedia evidence.
 
@@ -703,6 +733,26 @@ def load_sst5_eval() -> list[dict]:
     return examples
 
 
+def load_folio_eval() -> list[dict]:
+    """FOLIO reserved for evaluation (human-authored first-order-logic reasoning).
+
+    Held-out reasoning benchmark inside our own eval: premises -> state, conclusion
+    -> statement, True -> yes, False/Uncertain -> no. Small (203) and hand-written,
+    a genuine out-of-training measure of rule/logic reasoning alongside JevBench.
+    """
+    from datasets import load_dataset
+    ds = load_dataset("tasksource/folio", split="validation")
+    examples = []
+    for row in ds:
+        examples.append(_ex_noul(
+            state=row["premises"],
+            statement=row["conclusion"],
+            label=1 if row["label"] == "True" else 0,
+            source="folio_eval",
+        ))
+    return examples
+
+
 def load_rte_eval() -> list[dict]:
     """RTE reserved for evaluation (binary entailment over an unobserved corpus).
 
@@ -786,6 +836,7 @@ def build(
         "qnli": load_qnli,
         "anli": load_anli,
         "nli_fever": load_nli_fever,
+        "proofwriter": load_proofwriter,
     }
 
     eval_loaders = {
@@ -795,6 +846,7 @@ def build(
         "app_reviews_eval": load_app_reviews_eval,
         "rte_eval": load_rte_eval,
         "scitail_eval": load_scitail_eval,
+        "folio_eval": load_folio_eval,
     }
 
     if eval_only:

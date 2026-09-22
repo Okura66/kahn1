@@ -110,14 +110,25 @@ def main() -> None:
                     help="options shown per Choice item (banking77 carries 77 classes)")
     ap.add_argument("--eval", default="data/eval.jsonl",
                     help="reserved evaluation split to draw from")
+    ap.add_argument("--sources", default=None,
+                    help="comma-separated whitelist of eval sources to draw from "
+                         "(e.g. banking77,massive,sst5_eval,rte_eval). All sources are "
+                         "held-out; this only chooses which held-out sources the demo "
+                         "shows. Omit to draw from every source.")
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--out", default="data/race_set.json")
     args = ap.parse_args()
+
+    allowed = None
+    if args.sources:
+        allowed = {s.strip() for s in args.sources.split(",") if s.strip()}
 
     rows = load_eval(Path(args.eval))
     by_kind: dict[str, list[tuple[int, dict]]] = {k: [] for k in KINDS}
     for i, ex in enumerate(rows):
         if ex.get("kind") in by_kind:
+            if allowed is not None and ex.get("source") not in allowed:
+                continue
             by_kind[ex["kind"]].append((i, ex))
 
     empty = [k for k in KINDS if not by_kind[k]]

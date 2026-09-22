@@ -12,14 +12,15 @@ Training sources (300k+ instances):
            IMDB (2), medical triage / CSAT (synthetic) — deliberately mixed
            cardinalities, since `levels` is arbitrary at inference time
   Noul   : MNLI, SNLI, ANLI (entailment vs contradiction, neutral dropped),
-           QNLI (answerability), BoolQ (yes/no questions) — each balanced 50/50
+           QNLI (answerability), BoolQ (yes/no questions), FEVER (fact
+           verification, unsupported = no) — each balanced 50/50
 
 Reserved evaluation sources:
   Strict invariant: The evaluation split is partitioned at the DATASET LEVEL, not per row.
-  Banking77 and MASSIVE (Choice), SST-5 (Score), RTE and SciTail (Noul) are strictly
-  reserved for zero-shot generalization benchmarking and never appear in training
-  data mixtures. Every primitive the engine answers must have at least one reserved
-  source — build() refuses to write an eval split with a missing primitive.
+  Banking77 and MASSIVE (Choice), SST-5 and app_reviews (Score), RTE and SciTail (Noul)
+  are strictly reserved for zero-shot generalization benchmarking and never appear in
+  training data mixtures. Every primitive the engine answers must have at least one
+  reserved source — build() refuses to write an eval split with a missing primitive.
 
 Usage:
     python training/build_dataset.py --out data/train.jsonl --eval-out data/eval.jsonl --max-per-source 30000
@@ -42,7 +43,9 @@ EVAL_CHOICE_SOURCES = {
     "massive",    # 60 unobserved user intent classes (SetFit/amazon_massive_intent_en-US)
 }
 EVAL_SCORE_SOURCES = {
-    "sst5_eval",  # 5 unobserved sentence polarity levels (SetFit/sst5)
+    "sst5_eval",       # 5 unobserved sentence polarity levels (SetFit/sst5)
+    "app_reviews_eval",  # 5 star levels, app-store domain: tests whether SST-5
+                         # score accuracy generalizes beyond movie-review sentiment
 }
 EVAL_NOUL_SOURCES = {
     "rte_eval",      # GLUE RTE validation: natively binary entailment, no 3-way collapse
@@ -67,6 +70,7 @@ TRAIN_SOURCES = {
     "boolq",
     "qnli",
     "anli",
+    "nli_fever",
 }
 
 
@@ -568,6 +572,30 @@ def load_qnli() -> list[dict]:
     return _balance_noul(examples)
 
 
+def load_nli_fever() -> list[dict]:
+    """FEVER (NLI form): claim verified against Wikipedia evidence.
+
+    SUPPORTS -> yes; REFUTES and NOT ENOUGH INFO -> no. Unlike the NLI sources,
+    NOT ENOUGH INFO is deliberately kept as 'no': fact verification treats an
+    unsupported claim as not-affirmable, which is exactly the entailment-vs-neutral
+    pattern the SciTail eval exercises and the training mixture otherwise lacks.
+    Semantically cleaner than forcing NLI-neutral to 'no' (there neutral means
+    "could be true"; here it means "the evidence does not support it").
+    """
+    from datasets import load_dataset
+    ds = load_dataset("pietrolesci/nli_fever", split="train")
+    examples = []
+    for row in ds:
+        # label: 0=SUPPORTS, 1=NOT ENOUGH INFO, 2=REFUTES.
+        examples.append(_ex_noul(
+            state=row["premise"],
+            statement=row["hypothesis"],
+            label=1 if row["label"] == 0 else 0,
+            source="nli_fever",
+        ))
+    return _balance_noul(examples)
+
+
 def load_anli() -> list[dict]:
     """ANLI rounds 1-3: adversarial NLI, entailment vs contradiction (neutral dropped)."""
     from datasets import load_dataset
@@ -626,6 +654,35 @@ def load_massive_eval() -> list[dict]:
             label=name_to_idx[lbl_text],
             source="massive",
         ))
+    return examples
+
+
+def load_app_reviews_eval() -> list[dict]:
+    """App-store reviews reserved for evaluation (5 star levels, unobserved domain).
+
+    A second Score benchmark next to SST-5, in a different register (app feedback
+    vs movie-review sentiment), to check whether Score accuracy is domain-specific.
+    """
+    from datasets import load_dataset
+    ds = load_dataset("sealuzh/app_reviews", split="train")
+    levels = ["1 star", "2 stars", "3 stars", "4 stars", "5 stars"]
+    # 288k rows, heavily 5-star skewed; cap per class for a balanced benchmark.
+    per_class = 800
+    counts = {i: 0 for i in range(5)}
+    examples = []
+    for row in ds:
+        lbl = int(row["star"]) - 1
+        if 0 <= lbl < 5 and counts[lbl] < per_class:
+            examples.append(_ex_score(
+                state=row["review"],
+                prompt="How many stars does this review give?",
+                levels=levels,
+                label=lbl,
+                source="app_reviews_eval",
+            ))
+            counts[lbl] += 1
+        if all(c >= per_class for c in counts.values()):
+            break
     return examples
 
 
@@ -728,12 +785,14 @@ def build(
         "boolq": load_boolq,
         "qnli": load_qnli,
         "anli": load_anli,
+        "nli_fever": load_nli_fever,
     }
 
     eval_loaders = {
         "banking77": load_banking77_eval,
         "massive": load_massive_eval,
         "sst5_eval": load_sst5_eval,
+        "app_reviews_eval": load_app_reviews_eval,
         "rte_eval": load_rte_eval,
         "scitail_eval": load_scitail_eval,
     }

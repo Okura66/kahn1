@@ -109,20 +109,56 @@ def fit_temperature(
     return float(res.x[0])
 
 
+def _confidence_and_correct(
+    all_logits: list[list[float]], labels: list[int], T: float,
+) -> tuple[list[float], list[int]]:
+    """After temperature T, return (p_max, is_argmax_correct) per example.
+
+    These are the (confidence, correctness) pairs a 1-D isotonic calibrator is fit on.
+    """
+    confs: list[float] = []
+    correct: list[int] = []
+    for logits, y in zip(all_logits, labels):
+        probs = apply_temperature(logits, T)
+        pred = max(range(len(probs)), key=lambda i: probs[i])
+        confs.append(max(probs))
+        correct.append(1 if pred == y else 0)
+    return confs, correct
+
+
 def fit_all(
     by_kind: dict[str, tuple[list[list[float]], list[int]]],
+    fit_isotonic: bool = False,
 ) -> TemperatureConfig:
-    """Fit temperature parameters across all available primitive groups.
+    """Fit temperature (and optionally isotonic) parameters across primitive groups.
+
+    Temperature is fit first by NLL; the isotonic stage, when enabled, is fit on the
+    temperature-scaled confidences.
+
+    fit_isotonic defaults to False: on a 1000-example calibration split an ablation
+    (temperature-only vs temperature+isotonic, same checkpoint, 14,663-item eval)
+    found isotonic RAISED ECE on all three primitives — the non-parametric fit
+    overfits a small val set, and adds nothing once temperature has done its job.
+    The capability is kept for larger calibration sets, but off by default.
 
     Args:
         by_kind: Mapping from primitive kind ('choice', 'score', 'noul')
                  to (logits_list, ground_truth_labels) pairs.
+        fit_isotonic: also fit a per-primitive isotonic confidence calibrator.
     """
     cfg = TemperatureConfig()
     for kind, (logits, labels) in by_kind.items():
-        if logits:
-            T = fit_temperature(logits, labels, kind)
-            setattr(cfg, kind, T)
+        if not logits:
+            continue
+        T = fit_temperature(logits, labels, kind)
+        setattr(cfg, kind, T)
+        if fit_isotonic:
+            confs, correct = _confidence_and_correct(logits, labels, T)
+            # Needs both classes present to learn a non-trivial mapping.
+            if len(set(correct)) > 1:
+                iso = IsotonicCalibrator()
+                iso.fit(confs, correct)
+                cfg.isotonic[kind] = iso.to_dict()
     return cfg
 
 
@@ -183,6 +219,45 @@ class CalibratedEngine:
     def __init__(self, engine, config: TemperatureConfig):
         self.engine = engine
         self.config = config
+        # Lazily reconstructed per-primitive isotonic confidence calibrators.
+        self._iso: dict[str, IsotonicCalibrator] = {}
+        for kind, d in (config.isotonic or {}).items():
+            if d.get("x") and d.get("y"):
+                self._iso[kind] = IsotonicCalibrator.from_dict(d)
+
+    def _recalibrate(self, kind: str, answer):
+        """Recalibrate an answer's confidence via the per-primitive isotonic map.
+
+        Temperature fixes global sharpness; this corrects the residual gap between
+        stated confidence and empirical accuracy (the driver of ECE). Monotonic, so
+        the argmax — hence the predicted label — never changes.
+        """
+        iso = self._iso.get(kind)
+        if iso is None:
+            return answer
+        if kind == "noul":
+            p_yes = answer.noul
+            p_max = max(p_yes, 1.0 - p_yes)
+            c = min(max(iso.predict(p_max), 0.0), 1.0)
+            answer.noul = c if p_yes >= 0.5 else 1.0 - c
+            return answer
+        # choice / score: rescale the winning class to the calibrated confidence,
+        # spreading the remaining mass over the others in proportion.
+        probs = answer.probabilities
+        if not probs:
+            return answer
+        win = max(probs, key=probs.get)
+        p_max = probs[win]
+        c = min(max(iso.predict(p_max), 0.0), 1.0)
+        if p_max >= 1.0:
+            return answer
+        scale = (1.0 - c) / (1.0 - p_max)
+        new = {k: (c if k == win else v * scale) for k, v in probs.items()}
+        s = sum(new.values()) or 1.0
+        answer.probabilities = {k: v / s for k, v in new.items()}
+        from .types import confidence_from_probs
+        answer.confidence = confidence_from_probs(list(answer.probabilities.values()))
+        return answer
 
     def evaluate(self, query, n_permutations: int = 3):
         """Execute calibrated evaluation batch over a shared query context."""
@@ -214,11 +289,11 @@ class CalibratedEngine:
         for qi, items in by_qi.items():
             q = query.questions[qi]
             if isinstance(q, ChoiceQuestion):
-                answers[q.key] = eng._compose_choice(q, items)
+                answers[q.key] = self._recalibrate("choice", eng._compose_choice(q, items))
             elif isinstance(q, ScoreQuestion):
-                answers[q.key] = eng._compose_score(q, items)
+                answers[q.key] = self._recalibrate("score", eng._compose_score(q, items))
             elif isinstance(q, NoulQuestion):
-                answers[q.key] = eng._compose_noul(q, items)
+                answers[q.key] = self._recalibrate("noul", eng._compose_noul(q, items))
         latency_ms = (time.perf_counter() - t0) * 1000.0
         return EvaluateResponse(
             answers=answers, latency_ms=latency_ms,

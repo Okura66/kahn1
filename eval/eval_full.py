@@ -24,6 +24,7 @@ def evaluate_full_dataset(
     n_permutations: int = 3,
     out_report: str = "reports/FULL_EVAL_8260.md",
     preds_out_path: str = "reports/eval_8260_preds.json",
+    max_model_len: int = 2048,
 ):
     print(f"[full_eval] Loading full evaluation dataset from {eval_path}...")
     lines = [
@@ -46,7 +47,7 @@ def evaluate_full_dataset(
         print(f"  - {s}: {len(s_exs)} instances ({ex_type(s_exs[0])})")
 
     print(f"\n[full_eval] Initializing engine with model {model}...")
-    engine_raw = Engine(EngineConfig(model=model))
+    engine_raw = Engine(EngineConfig(model=model, max_model_len=max_model_len))
 
     if calibration_path and Path(calibration_path).exists():
         print(f"[full_eval] Loading temperature calibration parameters from {calibration_path}...")
@@ -229,6 +230,8 @@ if __name__ == "__main__":
     parser.add_argument("--n-permutations", type=int, default=3)
     parser.add_argument("--out", default="reports/FULL_EVAL_8260.md")
     parser.add_argument("--preds-out", default="reports/eval_8260_preds.json")
+    parser.add_argument("--max-model-len", type=int, default=2048,
+                        help="raise for long-context benchmarks (e.g. JevBench hard, ~4k tokens)")
     args = parser.parse_args()
 
     evaluate_full_dataset(
@@ -238,4 +241,5 @@ if __name__ == "__main__":
         n_permutations=args.n_permutations,
         out_report=args.out,
         preds_out_path=args.preds_out,
+        max_model_len=args.max_model_len,
     )

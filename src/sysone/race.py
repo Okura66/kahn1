@@ -256,13 +256,108 @@ async def _run_jev(items, emit, model):
     await emit({"type": "done", **run.summary(total)})
 
 
+async def _run_kahn1_batch(items, engine, n_permutations, emit):
+    """Throughput mode: all items in ONE vLLM generate() via engine.evaluate_batch.
+
+    Calibration is argmax-preserving, so the score is identical to the sequential
+    path; the batch path unwraps to the raw engine (displayed confidence is then
+    uncalibrated, the correctness is not).
+    """
+    loop = asyncio.get_running_loop()
+    backend = getattr(engine, "engine", engine)  # unwrap CalibratedEngine
+    t_load = time.perf_counter()
+    try:
+        await loop.run_in_executor(None, backend._ensure_loaded)
+    except Exception as exc:
+        msg = f"{type(exc).__name__}: {exc}"
+        await emit({"type": "error", "engine": "kahn1", "message": msg})
+        run = EngineRun(name="kahn1", n_items=len(items)); run.error = msg
+        await emit({"type": "done", **run.summary(0.0)})
+        return
+    await emit({"type": "ready", "engine": "kahn1",
+                "load_ms": round((time.perf_counter() - t_load) * 1000.0, 1)})
+
+    run = EngineRun(name="kahn1", n_items=len(items))
+    queries = [build_query(it) for it in items]
+    t0 = time.perf_counter()
+    try:
+        responses = await loop.run_in_executor(
+            None, lambda: backend.evaluate_batch(queries, n_permutations=n_permutations))
+    except Exception as exc:
+        run.error = f"{type(exc).__name__}: {exc}"
+        await emit({"type": "error", "engine": "kahn1", "message": run.error})
+        await emit({"type": "done", **run.summary(0.0)})
+        return
+    batch_ms = (time.perf_counter() - t0) * 1000.0
+    per_item = batch_ms / max(len(items), 1)
+    for idx, (item, resp) in enumerate(zip(items, responses)):
+        norm = normalize_kahn1(item, resp.answers["q"])
+        ok = is_correct(item, norm["pick"])
+        run.record(item, ok, per_item)
+        await emit({"type": "line", "engine": "kahn1", "index": idx,
+                    "text": render_line(item, norm["json"], idx == len(items) - 1),
+                    "correct": ok, "expected": None if ok else item["gold"],
+                    "latency_ms": round(per_item, 1), "score": round(run.score, 1)})
+    await emit({"type": "done", **run.summary(batch_ms)})
+
+
+async def _run_jev_batch(items, emit, model, concurrency=8):
+    """Throughput mode for JEV: bounded-concurrency requests (the API has no
+    multi-state batch endpoint), so this is parallel round trips, not one batch."""
+    run = EngineRun(name="jev", n_items=len(items))
+    if not jev.has_key():
+        run.error = "JEV_API_KEY is not set in the server environment; the JEV side cannot run."
+        await emit({"type": "error", "engine": "jev", "message": run.error})
+        await emit({"type": "done", **run.summary(0.0)})
+        return
+
+    client = jev.make_client()
+    sem = asyncio.Semaphore(concurrency)
+    t0 = time.perf_counter()
+
+    async def one(idx, item):
+        async with sem:
+            result = await jev.evaluate(item["state"], {"q": jev.question_payload(item)},
+                                        model=model, client=client)
+            return idx, item, jev.normalize(item, result.answers.get("q", {})), result.latency_ms
+
+    try:
+        tasks = [asyncio.create_task(one(i, it)) for i, it in enumerate(items)]
+        done_order = 0
+        for fut in asyncio.as_completed(tasks):
+            try:
+                idx, item, norm, lat = await fut
+            except Exception as exc:
+                run.error = f"{type(exc).__name__}: {exc}"
+                await emit({"type": "error", "engine": "jev", "message": run.error})
+                break
+            ok = is_correct(item, norm["pick"])
+            run.record(item, ok, lat)
+            done_order += 1
+            await emit({"type": "line", "engine": "jev", "index": idx,
+                        "text": render_line(item, norm["json"], done_order == len(items)),
+                        "correct": ok, "expected": None if ok else item["gold"],
+                        "latency_ms": round(lat, 1), "score": round(run.score, 1)})
+    finally:
+        await client.aclose()
+    total = (time.perf_counter() - t0) * 1000.0
+    await emit({"type": "done", **run.summary(total)})
+
+
 async def race(
     items: list[dict],
     engine,
     n_permutations: int = 1,
     jev_model: str = jev.DEFAULT_MODEL,
+    mode: str = "sequential",
+    concurrency: int = 8,
 ) -> AsyncIterator[dict]:
-    """Run both engines concurrently, yielding events as each item lands."""
+    """Run both engines, yielding events as each item lands.
+
+    mode="sequential" (default): one item per request, wall-clock comparable as
+    per-item latency. mode="batch": Kahn1 runs one vLLM batch, JEV runs
+    bounded-concurrency requests — a throughput comparison, not per-item latency.
+    """
     queue: asyncio.Queue = asyncio.Queue()
 
     async def emit(ev: dict) -> None:
@@ -275,12 +370,19 @@ async def race(
                   for k in ("choice", "score", "noul")},
         "n_permutations": n_permutations,
         "jev_configured": jev.has_key(),
+        "mode": mode,
     }
 
-    tasks = [
-        asyncio.create_task(_run_kahn1(items, engine, n_permutations, emit)),
-        asyncio.create_task(_run_jev(items, emit, jev_model)),
-    ]
+    if mode == "batch":
+        tasks = [
+            asyncio.create_task(_run_kahn1_batch(items, engine, n_permutations, emit)),
+            asyncio.create_task(_run_jev_batch(items, emit, jev_model, concurrency)),
+        ]
+    else:
+        tasks = [
+            asyncio.create_task(_run_kahn1(items, engine, n_permutations, emit)),
+            asyncio.create_task(_run_jev(items, emit, jev_model)),
+        ]
     finished = 0
     try:
         while finished < len(tasks):

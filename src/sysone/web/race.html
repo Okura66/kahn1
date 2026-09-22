@@ -156,6 +156,7 @@
       <button id="stop" disabled>STOP</button>
       <button id="reset">RESET</button>
       <button id="perm">k = 1</button>
+      <button id="mode">sequential</button>
       <span class="clock" id="clock">0.00s</span>
       <span class="warn" id="warn"></span>
     </div>
@@ -214,7 +215,7 @@ const side = {
            meta: el("metaR"), time: el("timeR"), score: el("scoreR"), foot: el("footR") },
 };
 
-let es = null, t0 = 0, timer = null, nPerm = 1, opened = { kahn1: false, jev: false };
+let es = null, t0 = 0, timer = null, nPerm = 1, raceMode = "sequential", opened = { kahn1: false, jev: false };
 
 function fit() {
   const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
@@ -276,6 +277,7 @@ function start() {
   el("run").disabled = true;
   el("stop").disabled = false;
   el("perm").disabled = true;
+  el("mode").disabled = true;
   side.kahn1.status.textContent = "Loading the local model, then scoring items one by one…";
   side.jev.status.textContent = "Sending one request per item to the JEV System 1 API…";
 
@@ -284,7 +286,7 @@ function start() {
     el("clock").textContent = ((performance.now() - t0) / 1000).toFixed(2) + "s";
   }, 50);
 
-  es = new EventSource("/api/race/stream?n_permutations=" + nPerm);
+  es = new EventSource("/api/race/stream?n_permutations=" + nPerm + "&mode=" + raceMode);
   es.onmessage = (m) => handle(JSON.parse(m.data));
   es.onerror = () => { side.kahn1.status.textContent += "  [stream closed]"; finish(); };
 }
@@ -335,12 +337,14 @@ function finish() {
   el("run").disabled = false;
   el("stop").disabled = true;
   el("perm").disabled = false;
+  el("mode").disabled = false;
 }
 
 el("run").onclick = start;
 el("stop").onclick = () => { finish(); };
 el("reset").onclick = () => { finish(); resetPanels(); };
 el("perm").onclick = () => { nPerm = nPerm === 1 ? 3 : 1; el("perm").textContent = "k = " + nPerm; };
+el("mode").onclick = () => { raceMode = raceMode === "sequential" ? "batch" : "sequential"; el("mode").textContent = raceMode; };
 
 loadMeta();
 </script>

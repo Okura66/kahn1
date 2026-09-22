@@ -190,8 +190,13 @@ async def race_items(path: str | None = None):
 
 @app.get("/api/race/stream")
 async def race_stream(path: str | None = None, n_permutations: int = 1,
-                      limit: int | None = None):
-    """Stream race events as server-sent events, one per answered item."""
+                      limit: int | None = None, mode: str = "sequential",
+                      concurrency: int = 8):
+    """Stream race events as server-sent events, one per answered item.
+
+    mode: "sequential" (per-item latency) or "batch" (throughput: Kahn1 one vLLM
+    batch, JEV bounded-concurrency requests). concurrency bounds the JEV batch mode.
+    """
     from fastapi.responses import StreamingResponse
 
     from . import race as race_mod
@@ -207,7 +212,8 @@ async def race_stream(path: str | None = None, n_permutations: int = 1,
     async def events():
         try:
             async for ev in race_mod.race(items, get_runner(),
-                                          n_permutations=n_permutations):
+                                          n_permutations=n_permutations,
+                                          mode=mode, concurrency=concurrency):
                 yield f"data: {json.dumps(ev)}\n\n"
         except Exception as exc:  # surface failures in the page instead of hanging
             payload = {"type": "fatal", "message": f"{type(exc).__name__}: {exc}"}

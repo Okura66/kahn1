@@ -414,6 +414,56 @@ class Engine:
             cache_hit_rate=cache_hit_rate,
         )
 
+    def evaluate_batch(self, queries: list[Query], n_permutations: int = 3) -> list[EvaluateResponse]:
+        """Evaluate many queries in ONE vLLM generate() call — the true batched path.
+
+        Every query's prompts (all questions x permutations) are flattened into a
+        single generate() so vLLM schedules them together; results are then split
+        back per query. This is the throughput mode: wall-clock is one batched
+        forward, not the sum of per-item round trips.
+        """
+        self._ensure_loaded()
+        t0 = time.perf_counter()
+        # Flatten, remembering how many entries each query owns.
+        all_entries: list[dict] = []
+        spans: list[tuple[int, int]] = []
+        for q in queries:
+            entries = self._build_batch(q, n_permutations)
+            spans.append((len(all_entries), len(all_entries) + len(entries)))
+            all_entries.extend(entries)
+
+        if not all_entries:
+            return [EvaluateResponse(answers={}, latency_ms=0.0, cache_hit_rate=0.0)
+                    for _ in queries]
+
+        prompts = [e["spec"].full_text for e in all_entries]
+        params_list = [self._make_params(e["resolved"].token_ids) for e in all_entries]
+        outputs = self._llm.generate(prompts, params_list)
+        cache_hit_rate = self._cache_hit_rate(outputs)
+        results = [self._extract(o, e["spec"], e["resolved"])
+                   for o, e in zip(outputs, all_entries)]
+
+        latency_ms = (time.perf_counter() - t0) * 1000.0
+        responses: list[EvaluateResponse] = []
+        for q, (lo, hi) in zip(queries, spans):
+            by_qi: dict[int, list[dict]] = {}
+            for e, lr in zip(all_entries[lo:hi], results[lo:hi]):
+                by_qi.setdefault(e["qi"], []).append(dict(entry=e, result=lr))
+            answers: dict[str, Answer] = {}
+            for qi, items in by_qi.items():
+                question = q.questions[qi]
+                if isinstance(question, ChoiceQuestion):
+                    answers[question.key] = self._compose_choice(question, items)
+                elif isinstance(question, ScoreQuestion):
+                    answers[question.key] = self._compose_score(question, items)
+                elif isinstance(question, NoulQuestion):
+                    answers[question.key] = self._compose_noul(question, items)
+            # Per-query latency is not meaningful in a shared batch; report the
+            # shared wall-clock so a caller summing them does not double count.
+            responses.append(EvaluateResponse(
+                answers=answers, latency_ms=latency_ms, cache_hit_rate=cache_hit_rate))
+        return responses
+
     def _make_params_with_logprobs(self, max_opts: int):
         sp = self._SamplingParams
         kwargs: dict[str, Any] = dict(

@@ -229,6 +229,41 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
   .clock { font-size: 14px; letter-spacing: 2px; color: var(--faint); margin-left: 10px; width: 90px; }
   .warn { font-size: 14px; letter-spacing: 1px; color: var(--muted); margin-left: 8px; max-width: 520px;
           white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Snake promo, desktop only. Outside the scaled stage: a card when the side
+     margin can hold it, otherwise an edge tab that opens the card on hover. */
+  .snake-cta {
+    position: fixed; right: 0; top: 50%; transform: translateY(-50%); z-index: 9;
+    display: flex; align-items: center; color: var(--ink); text-decoration: none;
+  }
+  .snake-cta .tab {
+    writing-mode: vertical-rl; background: var(--ink); color: var(--bg);
+    font-size: 12px; font-weight: 700; letter-spacing: 3px; padding: 16px 9px;
+  }
+  .snake-cta .card {
+    width: 250px; background: var(--bg); border: 1px solid var(--ink); border-right: none;
+    padding: 18px 18px 16px; display: none; flex-direction: column; gap: 10px;
+  }
+  .snake-cta:hover .card, .snake-cta:focus-visible .card, .snake-cta.roomy .card { display: flex; }
+  .snake-cta.roomy { right: 16px; }
+  .snake-cta.roomy .card { border-right: 1px solid var(--ink); }
+  .snake-cta.roomy .tab { display: none; }
+  .snake-cta:focus-visible { outline: 1px dashed var(--ink); outline-offset: 3px; }
+  .snake-cta .kicker { font-size: 11px; letter-spacing: 2.4px; color: var(--faint); }
+  .snake-cta b { font-size: 16px; }
+  .snake-cta .txt { font-size: 12px; line-height: 18px; color: var(--muted); }
+  .snake-cta .go {
+    align-self: flex-start; background: var(--ink); color: var(--bg); font-size: 12px;
+    letter-spacing: 2px; padding: 9px 14px; border: 1px solid var(--ink);
+  }
+  .snake-cta:hover .go { background: var(--bg); color: var(--ink); }
+  .snake-cta .url2 { font-size: 11px; letter-spacing: 1px; color: var(--faint); }
+  .mini { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; width: 120px; height: 120px; margin-bottom: 4px; }
+  .mini i { background: var(--track); }
+  .mini i.s { background: var(--dot); }
+  .mini i.h { background: var(--ink); }
+  .mini i.f { background: var(--bg); box-shadow: inset 0 0 0 3px var(--ink); border-radius: 50%; }
+  @media (max-width: 1099px) { .snake-cta { display: none; } }
 </style>
 </head>
 <body>
@@ -240,6 +275,17 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     <button id="consentNo">REFUSE</button>
   </div>
 </div>
+<a class="snake-cta" id="snakeCta" href="snake/" aria-label="New: Kahn1 plays Snake. Play it in your browser.">
+  <span class="card">
+    <span class="mini" id="mini" aria-hidden="true"></span>
+    <span class="kicker">NEW</span>
+    <b>Kahn1 plays Snake.</b>
+    <span class="txt">One Choice question per tick, the move read from the logits. Runs in your browser, like this playground.</span>
+    <span class="go">PLAY SNAKE &rarr;</span>
+    <span class="url2">demo.kahn1.com/snake</span>
+  </span>
+  <span class="tab" aria-hidden="true">KAHN1 PLAYS SNAKE</span>
+</a>
 <div class="viewport">
   <div class="stage" id="stage">
 
@@ -983,6 +1029,39 @@ fetch("https://kahn1.goatcounter.com/counter/TOTAL.json")
 if (new URLSearchParams(location.search).has("from")) {
   history.replaceState(null, "", location.pathname + location.hash);
 }
+
+/* Snake promo: a full card when the margin beside the scaled stage can hold it
+   (ultra-wide screens), otherwise an edge tab. The mini board loops a snake
+   around a fixed path; it stays still for prefers-reduced-motion. */
+function placeSnakeCta() {
+  const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+  el("snakeCta").classList.toggle("roomy", (window.innerWidth - 1920 * s) / 2 >= 300);
+}
+window.addEventListener("resize", placeSnakeCta);
+placeSnakeCta();
+(() => {
+  const n = 8, cells = [];
+  for (let i = 0; i < n * n; i++) cells.push(el("mini").appendChild(document.createElement("i")));
+  const path = [];  // a loop around the board, one cell in from the edge
+  for (let x = 1; x < 7; x++) path.push([x, 1]);
+  for (let y = 2; y < 7; y++) path.push([6, y]);
+  for (let x = 5; x > 0; x--) path.push([x, 6]);
+  for (let y = 5; y > 1; y--) path.push([1, y]);
+  let t = 0;
+  const draw = () => {
+    for (const c of cells) c.className = "";
+    for (let j = 0; j < 5; j++) {
+      const [x, y] = path[(t - j + path.length) % path.length];
+      cells[y * n + x].className = j === 0 ? "h" : "s";
+    }
+    const [fx, fy] = path[(t + 6) % path.length];
+    cells[fy * n + fx].className = "f";
+  };
+  draw();
+  if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    setInterval(() => { t = (t + 1) % path.length; draw(); }, 220);
+  }
+})();
 
 buildPresets();
 load(PRESETS.TICKET.state, PRESETS.TICKET.schema, null, "TICKET");

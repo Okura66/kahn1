@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kahn1 Plays Snake</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2317150f'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='20' font-weight='700' fill='%23faf8f5' text-anchor='middle'%3EK%3C/text%3E%3C/svg%3E">
+<meta name="description" content="Kahn1 plays Snake: one Choice question per tick, the move read from option-token logits.">
+<link rel="canonical" href="https://demo.kahn1.com/snake/">
+<script data-goatcounter="https://kahn1.goatcounter.com/count"
+        async src="https://gc.zgo.at/count.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf8f5;
+    --ink: #17150f;
+    --muted: #4a463e;
+    --faint: #8c877c;
+    --rule: #cdc7ba;
+    --dot: #b5afa2;
+    --track: #ebe6dd;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    overflow: hidden;
+  }
+  @keyframes blink { 0%,49% { opacity: 1 } 50%,100% { opacity: 0 } }
+
+  .viewport {
+    width: 100vw; height: 100vh; display: flex;
+    align-items: center; justify-content: center; overflow: hidden;
+  }
+  .stage {
+    width: 1920px; height: 1080px; flex: none; transform-origin: center center;
+    background: var(--bg); padding: 46px 40px 34px;
+    display: flex; flex-direction: column; gap: 26px; position: relative;
+  }
+
+  .head { display: flex; flex-direction: column; align-items: center; gap: 9px; flex: none; }
+  .head h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.2px; }
+  .facts {
+    display: flex; align-items: center; gap: 18px;
+    font-size: 16px; letter-spacing: 2px; color: var(--muted);
+  }
+  .facts i { color: var(--dot); font-style: normal; }
+  .back { position: absolute; top: 40px; left: 40px; font-size: 13px; letter-spacing: 2px;
+          color: var(--muted); text-decoration: none; padding: 10px 2px; }
+  .back:hover, .back:focus-visible { color: var(--ink); outline: none; text-decoration: underline; }
+
+  .lanes { display: flex; justify-content: center; gap: 40px; flex: none; }
+  .lane { position: relative; width: 900px; height: 840px; flex: none; }
+  .chip {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    background: var(--bg); padding: 0 14px; white-space: nowrap; z-index: 2;
+  }
+  .chip.top { top: -10px; font-size: 15px; font-weight: 700; letter-spacing: 2.4px; }
+  .chip.bot { bottom: -11px; font-size: 15px; color: var(--muted); }
+
+  .panel {
+    border: 1px solid var(--ink); width: 100%; height: 100%;
+    padding: 22px 24px; overflow: hidden; display: flex; flex-direction: column;
+  }
+  .cmd { font-size: 15px; font-weight: 700; line-height: 1.6; margin-bottom: 14px; flex: none; }
+  .status { font-size: 15px; line-height: 1.6; color: var(--muted); margin-bottom: 14px; flex: none;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .body { flex: 1; min-height: 0; display: flex; }
+
+  /* -- board -- */
+  .boardwrap { flex: 1; display: flex; align-items: center; justify-content: center; }
+  .board {
+    --n: 10; width: 560px; height: 560px; display: grid; gap: 4px;
+    grid-template-columns: repeat(var(--n), 1fr); grid-template-rows: repeat(var(--n), 1fr);
+    padding: 10px; border: 1px solid var(--rule); outline: 6px solid var(--track); outline-offset: -1px;
+  }
+  .cell { position: relative; background: var(--track); display: flex; align-items: center; justify-content: center; }
+  .cell.body { background: var(--dot); }
+  .cell.tail { background: var(--rule); }
+  .cell.head { background: var(--ink); }
+  .cell.food::after {
+    content: ""; width: 46%; height: 46%; border-radius: 50%;
+    border: 3px solid var(--ink); background: var(--bg);
+  }
+  .cell.dead { background: repeating-linear-gradient(45deg, var(--ink) 0 4px, var(--bg) 4px 8px); }
+  /* The four cells around the head carry the move distribution. */
+  .cell .pp {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums;
+    border: 2px solid var(--ink); background: rgba(23, 21, 15, var(--a, 0));
+  }
+  .cell .pp.hi { color: var(--bg); }
+  .cell .pp.off { border: 2px dashed var(--dot); }
+  .eyes { position: absolute; inset: 0; }
+  .eyes::before, .eyes::after {
+    content: ""; position: absolute; width: 7px; height: 7px; background: var(--bg);
+  }
+  .eyes.right::before { right: 18%; top: 22%; } .eyes.right::after { right: 18%; bottom: 22%; }
+  .eyes.left::before { left: 18%; top: 22%; }   .eyes.left::after { left: 18%; bottom: 22%; }
+  .eyes.up::before { top: 18%; left: 22%; }     .eyes.up::after { top: 18%; right: 22%; }
+  .eyes.down::before { bottom: 18%; left: 22%; } .eyes.down::after { bottom: 18%; right: 22%; }
+
+  /* -- answer lane (same line grammar as the playground) -- */
+  .answer { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .label {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 13px; letter-spacing: 2px; color: var(--muted);
+    border-bottom: 1px solid var(--rule); padding-bottom: 6px; margin-bottom: 8px; flex: none;
+  }
+  .label .hint { color: var(--faint); letter-spacing: 1px; }
+  pre.state {
+    margin: 0 0 18px; flex: 1; min-height: 0; overflow: hidden;
+    font-family: inherit; font-size: 13px; line-height: 16px; color: var(--muted); white-space: pre;
+  }
+  pre.state b { color: var(--ink); font-weight: 700; }
+  .ln { font-size: 15px; line-height: 21px; white-space: pre; margin-bottom: 4px; flex: none; }
+  .k { color: var(--ink); font-weight: 700; }
+  .v { color: var(--faint); }
+  .p { color: var(--ink); }
+  .dist { margin: 2px 0 0 32px; flex: none; }
+  .row {
+    display: grid; grid-template-columns: 110px 520px 64px; gap: 14px; align-items: center;
+    font-size: 13px; line-height: 22px; color: var(--faint);
+  }
+  .row .bar { height: 8px; background: var(--track); position: relative; }
+  .row .bar b { position: absolute; left: 0; top: 0; bottom: 0; background: var(--dot); width: 0; transition: width 120ms ease-out; }
+  .row .pct { text-align: right; font-variant-numeric: tabular-nums; }
+  .row.win { color: var(--ink); font-weight: 500; }
+  .row.win .bar b { background: var(--ink); }
+  .row .fatal { color: var(--faint); font-weight: 400; }
+
+  .cursor {
+    display: inline-block; width: 9px; height: 17px; background: var(--ink);
+    animation: blink 1s steps(1) infinite; vertical-align: text-bottom;
+  }
+
+  .foot { flex: none; height: 96px; padding-top: 14px; }
+  .foot .m { font-size: 15px; line-height: 21px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .total {
+    margin-top: 8px; display: flex; align-items: baseline; gap: 10px;
+    border-top: 1px solid var(--rule); padding-top: 8px;
+  }
+  .total .lbl { font-size: 14px; letter-spacing: 2px; color: var(--muted); }
+  .total .val { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .total .max { font-size: 14px; color: var(--faint); }
+
+  .controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex: none; }
+  button {
+    font-family: inherit; font-size: 14px; letter-spacing: 2px;
+    padding: 11px 20px; background: transparent; color: var(--ink);
+    border: 1px solid var(--rule); cursor: pointer;
+  }
+  button.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); padding: 11px 24px; min-width: 110px; }
+  button:hover:not(:disabled) { border-color: var(--ink); }
+  button.primary:hover:not(:disabled) { background: var(--bg); color: var(--ink); }
+  button:disabled { opacity: 0.35; cursor: default; }
+  button:focus-visible, input:focus-visible { outline: 1px dashed var(--ink); outline-offset: 3px; }
+  .url {
+    font-family: inherit; font-size: 14px; letter-spacing: 1px; color: var(--muted);
+    background: transparent; border: none; border-bottom: 1px solid var(--rule);
+    padding: 10px 2px; width: 240px; outline: none;
+  }
+  select.url { width: 250px; cursor: pointer; }
+  .credit {
+    position: relative; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;
+    font-size: 15px; color: var(--faint); text-decoration: none; border: 1px solid transparent;
+  }
+  .credit:hover, .credit:focus-visible { color: var(--ink); border-color: var(--rule); outline: none; }
+  .credit .tip {
+    position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: var(--bg); padding: 6px 10px; font-size: 12px; letter-spacing: 1px;
+    white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 120ms; z-index: 5;
+  }
+  .credit:hover .tip, .credit:focus-visible .tip { opacity: 1; }
+  .clock { font-size: 14px; letter-spacing: 2px; color: var(--faint); margin-left: 10px; width: 90px; }
+  .warn { font-size: 14px; letter-spacing: 1px; color: var(--muted); margin-left: 8px; max-width: 420px;
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hidden { visibility: hidden; }
+  [hidden] { display: none !important; }
+
+  @media (max-width: 1099px) {
+    body { overflow: auto; }
+    .viewport { width: auto; height: auto; display: block; overflow: visible; }
+    .stage { width: auto; height: auto; padding: 16px 16px 28px; gap: 22px; }
+    .back { position: static; }
+    .head h1 { font-size: 18px; text-align: center; }
+    .facts { flex-wrap: wrap; justify-content: center; gap: 4px 10px; font-size: 11px; letter-spacing: 1px; }
+    .lanes { display: contents; }
+    .head { order: 2; } .back { order: 1; }
+    .lane:first-child { order: 3; } .controls { order: 4; } .lane:last-child { order: 5; margin-top: 8px; }
+    .lane { width: auto; height: auto; }
+    .panel { height: auto; padding: 20px 14px 18px; }
+    .cmd, .status { font-size: 13px; }
+    .board { width: min(100%, 440px); height: auto; aspect-ratio: 1; }
+    pre.state { font-size: 11px; line-height: 14px; overflow-x: auto; max-height: 360px; }
+    .dist { margin-left: 0; }
+    .row { grid-template-columns: 70px minmax(0, 1fr) 52px; gap: 8px; font-size: 12px; }
+    .foot { height: auto; }
+    .controls { flex-wrap: wrap; gap: 8px; }
+    .controls .url { flex: 1 1 100%; width: auto; order: 5; }
+    .credit .tip { left: auto; right: 0; transform: none; }
+    .warn { flex: 1 1 100%; max-width: none; white-space: normal; margin: 0; text-align: center; order: 6; }
+    .chip.top, .chip.bot { font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+<div class="viewport">
+  <div class="stage" id="stage">
+
+    <a class="back" href="../">&larr; PLAYGROUND</a>
+
+    <div class="head">
+      <h1>Kahn1 plays Snake.</h1>
+      <div class="facts">
+        <span>ONE CHOICE PER TICK</span><i>&bull;</i>
+        <span>READ FROM OPTION LOGITS</span><i>&bull;</i>
+        <span>ZERO TOKENS GENERATED</span>
+      </div>
+    </div>
+
+    <div class="lanes">
+      <div class="lane">
+        <span class="chip top">&mdash; BOARD &mdash;</span>
+        <span class="chip bot" id="chipGame">game 1 · seed 0</span>
+        <div class="panel">
+          <div class="cmd" id="cmdGame">$ snake --size 10 --seed 0</div>
+          <div class="status" id="gstatus">Idle. Press PLAY to start.</div>
+          <div class="body"><div class="boardwrap"><div class="board" id="board"></div></div></div>
+          <div class="foot">
+            <div class="m" id="gmeta">length 3 · 0 steps · 0 since food</div>
+            <div class="m" id="gsession">no finished game yet</div>
+            <div class="total">
+              <span class="lbl">SCORE</span>
+              <span class="val" id="score">0</span>
+              <span class="max" id="best">best 0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lane">
+        <span class="chip top">&mdash; KAHN1 &mdash;</span>
+        <span class="chip bot" id="chipBackend">kahn1 · server</span>
+        <div class="panel">
+          <div class="cmd">$ kahn1 answer --choice up,down,left,right</div>
+          <div class="status" id="status">Connecting…</div>
+          <div class="body">
+            <div class="answer">
+              <div class="label"><span>STATE</span><span class="hint">grid + one step in each direction</span></div>
+              <pre class="state" id="state"></pre>
+              <div class="label"><span>ANSWER</span><span class="hint">p(move), option logits</span></div>
+              <div id="out"><div class="ln"><span class="cursor"></span></div></div>
+            </div>
+          </div>
+          <div class="foot">
+            <div class="m" id="meta">&nbsp;</div>
+            <div class="m" id="time">&nbsp;</div>
+            <div class="total">
+              <span class="lbl">LATENCY</span>
+              <span class="val" id="latency">&mdash;</span>
+              <span class="max">ms</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="primary" id="play">PLAY</button>
+      <button id="step" title="One tick">STEP</button>
+      <button id="reset" title="New game with the next seed">RESET</button>
+      <button id="perm" title="Option-order permutations averaged per decision (position debiasing)">k = 1</button>
+      <button id="speed" title="Pause between ticks">speed = fast</button>
+      <button id="backend" title="Where the model runs">backend = webgpu</button>
+      <input class="url" id="url" spellcheck="false" aria-label="Server URL" hidden>
+      <select class="url" id="quant" aria-label="GGUF quantization"></select>
+      <a class="credit" id="credit" href="https://huggingface.co/mradermacher" target="_blank" rel="noopener"
+         aria-label="GGUF quantized by mradermacher, thanks!"><span aria-hidden="true">&#9829;</span><span class="tip" role="tooltip">GGUF quantized by mradermacher, thanks!</span></a>
+      <span class="clock" id="clock">0.00s</span>
+      <span class="warn" id="warn"></span>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ------------------------------------------------------------------------ *
+ * Game. Same rules and the same state text as scripts/snake.py, so what the
+ * page shows is what the benchmark measured.
+ * ------------------------------------------------------------------------ */
+const N = 10, MAX_HUNGER = 120;
+const MOVES = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
+const NAMES = Object.keys(MOVES);
+const el = (id) => document.getElementById(id);
+
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+const key = (p) => p[0] + "," + p[1];
+const dist = (a, b) => Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]);
+
+class Game {
+  constructor(seed) {
+    this.seed = seed; this.rng = mulberry32(seed);
+    const c = Math.floor(N / 2);
+    this.snake = [[c, c], [c - 1, c], [c - 2, c]];
+    this.heading = "right"; this.score = 0; this.steps = 0; this.sinceFood = 0;
+    this.over = ""; this.deadAt = null; this.placeFood();
+  }
+  placeFood() {
+    const taken = new Set(this.snake.map(key)), free = [];
+    for (let x = 0; x < N; x++) for (let y = 0; y < N; y++) if (!taken.has(x + "," + y)) free.push([x, y]);
+    this.food = free.length ? free[Math.floor(this.rng() * free.length)] : [-1, -1];
+  }
+  cell(p) {
+    if (p[0] < 0 || p[0] >= N || p[1] < 0 || p[1] >= N) return "wall";
+    // The tail moves away this tick unless the snake eats, so it is safe.
+    if (this.snake.slice(0, -1).some((s) => s[0] === p[0] && s[1] === p[1])) return "body";
+    return p[0] === this.food[0] && p[1] === this.food[1] ? "food" : "empty";
+  }
+  next(move) { const [dx, dy] = MOVES[move]; return [this.snake[0][0] + dx, this.snake[0][1] + dy]; }
+  step(move) {
+    const nxt = this.next(move), what = this.cell(nxt);
+    this.steps++;
+    if (what === "wall" || what === "body") { this.over = "hit " + what; this.deadAt = nxt; return; }
+    this.snake.unshift(nxt); this.heading = move;
+    if (what === "food") { this.score++; this.sinceFood = 0; this.placeFood(); }
+    else { this.snake.pop(); this.sinceFood++; }
+    if (this.sinceFood >= MAX_HUNGER) this.over = "starved";
+  }
+  render() {
+    const body = new Set(this.snake.slice(1).map(key)), head = key(this.snake[0]), food = key(this.food);
+    const rows = ["#".repeat(N + 2)];
+    for (let y = 0; y < N; y++) {
+      let line = "#";
+      for (let x = 0; x < N; x++) {
+        const k = x + "," + y;
+        line += k === head ? "H" : body.has(k) ? "o" : k === food ? "F" : ".";
+      }
+      rows.push(line + "#");
+    }
+    rows.push(rows[0]);
+    return rows.join("\n");
+  }
+}
+
+const RULES =
+  "You control the snake in a game of Snake on a " + N + "x" + N + " board.\n" +
+  "Legend: H = snake head, o = snake body, F = food, . = empty, # = wall.\n" +
+  "Row 1 is the top. Moving into a wall or into the body ends the game.\n" +
+  "Eating the food makes the snake longer and scores a point.";
+
+function stateGrid(g) {
+  return RULES + "\n\n" + g.render() + "\n\n" +
+    "Score: " + g.score + ". Snake length: " + g.snake.length + ". Last move: " + g.heading + ".";
+}
+
+function stateSenses(g) {
+  const now = dist(g.snake[0], g.food), lines = [];
+  for (const m of NAMES) {
+    const nxt = g.next(m), what = g.cell(nxt);
+    if (what === "wall" || what === "body") lines.push("- " + m + ": " + what + ", moving there ends the game");
+    else if (what === "food") lines.push("- " + m + ": the food, moving there scores a point");
+    else {
+      const d = dist(nxt, g.food);
+      lines.push("- " + m + ": empty, " + (d < now ? "closer to" : "farther from") + " the food (" + d + " steps away)");
+    }
+  }
+  return stateGrid(g) + "\n\nThe food is " + now + " steps away. One step in each direction:\n" + lines.join("\n");
+}
+
+const QUESTION = {
+  move: { type: "choice", allow_other: false,
+          instructions: "Which move should the snake make now to stay alive and reach the food?",
+          criteria: NAMES },
+};
+
+/* ------------------------------------------------------------------------ *
+ * Backends, as on the playground: "webgpu" runs the GGUF in this tab,
+ * "server" calls the sysone FastAPI server. Both resolve evaluate(state) to
+ * { answers: { move: { choice, probabilities, confidence } }, latency_ms }.
+ * ------------------------------------------------------------------------ */
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("snake." + k); return v === null ? d : v; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("snake." + k, v); } catch {} },
+};
+const defaultUrl = /^https?:$/.test(location.protocol) && !/github\.io|kahn1\.com/.test(location.host)
+  ? location.origin : "http://127.0.0.1:8000";
+el("url").value = store.get("url", defaultUrl);
+const serverUrl = () => el("url").value.trim().replace(/\/+$/, "");
+
+/* Same weights, runtime and temperature as the playground (docs/index.html).
+   Weights sit in the origin's private storage, so a visit to the playground
+   already downloaded them. */
+const WLLAMA = "https://cdn.jsdelivr.net/npm/@wllama/wllama@3.6.1";
+const TOP_LOGPROBS = 100;
+const GGUF = {
+  repo: "mradermacher/Kahn1-Qwen2.5-3B-GGUF",
+  file: (q) => "Kahn1-Qwen2.5-3B." + q + ".gguf",
+  quants: { Q4_K_M: { mb: 1930 }, IQ4_XS: { mb: 1753 }, Q3_K_M: { mb: 1591 } },
+};
+const T_CHOICE = 1.1903007727373394;  // calibration_temponly.json, choice
+
+/* In-browser port of sysone's Choice path (prompt.py, engine, debias.py). */
+const SYSTEM_PROMPT = "You assess a state and answer with a single letter.";
+const LABELS = NAMES.map((_, i) => " " + String.fromCharCode(65 + i));  // Qwen merges ":A", hence the space
+const choicePrompt = (state, opts) =>
+  "<system>" + SYSTEM_PROMPT + "</system>\n<user>\n## State\n" + state + "\n" +
+  "\n## Question\n" + QUESTION.move.instructions + "\n" +
+  opts.map((o, i) => String.fromCharCode(65 + i) + ". " + o).join("\n") + "\n</user>\n<assistant>Answer:";
+
+/* k-1 distinct seeded shuffles after the identity, as on the playground. */
+function permutations(n, k, seed) {
+  const id = [...Array(n).keys()];
+  const perms = [id], seen = new Set([id.join()]);
+  let s = (seed + 1) * 2654435761 >>> 0;
+  const rand = () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  for (let a = 0; perms.length < k && a < k * 20; a++) {
+    const o = [...id];
+    for (let i = n - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [o[i], o[j]] = [o[j], o[i]]; }
+    if (!seen.has(o.join())) { seen.add(o.join()); perms.push(o); }
+  }
+  return perms;
+}
+function softmax(xs) {
+  const m = Math.max(...xs);
+  if (m === -Infinity) return xs.map(() => 1 / xs.length);
+  const e = xs.map((x) => Math.exp(x - m)), s = e.reduce((a, b) => a + b, 0);
+  return e.map((x) => x / s);
+}
+const lse = (a, b) => (a === -Infinity ? b : b === -Infinity ? a : Math.max(a, b) + Math.log1p(Math.exp(-Math.abs(a - b))));
+
+const BACKENDS = {
+  webgpu: {
+    wl: null, loadedQuant: null, gpu: false,
+    chip() {
+      const q = el("quant").value;
+      return "kahn1 · gguf " + q + " · " + (this.wl ? (this.gpu ? "webgpu" : "wasm cpu") : (navigator.gpu ? "webgpu" : "wasm cpu")) +
+             " · " + GGUF.quants[q].mb + " MB";
+    },
+    async ready() {
+      const q = el("quant").value, where = navigator.gpu ? "WebGPU" : "CPU (no WebGPU in this browser, slow)";
+      if (this.wl && this.loadedQuant === q) return "Model loaded in this tab on " + where + ".";
+      return "Runs in this tab on " + where + ". The first tick downloads " + GGUF.quants[q].mb +
+             " MB from Hugging Face, cached for next visits.";
+    },
+    loading() { return !(this.wl && this.loadedQuant === el("quant").value); },
+    async load(q) {
+      if (this.wl && this.loadedQuant === q) return;
+      if (this.wl) { await this.wl.exit(); this.wl = null; this.loadedQuant = null; }
+      el("status").textContent = "Loading wllama…";
+      const { Wllama } = await import(WLLAMA + "/esm/index.js");
+      const wl = new Wllama({ default: WLLAMA + "/esm/wasm/wllama.wasm" }, { suppressNativeLog: true });
+      await wl.loadModelFromHF({ repo: GGUF.repo, file: GGUF.file(q) }, {
+        n_ctx: 2048,
+        progressCallback: ({ loaded, total }) => {
+          el("status").textContent = "Downloading the model: " + Math.round(loaded / 1e6) + " / " +
+            Math.round(total / 1e6) + " MB (" + Math.round(100 * loaded / total) + "%)…";
+        },
+      });
+      this.gpu = wl.isSupportWebGPU();
+      this.wl = wl; this.loadedQuant = q;
+      el("chipBackend").textContent = this.chip();
+    },
+    /* Logprobs of the option letters, each marginalized over " A" and "A" as the
+       playground does, then renormalized: vLLM's allowed_token_ids softmax. */
+    async letterLogprobs(prompt) {
+      const r = await this.wl.createCompletion({
+        prompt, max_tokens: 1, temperature: 0, logprobs: TOP_LOGPROBS, cache_prompt: true,
+      });
+      const lps = r.choices[0].logprobs || {}, top = {};
+      for (const t of lps.content?.[0]?.top_logprobs || []) top[t.token] = t.logprob;
+      Object.assign(top, lps.top_logprobs?.[0] || {});
+      const get = (t) => (t in top ? top[t] : -Infinity);
+      const lp = LABELS.map((l) => lse(get(l), get(l.trimStart())));
+      if (lp.every((x) => x === -Infinity)) throw new Error("No option letter in the top " + TOP_LOGPROBS + " tokens.");
+      return lp;
+    },
+    async evaluate(state) {
+      await this.load(el("quant").value);
+      const t = performance.now(), acc = NAMES.map(() => 0), perms = permutations(NAMES.length, k, 0);
+      for (const order of perms) {
+        const lp = await this.letterLogprobs(choicePrompt(state, order.map((i) => NAMES[i])));
+        const p = softmax(lp.map((x) => x / T_CHOICE));
+        order.forEach((orig, pos) => { acc[orig] += p[pos] / perms.length; });
+      }
+      const best = acc.reduce((b, x, i) => (x > acc[b] ? i : b), 0), n = acc.length;
+      return {
+        answers: { move: { choice: NAMES[best],
+                           confidence: Math.max(0, (acc[best] - 1 / n) / (1 - 1 / n)),
+                           probabilities: Object.fromEntries(NAMES.map((m, i) => [m, acc[i]])) } },
+        latency_ms: performance.now() - t,
+      };
+    },
+  },
+  server: {
+    info: null,
+    chip() {
+      const i = this.info;
+      if (!i) return "kahn1 · server · " + serverUrl().replace(/^https?:\/\//, "");
+      const name = String(i.model || "").split("/").filter(Boolean).pop();
+      return "kahn1 · " + name + " · " + i.backend + (i.calibrated ? " · calibrated" : "");
+    },
+    async ready() {
+      const r = await fetch(serverUrl() + "/api/demo/info");
+      if (!r.ok) throw new Error("server answered " + r.status);
+      this.info = await r.json();
+      return this.info.loaded ? "Server ready, model loaded." : "Server ready. The model loads on the first tick.";
+    },
+    loading() { return !!this.info && !this.info.loaded; },
+    async evaluate(state) {
+      const r = await fetch(serverUrl() + "/api/demo/evaluate", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ state, schema: QUESTION, n_permutations: k }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(typeof d.detail === "string" ? d.detail : JSON.stringify(d.detail || r.statusText));
+      if (this.info) this.info.loaded = true;
+      return d;
+    },
+  },
+};
+
+let backend = store.get("backend", "webgpu") === "server" ? "server" : "webgpu";
+for (const q of Object.keys(GGUF.quants)) {
+  const o = document.createElement("option");
+  o.value = q; o.textContent = "gguf " + q + " · " + GGUF.quants[q].mb + " MB";
+  el("quant").appendChild(o);
+}
+el("quant").value = GGUF.quants[store.get("quant", "")] ? store.get("quant", "") : "Q4_K_M";
+
+async function connect() {
+  const b = BACKENDS[backend];
+  el("backend").textContent = "backend = " + backend;
+  el("url").hidden = backend !== "server";
+  el("quant").hidden = el("credit").hidden = backend !== "webgpu";
+  el("chipBackend").textContent = b.chip();
+  el("warn").textContent = "";
+  try {
+    el("status").textContent = await b.ready();
+    el("chipBackend").textContent = b.chip();
+  } catch (e) {
+    el("chipBackend").textContent = "kahn1 · server · offline";
+    el("status").textContent = "No server at " + serverUrl() + ".";
+    el("warn").textContent = "start it: uvicorn sysone.server:app --port 8000";
+  }
+}
+
+const ask = (state) => BACKENDS[backend].evaluate(state);
+
+/* ------------------------------------------------------------------------ *
+ * View
+ * ------------------------------------------------------------------------ */
+const board = el("board");
+board.style.setProperty("--n", N);
+const cells = [];
+for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+  const c = document.createElement("div"); c.className = "cell"; board.appendChild(c); cells.push(c);
+}
+const at = (p) => (p[0] >= 0 && p[0] < N && p[1] >= 0 && p[1] < N) ? cells[p[1] * N + p[0]] : null;
+
+function drawBoard(g, probs) {
+  for (const c of cells) { c.className = "cell"; c.innerHTML = ""; }
+  g.snake.forEach((p, i) => {
+    const c = at(p); if (!c) return;
+    c.classList.add(i === 0 ? "head" : i === g.snake.length - 1 ? "tail" : "body");
+  });
+  const f = at(g.food); if (f) f.classList.add("food");
+  const h = at(g.snake[0]);
+  if (h) { const e = document.createElement("span"); e.className = "eyes " + g.heading; h.appendChild(e); }
+  if (g.deadAt) { const c = at(g.deadAt); if (c) c.classList.add("dead"); }
+  if (!probs || g.over) return;
+  for (const m of NAMES) {
+    const c = at(g.next(m)); if (!c) continue;
+    const p = probs[m] || 0, s = document.createElement("span");
+    const fatal = ["wall", "body"].includes(g.cell(g.next(m)));
+    s.className = "pp" + (p > 0.55 ? " hi" : "") + (fatal ? " off" : "");
+    s.style.setProperty("--a", (0.85 * p).toFixed(3));
+    s.textContent = Math.round(p * 100) + "%";
+    c.appendChild(s);
+  }
+}
+
+function drawState(text) {
+  // Bold the per-direction readout so the eye finds what changed.
+  const esc = text.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  el("state").innerHTML = esc.replace(/^(- (up|down|left|right):.*)$/gm, "<b>$1</b>");
+}
+
+function drawAnswer(g, a, ms) {
+  const probs = a.probabilities, choice = a.choice;
+  const rows = NAMES.map((m) => {
+    const p = probs[m] || 0, fatal = ["wall", "body"].includes(g.cell(g.next(m)));
+    return '<div class="row' + (m === choice ? " win" : "") + '"><span>' + m +
+      (fatal ? ' <span class="fatal">&times;</span>' : "") + '</span><span class="bar"><b style="width:' +
+      (p * 100).toFixed(1) + '%"></b></span><span class="pct">' + (p * 100).toFixed(1) + "%</span></div>";
+  }).join("");
+  el("out").innerHTML =
+    '<div class="ln"><span class="k">move</span> <span class="v">choice</span> <span class="p">' + choice +
+    '</span>  <span class="v">confidence ' + a.confidence.toFixed(3) + "</span></div>" +
+    '<div class="dist">' + rows + "</div>";
+  el("latency").textContent = ms.toFixed(0);
+}
+
+function drawGame(g) {
+  el("score").textContent = g.score;
+  el("best").textContent = "best " + Math.max(best, g.score);
+  el("gmeta").textContent = "length " + g.snake.length + " · " + g.steps + " steps · " + g.sinceFood + " since food";
+  el("cmdGame").textContent = "$ snake --size " + N + " --seed " + g.seed;
+  el("chipGame").textContent = "game " + (finished.length + (g.over ? 0 : 1)) + " · seed " + g.seed;
+}
+
+function drawSession() {
+  if (!finished.length) { el("gsession").textContent = "no finished game yet"; return; }
+  const mean = finished.reduce((s, x) => s + x, 0) / finished.length;
+  el("gsession").textContent = finished.length + " game" + (finished.length > 1 ? "s" : "") +
+    " · mean " + mean.toFixed(1) + " · last " + finished.map(String).slice(-6).join(" ");
+}
+
+/* ------------------------------------------------------------------------ *
+ * Loop
+ * ------------------------------------------------------------------------ */
+let seed = Number(store.get("seed", 0)) || 0;
+let game = new Game(seed), finished = [], best = 0;
+let k = Number(store.get("k", 1)) === 3 ? 3 : 1;
+const SPEEDS = { fast: 0, normal: 150, slow: 500 };
+let speed = SPEEDS[store.get("speed", "fast")] !== undefined ? store.get("speed", "fast") : "fast";
+let playing = false, busy = false, lat = [], t0 = 0, clockTimer = null;
+
+function syncButtons() {
+  el("play").textContent = playing ? "PAUSE" : game.over ? "PLAY AGAIN" : "PLAY";
+  el("step").disabled = playing || busy;
+  el("backend").disabled = el("quant").disabled = playing || busy;
+  el("perm").textContent = "k = " + k;
+  el("speed").textContent = "speed = " + speed;
+}
+
+function newGame(nextSeed) {
+  if (nextSeed) { seed++; store.set("seed", seed); }
+  game = new Game(seed); pending = null;
+  drawBoard(game, null); drawGame(game); drawState(currentState());
+  el("out").innerHTML = '<div class="ln"><span class="cursor"></span></div>';
+  el("gstatus").textContent = "New game. Press PLAY or STEP.";
+}
+
+const currentState = () => stateSenses(game);
+
+// Kahn1's answer is shown on the position it was asked about, and the move is
+// applied at the start of the next tick. Board, state and answer therefore
+// always describe the same moment while the next request is in flight.
+let pending = null;
+
+/** Apply the move Kahn1 picked last tick; true when it ate the food. */
+function applyPending() {
+  if (!pending) return false;
+  const before = game.score;
+  game.step(pending);
+  pending = null;
+  drawGame(game);
+  if (game.over) {
+    finished.push(game.score); best = Math.max(best, game.score);
+    drawBoard(game, null); drawSession(); drawGame(game);
+    el("gstatus").textContent = "Game over: " + game.over + " after " + game.steps + " steps.";
+  }
+  return game.score > before;
+}
+
+async function tick() {
+  if (busy) return false;
+  const ate = applyPending();
+  if (game.over) { syncButtons(); return false; }
+  busy = true; syncButtons();
+  const state = currentState();
+  drawState(state);
+  drawBoard(game, null);
+  try {
+    const t = performance.now();
+    if (BACKENDS[backend].loading())
+      el("status").textContent = backend === "webgpu" ? "Loading the model in this tab…"
+        : "Loading the model on the server, about a minute the first time…";
+    const d = await ask(state);
+    const ms = performance.now() - t;
+    lat.push(d.latency_ms || ms); if (lat.length > 50) lat.shift();
+    const a = d.answers.move;
+    drawAnswer(game, a, d.latency_ms || ms);  // engine time, not the first-tick download
+    drawBoard(game, a.probabilities);
+    pending = a.choice;
+    const fatal = ["wall", "body"].includes(game.cell(game.next(a.choice)));
+    const engineMs = lat.reduce((s, x) => s + x, 0) / lat.length;
+    el("meta").textContent = "tick " + (game.steps + 1) + " · engine " + (d.latency_ms || 0).toFixed(1) + " ms · mean " + engineMs.toFixed(1) + " ms";
+    el("time").textContent = "k " + k + " permutation" + (k > 1 ? "s" : "");
+    el("status").textContent = "Picked " + a.choice + " at " + (a.probabilities[a.choice] * 100).toFixed(1) + "%" +
+      (fatal ? ", into the " + game.cell(game.next(a.choice)) + "." : ".");
+    el("gstatus").textContent = (ate ? "Food! " : "Playing. ") + "Head at column " +
+      (game.snake[0][0] + 1) + ", row " + (game.snake[0][1] + 1) + ".";
+    return true;
+  } catch (e) {
+    el("status").textContent = "Error: " + e.message;
+    if (backend === "server") el("warn").textContent = "is the server running at " + serverUrl() + "?";
+    return false;
+  } finally {
+    busy = false; syncButtons();
+  }
+}
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function loop() {
+  t0 = performance.now();
+  clockTimer = setInterval(() => { el("clock").textContent = ((performance.now() - t0) / 1000).toFixed(2) + "s"; }, 50);
+  while (playing) {
+    const alive = await tick();
+    if (!alive) { playing = false; break; }
+    if (SPEEDS[speed]) await sleep(SPEEDS[speed] / 2);
+  }
+  clearInterval(clockTimer); syncButtons();
+}
+
+el("play").onclick = () => {
+  if (playing) { playing = false; syncButtons(); return; }
+  if (game.over) newGame(true);
+  playing = true; syncButtons(); loop();
+};
+el("step").onclick = () => { if (game.over) newGame(true); tick(); };
+el("reset").onclick = () => { playing = false; newGame(true); syncButtons(); };
+el("perm").onclick = () => { k = k === 3 ? 1 : 3; store.set("k", k); syncButtons(); };
+el("speed").onclick = () => {
+  const order = Object.keys(SPEEDS); speed = order[(order.indexOf(speed) + 1) % order.length];
+  store.set("speed", speed); syncButtons();
+};
+el("url").addEventListener("change", () => { store.set("url", serverUrl()); connect(); });
+el("backend").onclick = () => { backend = backend === "webgpu" ? "server" : "webgpu"; store.set("backend", backend); connect(); };
+el("quant").addEventListener("change", () => { store.set("quant", el("quant").value); connect(); });
+document.addEventListener("keydown", (e) => {
+  if (e.target.tagName === "INPUT") return;
+  if (e.key === " ") { e.preventDefault(); el("play").click(); }
+  else if (e.key === "ArrowRight" || e.key === "n") el("step").click();
+});
+
+const FLUID = window.matchMedia("(max-width: 1099px)");
+function fit() {
+  const st = el("stage");
+  if (FLUID.matches) { st.removeAttribute("style"); return; }
+  const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+  st.style.transform = "scale(" + s + ")";
+  st.style.marginLeft = st.style.marginRight = ((1920 * s) - 1920) / 2 + "px";
+  st.style.marginTop = st.style.marginBottom = ((1080 * s) - 1080) / 2 + "px";
+}
+window.addEventListener("resize", fit);
+FLUID.addEventListener("change", fit);
+fit();
+
+newGame(false);
+syncButtons();
+connect();
+</script>
+</body>
+</html>

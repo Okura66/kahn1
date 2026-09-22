@@ -251,6 +251,10 @@ class CalibratedEngine:
         c = min(max(iso.predict(p_max), 0.0), 1.0)
         if p_max >= 1.0:
             return answer
+        # A map that lowers p_max hands mass to the others and could lift the
+        # runner-up above the winner. Floor c so the winner stays the argmax.
+        runner_up = max((v for k, v in probs.items() if k != win), default=0.0)
+        c = max(c, runner_up / (1.0 - p_max + runner_up))
         scale = (1.0 - c) / (1.0 - p_max)
         new = {k: (c if k == win else v * scale) for k, v in probs.items()}
         s = sum(new.values()) or 1.0

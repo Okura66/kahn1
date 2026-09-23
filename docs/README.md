@@ -14,6 +14,8 @@ Two backends, toggled from the page:
   (Q4_K_M / IQ4_XS / Q3_K_M; Q2_K outputs noise). Weights are cached per site in the
   browser; the CLEAR button in the page deletes them. That GGUF is **v1**, whose Noul
   answers are inverted: `GGUF.noulInverted` flips them — set it to `false` for a v3 GGUF.
+  Without a usable WebGPU adapter it runs on the WASM CPU backend; if WebGPU fails to
+  load the model, the page retries with `n_gpu_layers: 0` and the chip reads `wasm cpu (fallback)`.
 
 ## Run the server backend (WSL2, vLLM)
 

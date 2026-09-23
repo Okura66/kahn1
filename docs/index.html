@@ -456,15 +456,22 @@ const BACKENDS = {
     wl: null,       // Wllama instance once a model is loaded
     loadedQuant: null,
     gpu: false,
+    fallback: false, // WebGPU failed on load, running on the CPU
+    device(long) {
+      const gpu = this.wl ? this.gpu : gpuProbed ?? !!navigator.gpu;
+      if (gpu) return long ? "WebGPU" : "webgpu";
+      if (this.wl && this.fallback) return long ? "CPU (WebGPU could not load the model — slow)" : "wasm cpu (fallback)";
+      return long ? "CPU (no usable WebGPU in this browser — slow)" : "wasm cpu";
+    },
     chip() {
       const q = GGUF.quants[el("quant").value];
       return "kahn1 · gguf " + el("quant").value + " · " +
-             (this.wl ? (this.gpu ? "webgpu" : "wasm cpu") : (navigator.gpu ? "webgpu" : "wasm cpu")) +
+             this.device() +
              " · " + q.mb + " MB";
     },
     async ready() {
       const q = el("quant").value;
-      const where = navigator.gpu ? "WebGPU" : "CPU (no WebGPU in this browser — slow)";
+      const where = (await probeGpu(), this.device(true));
       if (this.wl && this.loadedQuant === q) return "Model loaded in this tab on " + where + ".";
       return "Runs in this tab on " + where + ". First RUN downloads " + GGUF.quants[q].mb +
              " MB from Hugging Face, cached for next visits.";
@@ -491,16 +498,33 @@ const BACKENDS = {
       const t = performance.now();
       el("status").textContent = "Loading wllama…";
       const { Wllama } = await import(WLLAMA + "/esm/index.js");
-      const wl = new Wllama({ default: WLLAMA + "/esm/wasm/wllama.wasm" },
-                            { suppressNativeLog: true });
-      await wl.loadModelFromHF({ repo: GGUF.repo, file: GGUF.file(q) }, {
-        n_ctx: 2048,
-        progressCallback: ({ loaded, total }) => {
-          el("status").textContent = "Downloading the model: " + Math.round(loaded / 1e6) + " / " +
-            Math.round(total / 1e6) + " MB (" + Math.round(100 * loaded / total) + "%)…";
-        },
-      });
-      this.gpu = wl.isSupportWebGPU();
+      const gpu = await probeGpu();
+      const open = async (cpu) => {
+        const wl = new Wllama({ default: WLLAMA + "/esm/wasm/wllama.wasm" }, { suppressNativeLog: true });
+        try {
+          await wl.loadModelFromHF({ repo: GGUF.repo, file: GGUF.file(q) }, {
+            n_ctx: 2048,
+            ...(cpu ? { n_gpu_layers: 0 } : {}),
+            progressCallback: ({ loaded, total }) => {
+              el("status").textContent = "Downloading the model: " + Math.round(loaded / 1e6) + " / " +
+                Math.round(total / 1e6) + " MB (" + Math.round(100 * loaded / total) + "%)…";
+            },
+          });
+          return wl;
+        } catch (e) { await wl.exit().catch(() => {}); throw e; }
+      };
+      this.fallback = false;
+      let wl;
+      try { wl = await open(!gpu); }
+      catch (e) {
+        if (!gpu) throw e;
+        // WebGPU came up but could not take the model (VRAM or buffer limits): run it on the CPU.
+        console.warn("[kahn1] WebGPU load failed, retrying on the CPU:", e);
+        el("status").textContent = "WebGPU could not load the model, retrying on the CPU…";
+        wl = await open(true);
+        this.fallback = true;
+      }
+      this.gpu = gpu && !this.fallback;
       this.wl = wl;
       this.loadedQuant = q;
       el("chipBackend").textContent = this.chip();
@@ -563,6 +587,17 @@ const BACKENDS = {
  * from_jev, engine._build_batch / _compose_*, debias.py). Keep in sync.
  * ------------------------------------------------------------------------ */
 const WLLAMA = "https://cdn.jsdelivr.net/npm/@wllama/wllama@3.6.1";
+/* wllama's isSupportWebGPU() only checks that navigator.gpu exists. Ask for an
+   adapter, as ggml-webgpu does, so the chip says where the model really runs;
+   without one llama.cpp silently falls back to the WASM CPU backend. Firefox
+   without JSPI runs wllama with WebGPU disabled. */
+let gpuProbed = null;
+let gpuProbe = null;
+const probeGpu = () => gpuProbe ??= (async () => {
+  let ok = !!navigator.gpu && !(/Firefox\//.test(navigator.userAgent) && !WebAssembly.Suspending);
+  if (ok) try { ok = !!(await navigator.gpu.requestAdapter()); } catch { ok = false; }
+  return gpuProbed = ok;
+})();
 const TOP_LOGPROBS = 100;
 const GGUF = {
   // Kahn1 v1 (the checkpoint the Hub had when it was quantized), quantized by mradermacher.

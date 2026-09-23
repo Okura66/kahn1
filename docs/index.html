@@ -229,6 +229,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
   .clock { font-size: 14px; letter-spacing: 2px; color: var(--faint); margin-left: 10px; width: 90px; }
   .warn { font-size: 14px; letter-spacing: 1px; color: var(--muted); margin-left: 8px; max-width: 520px;
           white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .warn.alert { color: var(--ink); white-space: normal; }
 
   /* Snake promo, desktop only. Outside the scaled stage: a card when the side
      margin can hold it, otherwise an edge tab that opens the card on hover. */
@@ -463,6 +464,13 @@ const BACKENDS = {
       if (this.wl && this.fallback) return long ? "CPU (WebGPU could not load the model — slow)" : "wasm cpu (fallback)";
       return long ? "CPU (no usable WebGPU in this browser — slow)" : "wasm cpu";
     },
+    /* Single-threaded WASM (GitHub Pages cannot send COOP/COEP): a 10-token
+       prompt takes ~35 s on a desktop CPU, so say it before the first run. */
+    slowNote() {
+      if (this.device() === "webgpu") return "";
+      return "⚠ " + (this.wl && this.fallback ? "WebGPU could not load the model" : "No WebGPU here") +
+             ": CPU only, minutes per question. Use Chrome or Edge, or the server backend.";
+    },
     chip() {
       const q = GGUF.quants[el("quant").value];
       return "kahn1 · gguf " + el("quant").value + " · " +
@@ -525,10 +533,11 @@ const BACKENDS = {
         this.fallback = true;
       }
       this.gpu = gpu && !this.fallback;
+      showWarn(this.slowNote());
       this.wl = wl;
       this.loadedQuant = q;
       el("chipBackend").textContent = this.chip();
-      el("status").textContent = "Scoring…";
+      el("status").textContent = this.gpu ? "Scoring…" : "Scoring on the CPU, this can take minutes…";
       return performance.now() - t;
     },
     /* Next-token logprobs of the option labels. top_logprobs are the full-vocab
@@ -878,7 +887,12 @@ function resetOut() {
   el("footer").classList.add("hidden");
   el("status").textContent = "Idle. Press RUN to start.";
   el("clock").textContent = "0.00s";
-  el("warn").textContent = "";
+  showWarn(backend === "webgpu" ? BACKENDS.webgpu.slowNote() : "");
+}
+
+function showWarn(text) {
+  el("warn").textContent = text;
+  el("warn").classList.toggle("alert", !!text);
 }
 
 async function connect() {
@@ -891,10 +905,11 @@ async function connect() {
   if (backend === "webgpu") refreshPurge();
   el("chipBackend").textContent = b.chip();
   el("status").textContent = "Connecting…";
-  el("warn").textContent = "";
+  showWarn("");
   try {
     el("status").textContent = await b.ready();
     el("chipBackend").textContent = b.chip();
+    showWarn(backend === "webgpu" ? b.slowNote() : "");
   } catch (e) {
     el("status").textContent = "Backend unavailable.";
     el("warn").textContent = backend === "server"

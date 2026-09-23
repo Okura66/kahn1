@@ -188,6 +188,7 @@
   .clock { font-size: 14px; letter-spacing: 2px; color: var(--faint); margin-left: 10px; width: 90px; }
   .warn { font-size: 14px; letter-spacing: 1px; color: var(--muted); margin-left: 8px; max-width: 420px;
           white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .warn.alert { color: var(--ink); white-space: normal; }
   .hidden { visibility: hidden; }
   [hidden] { display: none !important; }
 
@@ -302,6 +303,7 @@
       <button id="backend" title="Where the model runs">backend = webgpu</button>
       <input class="url" id="url" spellcheck="false" aria-label="Server URL" hidden>
       <select class="url" id="quant" aria-label="GGUF quantization"></select>
+      <button id="purge" title="Unload the model and delete downloaded weights from this browser">CLEAR CACHE</button>
       <a class="credit" id="credit" href="https://huggingface.co/mradermacher" target="_blank" rel="noopener"
          aria-label="GGUF quantized by mradermacher, thanks!"><span aria-hidden="true">&#9829;</span><span class="tip" role="tooltip">GGUF quantized by mradermacher, thanks!</span></a>
       <span class="clock" id="clock">0.00s</span>
@@ -485,6 +487,29 @@ const BACKENDS = {
       if (this.wl && this.fallback) return long ? "CPU (WebGPU could not load the model, slow)" : "wasm cpu (fallback)";
       return long ? "CPU (no usable WebGPU in this browser, slow)" : "wasm cpu";
     },
+    /* Single-threaded WASM (GitHub Pages cannot send COOP/COEP): a 10-token
+       prompt takes ~35 s on a desktop CPU, so say it before the first tick. */
+    slowNote() {
+      if (this.device() === "webgpu") return "";
+      return "⚠ " + (this.wl && this.fallback ? "WebGPU could not load the model" : "No WebGPU here") +
+             ": CPU only, minutes per move. Use Chrome or Edge, or the server backend.";
+    },
+    /* Weights live in the browser's origin-private storage (OPFS), per site. */
+    async cache() {
+      if (!this.wl) {
+        const { Wllama } = await import(WLLAMA + "/esm/index.js");
+        this.idle = this.idle || new Wllama({ default: WLLAMA + "/esm/wasm/wllama.wasm" }, { suppressNativeLog: true });
+      }
+      return (this.wl || this.idle).cacheManager;
+    },
+    async cachedBytes() {
+      return (await (await this.cache()).list()).reduce((a, e) => a + e.size, 0);
+    },
+    async purge() {
+      const cm = await this.cache();
+      if (this.wl) { await this.wl.exit(); this.wl = null; this.loadedQuant = null; }
+      await cm.clear();
+    },
     chip() {
       const q = el("quant").value;
       return "kahn1 · gguf " + q + " · " + this.device() +
@@ -528,6 +553,8 @@ const BACKENDS = {
         this.fallback = true;
       }
       this.gpu = gpu && !this.fallback;
+      showWarn(this.slowNote());
+      el("status").textContent = this.gpu ? "Thinking…" : "Thinking on the CPU, this can take minutes…";
       this.wl = wl; this.loadedQuant = q;
       el("chipBackend").textContent = this.chip();
     },
@@ -598,16 +625,31 @@ for (const q of Object.keys(GGUF.quants)) {
 }
 el("quant").value = GGUF.quants[store.get("quant", "")] ? store.get("quant", "") : "Q4_K_M";
 
+function showWarn(text) {
+  el("warn").textContent = text;
+  el("warn").classList.toggle("alert", !!text);
+}
+
+async function refreshPurge() {
+  try {
+    const bytes = await BACKENDS.webgpu.cachedBytes();
+    el("purge").textContent = bytes ? "CLEAR " + (bytes / 1e9).toFixed(1) + " GB" : "CACHE EMPTY";
+    el("purge").disabled = busy || playing || (!bytes && !BACKENDS.webgpu.wl);
+  } catch { el("purge").textContent = "CLEAR CACHE"; }
+}
+
 async function connect() {
   const b = BACKENDS[backend];
   el("backend").textContent = "backend = " + backend;
   el("url").hidden = backend !== "server";
-  el("quant").hidden = el("credit").hidden = backend !== "webgpu";
+  el("quant").hidden = el("credit").hidden = el("purge").hidden = backend !== "webgpu";
+  if (backend === "webgpu") refreshPurge();
   el("chipBackend").textContent = b.chip();
-  el("warn").textContent = "";
+  showWarn("");
   try {
     el("status").textContent = await b.ready();
     el("chipBackend").textContent = b.chip();
+    showWarn(backend === "webgpu" ? b.slowNote() : "");
   } catch (e) {
     el("chipBackend").textContent = "kahn1 · server · offline";
     el("status").textContent = "No server at " + serverUrl() + ".";
@@ -699,7 +741,7 @@ let playing = false, busy = false, lat = [], t0 = 0, clockTimer = null;
 function syncButtons() {
   el("play").textContent = playing ? "PAUSE" : game.over ? "PLAY AGAIN" : "PLAY";
   el("step").disabled = playing || busy;
-  el("backend").disabled = el("quant").disabled = playing || busy;
+  el("backend").disabled = el("quant").disabled = el("purge").disabled = playing || busy;
   el("perm").textContent = "k = " + k;
   el("speed").textContent = "speed = " + speed;
 }
@@ -764,11 +806,13 @@ async function tick() {
       (game.snake[0][0] + 1) + ", row " + (game.snake[0][1] + 1) + ".";
     return true;
   } catch (e) {
-    el("status").textContent = "Error: " + e.message;
+    console.error("[kahn1]", e);
+    el("status").textContent = "Error: " + (e?.message ?? String(e));
     if (backend === "server") el("warn").textContent = "is the server running at " + serverUrl() + "?";
     return false;
   } finally {
     busy = false; syncButtons();
+    if (backend === "webgpu" && !playing) refreshPurge();
   }
 }
 
@@ -800,6 +844,16 @@ el("speed").onclick = () => {
 el("url").addEventListener("change", () => { store.set("url", serverUrl()); connect(); });
 el("backend").onclick = () => { backend = backend === "webgpu" ? "server" : "webgpu"; store.set("backend", backend); connect(); };
 el("quant").addEventListener("change", () => { store.set("quant", el("quant").value); connect(); });
+el("purge").onclick = async () => {
+  if (busy || playing) return;
+  el("purge").disabled = true;
+  try {
+    await BACKENDS.webgpu.purge();
+    el("status").textContent = "Model unloaded and downloaded weights deleted from this browser.";
+  } catch (e) { showWarn(e?.message ?? String(e)); }
+  refreshPurge();
+  el("chipBackend").textContent = BACKENDS.webgpu.chip();
+};
 document.addEventListener("keydown", (e) => {
   if (e.target.tagName === "INPUT") return;
   if (e.key === " ") { e.preventDefault(); el("play").click(); }

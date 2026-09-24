@@ -117,3 +117,19 @@ def test_load_calibration_endpoint(client, tmp_path):
     assert data["config"]["choice"] == 1.35
     assert data["config"]["score"] == 0.95
     assert data["config"]["noul"] == 1.10
+
+
+@pytest.mark.parametrize("origin, allowed", [
+    ("https://kahn1.com", True),
+    ("http://localhost:8000", True),
+    ("http://127.0.0.1:5500", True),
+    # No wildcard: other subdomains, look-alikes and GitHub Pages sites are refused.
+    ("https://demo.kahn1.com", False),
+    ("https://www.kahn1.com", False),
+    ("https://kahn1.com.evil.example", False),
+    ("http://kahn1.com", False),
+    ("https://someone.github.io", False),
+])
+def test_cors_allows_only_the_site_and_local_pages(client, origin, allowed):
+    resp = client.get("/health", headers={"Origin": origin})
+    assert (resp.headers.get("access-control-allow-origin") == origin) is allowed

@@ -238,11 +238,12 @@ async def race_stream(path: str | None = None, n_permutations: int = 1,
 
 DEMO_DIR = Path(__file__).resolve().parents[2] / "docs"
 
-# Origins allowed to call the API from a browser: local pages, GitHub Pages and
-# the playground's own domain. Override with SYSONE_CORS_ORIGIN_REGEX.
+# Origins allowed to call the API from a browser: local pages and the site
+# itself, https://kahn1.com. No wildcard: any other origin (another subdomain,
+# any *.github.io page) is refused. Override with SYSONE_CORS_ORIGIN_REGEX.
 _CORS_REGEX = os.environ.get(
     "SYSONE_CORS_ORIGIN_REGEX",
-    r"https?://(localhost|127\.0\.0\.1)(:\d+)?|https://[\w-]+\.github\.io|https://([\w-]+\.)?kahn1\.com",
+    r"https?://(localhost|127\.0\.0\.1)(:\d+)?|https://kahn1\.com",
 )
 
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402

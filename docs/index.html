@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google Tag Manager, loaded only once the visitor accepts analytics cookies
+     (ePrivacy / CNIL: no non-essential cookie before consent). See the consent banner. -->
+<script>
+function loadGTM() {
+  if (window.__gtmLoaded) return;
+  window.__gtmLoaded = true;
+  (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-TTC5WPRN');
+}
+try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); } catch (e) {}
+</script>
+<!-- End Google Tag Manager -->
+<!-- GoatCounter: cookieless visit count, exempt from consent. Runs for every visitor. -->
+<script data-goatcounter="https://kahn1.goatcounter.com/count"
+        async src="https://gc.zgo.at/count.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kahn1 — Typed LLM decisions read from logits, zero tokens generated</title>
+<meta name="description" content="Kahn1 is an open-source System 1 decision engine: classify, score and verify any text with a fine-tuned 3B model that reads calibrated answers from option-token logits.">
+<link rel="canonical" href="https://kahn1.com/">
+<link rel="alternate" hreflang="en" href="https://kahn1.com/">
+<link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/">
+<link rel="alternate" hreflang="x-default" href="https://kahn1.com/">
+<meta name="author" content="Axel Montzamir">
+<meta name="theme-color" content="#faf8f5">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Kahn1">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="fr_FR">
+<meta property="og:url" content="https://kahn1.com/">
+<meta property="og:title" content="Kahn1 — Any text in. Typed answers out.">
+<meta property="og:description" content="Classify, score and verify any text with a 3B model that reads calibrated answers from option-token logits. Zero tokens generated, zero schema errors.">
+<meta property="og:image" content="https://kahn1.com/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Kahn1: any text in, typed answers out. Choice, Score, Noul read from option logits.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2317150f'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='20' font-weight='700' fill='%23faf8f5' text-anchor='middle'%3EK%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://kahn1.com/#website",
+      "url": "https://kahn1.com/",
+      "name": "Kahn1",
+      "inLanguage": ["en", "fr"]
+    },
+    {
+      "@type": "Person",
+      "@id": "https://kahn1.com/#author",
+      "name": "Axel Montzamir",
+      "url": "https://www.linkedin.com/in/amontzamir/",
+      "sameAs": ["https://github.com/Okura66", "https://huggingface.co/Okura66"]
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://kahn1.com/#software",
+      "name": "Kahn1",
+      "alternateName": "sysone",
+      "url": "https://kahn1.com/",
+      "description": "Open-source System 1 decision engine. It answers typed questions (Choice, Score, Noul) about any text by reading calibrated probability distributions from option-token logits, without generating text.",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Linux, Windows, macOS, web browser (WebGPU)",
+      "license": "https://opensource.org/licenses/MIT",
+      "isAccessibleForFree": true,
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+      "author": { "@id": "https://kahn1.com/#author" },
+      "sameAs": ["https://github.com/Okura66/kahn1", "https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B"]
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "name": "kahn1",
+      "codeRepository": "https://github.com/Okura66/kahn1",
+      "programmingLanguage": "Python",
+      "license": "https://opensource.org/licenses/MIT",
+      "author": { "@id": "https://kahn1.com/#author" }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        { "@type": "Question", "name": "What is Kahn1?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Kahn1 is an open-source decision engine built on a fine-tuned Qwen2.5-3B. It takes a text (the state) and typed questions, and returns for each question a typed value and a calibrated probability distribution read from the logits of the option tokens. It generates no text." } },
+        { "@type": "Question", "name": "How is Kahn1 different from JSON mode or structured outputs?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Structured decoding constrains the tokens a model generates, and the result still has to be parsed. Kahn1 generates nothing: it reads one probability distribution per question over the option tokens, so the full distribution and a calibrated confidence come with every answer, and there is nothing to parse." } },
+        { "@type": "Question", "name": "Can Kahn1 run without a GPU?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. The CPU engine runs the same decision code with a plain transformers forward pass, at seconds per question instead of tens of milliseconds. The playground and the Snake demo also run a 4-bit GGUF of the model in the browser with WebGPU." } },
+        { "@type": "Question", "name": "Can I use my own categories?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. Categories, scales and statements are part of each request, so changing them needs no retraining. Calibration was fitted on the training distribution: recalibrate on your own labelled examples with sysone calibrate before relying on a confidence threshold." } },
+        { "@type": "Question", "name": "How accurate is Kahn1?",
+          "acceptedAnswer": { "@type": "Answer", "text": "On 14,663 held-out items never seen in training, the v3 checkpoint reaches 70.3% overall: 90.9% on Choice (banking77 and MASSIVE intents), 51.5% exact match on 5-level Score scales (95.2% within one level on SST-5) and 67.0% on Noul (82.7% on RTE, 65.0% on SciTail). Median latency is 36.4 ms on a single RTX 5070 Ti with vLLM." } },
+        { "@type": "Question", "name": "How does Kahn1 compare with JEV?",
+          "acceptedAnswer": { "@type": "Answer", "text": "On the 14,663 items of the Kahn1 held-out set, run through the TypeSafe API, Kahn1 scores 70.3% and JEV 1.13.0 67.3%: Kahn1 leads on Choice, they are level on Score and JEV leads on Noul. On the 231 public JevBench items, scored by JevBench itself, Jev scores 86.6% and Kahn1 67.5% (73.0% vs 42.3% on the hard tier). Kahn1 is stronger overall on the task families it was trained for; Jev is clearly stronger on open-ended judgment. Kahn1 is open and runs on your own hardware; JEV is a hosted API." } },
+        { "@type": "Question", "name": "Is Kahn1 free?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. The code is MIT-licensed and the weights are on Hugging Face: a merged model (Okura66/Kahn1-Qwen2.5-3B) and a LoRA adapter (Okura66/Kahn1-Qwen2.5-3B-LoRA)." } }
+      ]
+    }
+  ]
+}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<div class="consent" id="consent" role="dialog" aria-labelledby="consentText" hidden>
+  <p id="consentText">Can Google Analytics count this visit? It sets cookies. Refusing changes nothing
+     else on the site, and nothing you type in the demos is sent to it.</p>
+  <div class="row2">
+    <button class="primary" id="consentYes">ACCEPT</button>
+    <button id="consentNo">REFUSE</button>
+  </div>
+</div>
+
+<a class="edge left" href="playground/" aria-label="Open the playground: ask typed questions about any text, in your browser.">
+  <span class="card2">
+    <span class="minibars" id="minibars" aria-hidden="true" data-frames='[{&quot;q&quot;: &quot;intent&quot;, &quot;rows&quot;: [[&quot;refund&quot;, 0.9561], [&quot;none&quot;, 0.041], [&quot;delivery&quot;, 0.0024], [&quot;account&quot;, 0.0003]]}, {&quot;q&quot;: &quot;urgency&quot;, &quot;rows&quot;: [[&quot;high&quot;, 0.7356], [&quot;critical&quot;, 0.2604], [&quot;medium&quot;, 0.0028], [&quot;low&quot;, 0.0013]]}, {&quot;q&quot;: &quot;churn_risk&quot;, &quot;rows&quot;: [[&quot;yes&quot;, 0.9843], [&quot;no&quot;, 0.0157]]}]'></span>
+    <span class="kicker">TRY IT</span>
+    <b>The playground.</b>
+    <span class="txt">Paste any text, write a schema, read the answers and their distributions. The model runs in your browser.</span>
+    <span class="go">OPEN THE PLAYGROUND &rarr;</span>
+    <span class="url2">kahn1.com/playground</span>
+  </span>
+  <span class="tab" aria-hidden="true">PLAYGROUND</span>
+</a>
+<a class="edge right" href="snake/" aria-label="Kahn1 plays Snake. Watch it in your browser.">
+  <span class="card2">
+    <span class="mini" id="mini" aria-hidden="true"></span>
+    <span class="kicker">DEMO</span>
+    <b>Kahn1 plays Snake.</b>
+    <span class="txt">One Choice question per tick, the move read from the logits. Runs in your browser, like the playground.</span>
+    <span class="go">PLAY SNAKE &rarr;</span>
+    <span class="url2">kahn1.com/snake</span>
+  </span>
+  <span class="tab" aria-hidden="true">KAHN1 PLAYS SNAKE</span>
+</a>
+
+<div class="wrap">
+  <header class="top">
+    <div class="left">
+      <a class="brand" href="./" aria-label="Kahn1, home">KAHN1</a>
+      <nav class="nav" aria-label="Site">
+        <a href="playground/">PLAYGROUND</a>
+        <a href="snake/">SNAKE</a>
+        <a href="benchmarks/">BENCHMARKS</a>
+        <a href="get-started/">GET STARTED</a>
+      </nav>
+    </div>
+    <nav class="links" aria-label="Language and author links">
+      <span class="views" id="views" data-one="view" data-many="views" hidden></span>
+      <span class="lang">
+        <a href="./" hreflang="en" lang="en" aria-current="page">EN</a>
+        <a href="fr/" hreflang="fr" lang="fr" title="Lire en français">FR</a>
+      </span>
+      <a href="https://www.linkedin.com/in/amontzamir/" target="_blank" rel="noopener" title="LinkedIn" aria-label="LinkedIn">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 1 1 0-4.125 2.062 2.062 0 0 1 0 4.125zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+      </a>
+      <a href="https://github.com/Okura66/kahn1" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+      </a>
+      <a href="https://huggingface.co/Okura66" target="_blank" rel="noopener" title="Hugging Face" aria-label="Hugging Face">
+        <span class="hf" aria-hidden="true">🤗</span>
+      </a>
+      <a href="#" class="cookies" data-cookies title="Change your cookie choice">cookies</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="title">
+      <h1 id="title">Any text in. Typed answers out.</h1>
+      <div class="facts">
+        <span>CHOICE · SCORE · NOUL</span><i>&bull;</i>
+        <span>READ FROM OPTION LOGITS</span><i>&bull;</i>
+        <span>ZERO TOKENS GENERATED</span>
+      </div>
+      <p class="lead"><strong>Kahn1</strong> is an open-source decision engine built on a fine-tuned
+        Qwen2.5-3B. Give it a <em>state</em> (a message, a review, a document) and a list of typed
+        questions. Each answer comes back as a value and a calibrated probability distribution, read
+        straight from the logits of the option tokens. Nothing is generated and nothing is parsed, so
+        a malformed answer cannot happen.</p>
+      <div class="cta">
+        <a class="btn primary" href="playground/">OPEN THE PLAYGROUND &rarr;</a>
+        <a class="btn" href="snake/">WATCH IT PLAY SNAKE</a>
+        <a class="btn" href="https://github.com/Okura66/kahn1" rel="noopener">GITHUB</a>
+        <a class="btn" href="https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B" rel="noopener">HUGGING FACE</a>
+      </div>
+      <p class="note">Both demos run the model in your browser (WebGPU, 1.6 to 1.9 GB download) or on your own server.</p>
+    </section>
+
+    <section class="sec" id="benchmarks" aria-labelledby="h-vs">
+      <h2 id="h-vs">Kahn1 vs JEV</h2>
+      <p class="intro">Same items, same prompts, scored against the same labels. Two benchmarks, and each
+        one plays to one side, so read both.</p>
+      <figure class="vchart" role="group" aria-label="Accuracy of Kahn1 and JEV, grouped by primitive on the Kahn1 held-out set and by tier on JevBench.">
+        <div class="vc-legend"><span><i></i>Kahn1 v3 · open 3B model</span><span><i class="jev"></i>JEV 1.13.0 · TypeSafe API</span></div>
+        <div class="vc-sets">
+          <div class="vc-set">
+            <div class="vc-title">KAHN1 HELD-OUT</div><div class="vc-sub">14,663 items · JEV run by us through its API</div>
+            <div class="vc-plot"><div class="vc-grid"><span style="bottom:0%"><em>0</em></span><span style="bottom:25%"><em>25</em></span><span style="bottom:50%"><em>50</em></span><span style="bottom:75%"><em>75</em></span><span style="bottom:100%"><em>100</em></span></div><div class="vc-cols"><div class="vc-g"><span class="vc-b hi" style="height:90.94%" tabindex="0" data-tip="Kahn1 · Choice&#10;90.9% of 6,050 items" aria-label="Kahn1, Choice: 90.9%"><span class="val">91</span></span><span class="vc-b jev" style="height:80.15%" tabindex="0" data-tip="JEV · Choice&#10;80.1% of 6,050 items" aria-label="JEV, Choice: 80.1%"><span class="val">80</span></span></div><div class="vc-g"><span class="vc-b" style="height:51.45%" tabindex="0" data-tip="Kahn1 · Score&#10;51.4% of 6,210 items" aria-label="Kahn1, Score: 51.4%"><span class="val">51</span></span><span class="vc-b jev hi" style="height:52.01%" tabindex="0" data-tip="JEV · Score&#10;52.0% of 6,210 items" aria-label="JEV, Score: 52.0%"><span class="val">52</span></span></div><div class="vc-g"><span class="vc-b" style="height:67.04%" tabindex="0" data-tip="Kahn1 · Noul&#10;67.0% of 2,403 items" aria-label="Kahn1, Noul: 67.0%"><span class="val">67</span></span><span class="vc-b jev hi" style="height:74.45%" tabindex="0" data-tip="JEV · Noul&#10;74.4% of 2,403 items" aria-label="JEV, Noul: 74.4%"><span class="val">74</span></span></div><div class="vc-g total"><span class="vc-b hi" style="height:70.30%" tabindex="0" data-tip="Kahn1 · All&#10;70.3% of 14,663 items" aria-label="Kahn1, All: 70.3%"><span class="val">70</span></span><span class="vc-b jev" style="height:67.30%" tabindex="0" data-tip="JEV · All&#10;67.3% of 14,663 items" aria-label="JEV, All: 67.3%"><span class="val">67</span></span></div></div></div>
+            <div class="vc-x"><span class="">Choice</span><span class="">Score</span><span class="">Noul</span><span class="total">All</span></div>
+          </div>
+          <div class="vc-set">
+            <div class="vc-title">JEVBENCH PUBLIC</div><div class="vc-sub">231 items · Jev scored by JevBench</div>
+            <div class="vc-plot"><div class="vc-grid"><span style="bottom:0%"><em>0</em></span><span style="bottom:25%"><em>25</em></span><span style="bottom:50%"><em>50</em></span><span style="bottom:75%"><em>75</em></span><span style="bottom:100%"><em>100</em></span></div><div class="vc-cols"><div class="vc-g"><span class="vc-b hi" style="height:100.00%" tabindex="0" data-tip="Kahn1 · Easy&#10;100.0% of 48 items" aria-label="Kahn1, Easy: 100.0%"><span class="val">100</span></span><span class="vc-b jev hi" style="height:100.00%" tabindex="0" data-tip="JEV · Easy&#10;100.0% of 48 items" aria-label="JEV, Easy: 100.0%"><span class="val">100</span></span></div><div class="vc-g"><span class="vc-b" style="height:84.72%" tabindex="0" data-tip="Kahn1 · Standard&#10;84.7% of 72 items" aria-label="Kahn1, Standard: 84.7%"><span class="val">85</span></span><span class="vc-b jev hi" style="height:98.61%" tabindex="0" data-tip="JEV · Standard&#10;98.6% of 72 items" aria-label="JEV, Standard: 98.6%"><span class="val">99</span></span></div><div class="vc-g"><span class="vc-b" style="height:42.34%" tabindex="0" data-tip="Kahn1 · Hard&#10;42.3% of 111 items" aria-label="Kahn1, Hard: 42.3%"><span class="val">42</span></span><span class="vc-b jev hi" style="height:72.97%" tabindex="0" data-tip="JEV · Hard&#10;73.0% of 111 items" aria-label="JEV, Hard: 73.0%"><span class="val">73</span></span></div><div class="vc-g total"><span class="vc-b" style="height:67.53%" tabindex="0" data-tip="Kahn1 · All&#10;67.5% of 231 items" aria-label="Kahn1, All: 67.5%"><span class="val">68</span></span><span class="vc-b jev hi" style="height:86.58%" tabindex="0" data-tip="JEV · All&#10;86.6% of 231 items" aria-label="JEV, All: 86.6%"><span class="val">87</span></span></div></div></div>
+            <div class="vc-x"><span class="">Easy</span><span class="">Standard</span><span class="">Hard</span><span class="total">All</span></div>
+          </div>
+        </div>
+        <div class="vc-foot">
+          <details><summary>TABLE VIEW</summary><div class="tbl-wrap"><table class="tbl">
+            <thead><tr><th scope="col">Benchmark</th><th scope="col">Group</th><th scope="col" class="r">Items</th><th scope="col" class="r">Kahn1</th><th scope="col" class="r">JEV</th></tr></thead>
+            <tbody><tr><td>KAHN1 HELD-OUT</td><td>Choice</td><td class="r">6,050</td><td class="r">90.9%</td><td class="r">80.1%</td></tr><tr><td>KAHN1 HELD-OUT</td><td>Score</td><td class="r">6,210</td><td class="r">51.4%</td><td class="r">52.0%</td></tr><tr><td>KAHN1 HELD-OUT</td><td>Noul</td><td class="r">2,403</td><td class="r">67.0%</td><td class="r">74.4%</td></tr><tr><td>KAHN1 HELD-OUT</td><td>All</td><td class="r">14,663</td><td class="r">70.3%</td><td class="r">67.3%</td></tr><tr><td>JEVBENCH PUBLIC</td><td>Easy</td><td class="r">48</td><td class="r">100.0%</td><td class="r">100.0%</td></tr><tr><td>JEVBENCH PUBLIC</td><td>Standard</td><td class="r">72</td><td class="r">84.7%</td><td class="r">98.6%</td></tr><tr><td>JEVBENCH PUBLIC</td><td>Hard</td><td class="r">111</td><td class="r">42.3%</td><td class="r">73.0%</td></tr><tr><td>JEVBENCH PUBLIC</td><td>All</td><td class="r">231</td><td class="r">67.5%</td><td class="r">86.6%</td></tr></tbody></table></div></details>
+          <a class="vc-more" href="benchmarks/">All benchmark results &rarr;</a>
+        </div>
+      </figure>
+      <p class="callout"><b>Where each one wins.</b> On the families it was trained for, Kahn1 leads by
+        3.0 points overall: well ahead on Choice (90.9% vs 80.1%),
+        level on Score (51.4% vs 52.0%), behind on Noul
+        (67.0% vs 74.4%). On JevBench, Jev leads by 19.0 points,
+        and by 30.6 on the hard tier: open-ended judgment is where a 3B model falls behind.</p>
+      <div class="stats" style="margin-top:30px">
+        <div class="stat"><span class="n">36.4 ms</span><span class="l">Kahn1 median latency</span><span class="s">local vLLM, one RTX 5070 Ti, k = 3</span></div>
+        <div class="stat"><span class="n">248 ms</span><span class="l">JEV median round trip</span><span class="s">hosted API, timed at our client, network included</span></div>
+        <div class="stat"><span class="n">MIT</span><span class="l">Kahn1 weights</span><span class="s">open, runs on your hardware or in the browser</span></div>
+        <div class="stat"><span class="n">$0.042</span><span class="l">JEV price</span><span class="s">per million input tokens, output free (public tariff)</span></div>
+      </div>
+      <p class="small faint" style="margin-top:14px">The two latencies are not the same measurement: one is a local
+        GPU, the other a request over the internet. Reports:
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/JEV_VS_KAHN1.md" rel="noopener">held-out head-to-head</a> ·
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/JEVBENCH_VS_JEV.md" rel="noopener">JevBench head-to-head</a> ·
+        <a href="https://github.com/Okura66/kahn1/blob/main/scripts/jev_holdout.py" rel="noopener">script</a>. More numbers in
+        <a href="benchmarks/">the benchmarks page</a>.</p>
+    </section>
+
+    <section class="sec" id="how-it-works" aria-labelledby="h-how">
+      <h2 id="h-how">How it works</h2>
+      <p class="intro">The name is a nod to Daniel Kahneman's <em>System 1</em>: fast, cheap judgments
+        that settle most cases and route the rest before a slower System 2 (a frontier model or a
+        person) steps in.</p>
+      <div class="reader" id="reader" role="figure" aria-label="Animation: Kahn1 reads a state once, then answers each question from the probabilities of its option tokens.">
+        <div class="rd-grid">
+          <div class="rd-state">
+            <div class="label"><span>STATE</span><span class="hint"><span data-tokens></span> tokens</span></div>
+            <p class="rd-text"></p>
+            <div class="rd-cache" aria-hidden="true"></div>
+            <div class="rd-cap">KV CACHE · COMPUTED ONCE, SHARED BY EVERY QUESTION</div>
+          </div>
+          <div class="rd-qs"></div>
+        </div>
+        <div class="rd-foot">
+          <span class="zero">TOKENS GENERATED <span class="n">0</span></span>
+          <span>FORWARD PASSES <span class="n" data-passes>0</span></span>
+          <span class="rd-nav"><button type="button" data-demo="0" aria-pressed="true">TICKET</button><button type="button" data-demo="1" aria-pressed="false">REVIEW</button><button type="button" data-demo="2" aria-pressed="false">FACTS</button><button type="button" data-pause aria-pressed="false">PAUSE</button></span>
+        </div>
+      </div>
+      <script type="application/json" id="reader-data">{"labels": {"pause": "PAUSE", "play": "PLAY"}, "demos": [{"state": "Hi, I was charged twice for order #48213 placed on September 12. I have been waiting a week for customer service to reply. I want a refund right away, otherwise I will dispute the charge with my bank and close my account.", "tokens": 75, "questions": [{"key": "intent", "kind": "choice", "q": "What is the customer's main request?", "cols": [["A", 0.9561], ["B", 0.0024], ["C", 0.0003], ["D", 0.0002], ["E", 0.041]], "names": ["refund", "delivery", "account", "information", "none of these"], "out": "\"refund\""}, {"key": "urgency", "kind": "score", "q": "How urgent is this message?", "cols": [["A", 0.0013], ["B", 0.0028], ["C", 0.7356], ["D", 0.2604]], "names": ["low", "medium", "high", "critical"], "out": "\"high\" · E = 3.26"}, {"key": "churn_risk", "kind": "noul", "q": "The customer threatens to leave the service or to escalate.", "cols": [["yes", 0.9843], ["no", 0.0157]], "names": ["yes", "no"], "out": "0.98"}]}, {"state": "Used to love this app but since the last update it crashes every time I open the camera. Support never answered. The new dark theme is nice though.", "tokens": 52, "questions": [{"key": "stars", "kind": "score", "q": "How many stars would this user give?", "cols": [["A", 0.333], ["B", 0.4915], ["C", 0.1528], ["D", 0.0191], ["E", 0.0035]], "names": ["1", "2", "3", "4", "5"], "out": "\"2\" · E = 1.87"}, {"key": "topic", "kind": "choice", "q": "What is the review mainly about?", "cols": [["A", 0.7532], ["B", 0.0155], ["C", 0.0044], ["D", 0.2136], ["E", 0.0021], ["F", 0.0113]], "names": ["stability", "design", "pricing", "customer support", "features", "none of these"], "out": "\"stability\""}, {"key": "reports_bug", "kind": "noul", "q": "The review reports a bug or a crash.", "cols": [["yes", 0.9967], ["no", 0.0033]], "names": ["yes", "no"], "out": "1.00"}]}, {"state": "The Eiffel Tower was completed in 1889 for the World's Fair in Paris. It was the tallest man-made structure in the world until the Chrysler Building was finished in New York in 1930.", "tokens": 68, "questions": [{"key": "built_1889", "kind": "noul", "q": "The Eiffel Tower was finished in the 19th century.", "cols": [["yes", 0.9947], ["no", 0.0053]], "names": ["yes", "no"], "out": "0.99"}, {"key": "still_tallest", "kind": "noul", "q": "The Eiffel Tower is still the tallest structure in the world.", "cols": [["yes", 0.036], ["no", 0.964]], "names": ["yes", "no"], "out": "0.04"}, {"key": "in_london", "kind": "noul", "q": "The Chrysler Building is in London.", "cols": [["yes", 0.0023], ["no", 0.9977]], "names": ["yes", "no"], "out": "0.00"}]}]}</script>
+      <p class="rd-note">Recorded outputs of the v3 checkpoint (temperature calibration, k = 1). Each column is the probability of one option token: nothing else is read, nothing is written.</p>
+
+      <div class="grid g3">
+        <div class="card">
+          <span class="num">01</span>
+          <h3>State + typed questions</h3>
+          <p>You send one state and any number of questions, in the JEV schema format or the native API.
+            Options are listed under letters A, B, C… so every answer is a single token.</p>
+        </div>
+        <div class="card">
+          <span class="num">02</span>
+          <h3>One batch, one shared prefix</h3>
+          <p>All questions, and their option permutations, go to vLLM in one batch. They share the
+            state's KV cache (prefix caching), so ten questions cost little more than one.</p>
+        </div>
+        <div class="card">
+          <span class="num">03</span>
+          <h3>Read the logits</h3>
+          <p>Kahn1 takes the softmax over the option tokens only, averages it across option orders to
+            cancel position bias, then applies temperature calibration. No text is generated.</p>
+        </div>
+      </div>
+
+      <h3 class="sub">Three primitives</h3>
+      <div class="grid g3">
+        <div class="card">
+          <h3>Choice</h3>
+          <p>Pick one option, with an optional <em>none of these answers</em> fallback. Up to 26 options in
+            one pass; larger label sets go through a two-stage router.</p>
+          <pre class="src">{"choice": "refund", "confidence": 0.95,
+ "probabilities": {…}}</pre>
+        </div>
+        <div class="card">
+          <h3>Score</h3>
+          <p>Place the state on an ordered scale. Besides the level, the expected value
+            Σ&nbsp;i·p<sub>i</sub> gives a continuous score between levels.</p>
+          <pre class="src">{"level": "high", "score": 2.26,
+ "confidence": 0.65, "probabilities": {…}}</pre>
+        </div>
+        <div class="card">
+          <h3>Noul</h3>
+          <p>Is this statement true for the state? A yes/no question answered with a probability you
+            can threshold.</p>
+          <pre class="src">{"noul": 0.98}</pre>
+        </div>
+      </div>
+      <p class="small faint" style="margin-top:26px">Confidence is <code>(p_max − 1/n) / (1 − 1/n)</code>:
+        the distance from a uniform guess, not the probability of being right. Schema compatibility:
+        the server accepts JEV dictionaries on <code>POST /v1/evaluate/jev</code>.</p>
+    </section>
+
+    <section class="sec" id="use-cases" aria-labelledby="h-use">
+      <h2 id="h-use">Use cases</h2>
+      <p class="intro">Kahn1 is meant to be the fast first layer of a pipeline: it takes the routine
+        decisions and hands the rest to something slower and more expensive.</p>
+      <div class="grid g3">
+        <div class="card">
+          <span class="num">01</span>
+          <h3>Triage and routing</h3>
+          <p>Sort tickets, emails or claims by intent, urgency and risk in one pass. To change the
+            categories, edit the schema: no relabelling, no retraining.</p>
+        </div>
+        <div class="card">
+          <span class="num">02</span>
+          <h3>Guardrails for agents</h3>
+          <p>Before a tool call runs, ask yes/no questions about it: does it leak personal data, does it
+            break a policy, did the user approve it? Each answer is a probability you can gate on.</p>
+        </div>
+        <div class="card">
+          <span class="num">03</span>
+          <h3>Document scoring</h3>
+          <p>Rate tone, urgency, complexity or quality as continuous expected values rather than
+            coarse labels, and index documents on them.</p>
+        </div>
+        <div class="card">
+          <span class="num">04</span>
+          <h3>Selective escalation</h3>
+          <p>Automate the confident cases and send the rest to a larger model or a person. With calibrated
+            confidence, the threshold becomes a risk decision you can measure.</p>
+        </div>
+        <div class="card">
+          <span class="num">05</span>
+          <h3>Cold start</h3>
+          <p>A new product line or a new taxonomy works zero-shot on day one. Recalibrate on your own
+            labelled examples with <code>sysone calibrate</code> once you have them.</p>
+        </div>
+        <div class="card">
+          <span class="num">06</span>
+          <h3>Control loops</h3>
+          <p>One Choice per tick can drive a policy: <a href="snake/">Kahn1 plays Snake</a> as well as a
+            greedy heuristic, provided the state spells out what lies around the head.</p>
+        </div>
+      </div>
+
+      <h3 class="sub">Kahn1 or classical ML?</h3>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th scope="col"></th><th scope="col">Classical ML (BERT, XGBoost…)</th><th scope="col">Kahn1</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">New category</th><td>Relabel, retrain, redeploy</td><td>Edit the schema in the request</td></tr>
+            <tr><th scope="row">Labelled data</th><td>Hundreds to thousands per class</td><td>None to start; some to recalibrate</td></tr>
+            <tr><th scope="row">Latency</th><td>Under 1 to 10 ms, CPU</td><td>~36 ms median, GPU</td></tr>
+            <tr><th scope="row">Hardware</th><td>Small CPUs, edge devices</td><td>A GPU for production throughput</td></tr>
+            <tr><th scope="row">Explanations</th><td>Feature importances, tree splits</td><td>Full distributions, no feature attribution</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted" style="margin-top:16px">Pick classical ML when the ontology is fixed for years,
+        latency must stay under 5 ms, hardware is small or the data is tabular. Pick Kahn1 when categories
+        change often, when you start without labels, or when the signal is in free text.</p>
+    </section>
+
+    <section class="sec" id="caveats" aria-labelledby="h-caveats">
+      <h2 id="h-caveats">Caveats</h2>
+      <p class="intro">Kahn1 is a 3-billion-parameter model. Read this before putting it in front of real decisions.</p>
+      <ol class="caveats">
+        <li><div><b>It is not a frontier model.</b>
+          <p>On subjective or ambiguous judgments it is wrong more often than a large model. On the hard
+            tier of the external JevBench it gets 42% right, against 73% for Jev.</p></div></li>
+        <li><div><b>Accuracy depends on the primitive.</b>
+          <p>Choice is strong (91% on held-out intent sets). Score reaches 51 to 52% exact match on
+            5-level scales, 95% within one level on SST-5. Noul is the weak point: 83% on RTE, 65% on
+            SciTail (out-of-domain science entailment).</p></div></li>
+        <li><div><b>Calibration holds on its own distribution.</b>
+          <p>Temperatures were fitted on a split disjoint from training, not on your data, and Noul's
+            calibration error is still 0.23. Recalibrate on your domain before trusting a threshold.</p></div></li>
+        <li><div><b>Confidence is not the probability of being right.</b>
+          <p>It measures the distance from a uniform guess. Set thresholds on held-out data from your
+            domain and check the risk-coverage curve.</p></div></li>
+        <li><div><b>Deterministic computation is not deterministic truth.</b>
+          <p>Same weights, same prompt and same kernels give the same logits. That does not make the
+            answer correct: adversarial or out-of-distribution text can still fool it, and it offers no
+            formal guarantee.</p></div></li>
+        <li><div><b>Regulation still applies.</b>
+          <p>Reading logits instead of parsing JSON removes format errors, not the obligations that come
+            with using a neural model for decisions (EU AI Act, sector rules). Keep a person or a larger
+            model on the low-confidence path, and log what was decided.</p></div></li>
+        <li><div><b>The speed comes from engineering.</b>
+          <p>Prefix caching and a single output position explain the latency, not a new architecture. On
+            a CPU expect seconds per question; in a browser without WebGPU, minutes.</p></div></li>
+        <li><div><b>The browser demos run an older checkpoint.</b>
+          <p>The playground and Snake load a v1 GGUF quantized to 4 bits (thanks to mradermacher); the page
+            flips its Noul answers, which v1 learned inverted. The benchmarks below are the unquantized v3
+            checkpoint on vLLM.</p></div></li>
+      </ol>
+    </section>
+
+    <section class="sec" id="get-started" aria-labelledby="h-start">
+      <h2 id="h-start">Get started</h2>
+      <p class="intro">Install, serve, send a first request, read the answer, calibrate on your data: the
+        guide walks through each step, on a GPU, a CPU or in the browser.</p>
+<pre class="term"><span class="d">$ </span>git clone https://github.com/Okura66/kahn1 && cd kahn1
+<span class="d">$ </span>uv venv --python 3.11 && uv pip install -e ".[gpu]"
+<span class="d">$ </span>SYSONE_MODEL=Okura66/Kahn1-Qwen2.5-3B uv run sysone serve --port 8000</pre>
+      <div class="cta" style="margin-top:26px"><a class="btn primary" href="get-started/">READ THE GUIDE &rarr;</a>
+        <a class="btn" href="playground/">OR TRY IT IN THE BROWSER</a></div>
+    </section>
+
+    <section class="sec faq" id="faq" aria-labelledby="h-faq">
+      <h2 id="h-faq">FAQ</h2>
+      <details>
+        <summary><h3>What is Kahn1?</h3></summary>
+        <div class="a">An open-source decision engine built on a fine-tuned Qwen2.5-3B. It takes a text (the
+          state) and typed questions, and returns for each question a typed value and a calibrated
+          probability distribution read from the logits of the option tokens. It generates no text.</div>
+      </details>
+      <details>
+        <summary><h3>How is it different from JSON mode or structured outputs?</h3></summary>
+        <div class="a">Structured decoding constrains the tokens a model generates, and the result still has
+          to be parsed. Kahn1 generates nothing: it reads one probability distribution per question over the
+          option tokens, so every answer comes with its full distribution and a calibrated confidence, and
+          there is nothing to parse.</div>
+      </details>
+      <details>
+        <summary><h3>Can it run without a GPU?</h3></summary>
+        <div class="a">Yes. The CPU engine runs the same decision code with a plain transformers forward
+          pass, at seconds per question instead of tens of milliseconds. The <a href="playground/">playground</a>
+          and <a href="snake/">Snake</a> also run a 4-bit GGUF in your browser with WebGPU; without WebGPU
+          they fall back to the CPU, which takes minutes.</div>
+      </details>
+      <details>
+        <summary><h3>Can I use my own categories?</h3></summary>
+        <div class="a">Yes. Categories, scales and statements are part of each request, so changing them needs
+          no retraining. Calibration was fitted on the training distribution: recalibrate on your own
+          labelled examples with <code>sysone calibrate</code> before relying on a confidence threshold.</div>
+      </details>
+      <details>
+        <summary><h3>How accurate is it?</h3></summary>
+        <div class="a">On 14,663 held-out items: 70.3% overall, 90.9% on Choice, 51.5% exact match on 5-level
+          Score scales (95.2% within one level on SST-5) and 67.0% on Noul. See the
+          <a href="#benchmarks">benchmark results</a> and the <a href="#caveats">caveats</a>.</div>
+      </details>
+      <details>
+        <summary><h3>How does Kahn1 compare with JEV?</h3></summary>
+        <div class="a">On the 14,663 items of the Kahn1 held-out set, run through the TypeSafe API, Kahn1 scores 70.3% and JEV 1.13.0 67.3%: Kahn1 leads on Choice, they are level on Score and JEV leads on Noul. On the 231 public JevBench items, scored by JevBench itself, Jev scores 86.6% and Kahn1 67.5% (73.0% vs 42.3% on the hard tier). Kahn1 is stronger overall on the task families it was trained for; Jev is clearly stronger on open-ended judgment. Kahn1 is open and runs on your own hardware; JEV is a hosted API. <a href="#benchmarks">See the head-to-head</a>.</div>
+      </details>
+      <details>
+        <summary><h3>Does the playground send my text anywhere?</h3></summary>
+        <div class="a">No. In WebGPU mode the model runs in your tab; in server mode the page talks only to the
+          server URL you set. Visits are counted by GoatCounter, without cookies, and by Google Analytics only
+          if you accept its cookies.</div>
+      </details>
+      <details>
+        <summary><h3>Is it free?</h3></summary>
+        <div class="a">Yes. The code is MIT-licensed and the weights are on Hugging Face, as a merged model and
+          as a LoRA adapter.</div>
+      </details>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>KAHN1 · MIT License · by <a href="https://www.linkedin.com/in/amontzamir/" rel="noopener">Axel Montzamir</a></span>
+    <nav aria-label="Footer">
+      <a href="playground/">Playground</a>
+      <a href="snake/">Snake</a>
+      <a href="https://github.com/Okura66/kahn1" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/Okura66" rel="noopener">Hugging Face</a>
+      <a href="fr/" hreflang="fr" lang="fr">Français</a>
+      <a href="#" data-cookies>Cookies</a>
+    </nav>
+    <span class="disc">Kahn1 is an independent project. It accepts the JEV schema format and is not affiliated with TypeSafe.</span>
+  </footer>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>

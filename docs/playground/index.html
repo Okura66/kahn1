@@ -22,7 +22,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kahn1 Playground</title>
-<link rel="canonical" href="https://demo.kahn1.com/">
+<link rel="canonical" href="https://kahn1.com/playground/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2317150f'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='20' font-weight='700' fill='%23faf8f5' text-anchor='middle'%3EK%3C/text%3E%3C/svg%3E">
 <meta name="description" content="Ask typed questions about any text. Kahn1 reads the answer from option-token logits — zero tokens generated.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -56,6 +56,11 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     display: flex; flex-direction: column; gap: 26px; position: relative;
   }
 
+  /* Site nav, top left: home and the two demos. */
+  .site { position: absolute; top: 40px; left: 40px; display: flex; gap: 22px; font-size: 13px; letter-spacing: 2px; }
+  .site a { color: var(--muted); text-decoration: none; padding: 10px 2px; }
+  .site a:hover, .site a:focus-visible { color: var(--ink); outline: none; text-decoration: underline; }
+  .site a[aria-current="page"] { color: var(--ink); font-weight: 700; }
   .links { position: absolute; top: 40px; right: 40px; display: flex; gap: 6px; }
   .links a {
     width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
@@ -186,6 +191,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     .viewport { width: auto; height: auto; display: block; overflow: visible; }
     .stage { width: auto; height: auto; padding: 16px 16px 28px; gap: 22px; }
     .links { position: static; justify-content: flex-end; margin-bottom: -10px; }
+    .site { position: static; order: 0; flex-wrap: wrap; gap: 4px 18px; }
     .head h1 { font-size: 18px; text-align: center; }
     .facts { flex-wrap: wrap; justify-content: center; gap: 4px 10px; font-size: 11px; letter-spacing: 1px; }
     /* Input, then the controls, then the answer: RUN sits right under what it runs. */
@@ -224,6 +230,8 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 120ms; z-index: 5;
   }
   .credit:hover .tip, .credit:focus-visible .tip { opacity: 1; }
+  /* Out of the layout until shown: an invisible tooltip still widens the page on phones. */
+  .credit:not(:hover):not(:focus-visible) .tip { display: none; }
   .links .views { align-self: center; margin-right: 6px; font-size: 12px; letter-spacing: 1px; color: var(--faint); }
   .links .cookies { width: auto; padding: 0 8px; font-size: 12px; letter-spacing: 1px; font-family: inherit; }
   .clock { font-size: 14px; letter-spacing: 2px; color: var(--faint); margin-left: 10px; width: 90px; }
@@ -276,19 +284,25 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     <button id="consentNo">REFUSE</button>
   </div>
 </div>
-<a class="snake-cta" id="snakeCta" href="snake/" aria-label="New: Kahn1 plays Snake. Play it in your browser.">
+<a class="snake-cta" id="snakeCta" href="../snake/" aria-label="New: Kahn1 plays Snake. Play it in your browser.">
   <span class="card">
     <span class="mini" id="mini" aria-hidden="true"></span>
     <span class="kicker">NEW</span>
     <b>Kahn1 plays Snake.</b>
     <span class="txt">One Choice question per tick, the move read from the logits. Runs in your browser, like this playground.</span>
     <span class="go">PLAY SNAKE &rarr;</span>
-    <span class="url2">demo.kahn1.com/snake</span>
+    <span class="url2">kahn1.com/snake</span>
   </span>
   <span class="tab" aria-hidden="true">KAHN1 PLAYS SNAKE</span>
 </a>
 <div class="viewport">
   <div class="stage" id="stage">
+
+    <nav class="site" aria-label="Site">
+      <a href="../">&larr; KAHN1</a>
+      <a href="../playground/" aria-current="page">PLAYGROUND</a>
+      <a href="../snake/">SNAKE</a>
+    </nav>
 
     <nav class="links" aria-label="Author links">
       <span class="views" id="views" hidden></span>

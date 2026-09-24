@@ -10,6 +10,9 @@
   <img src="https://img.shields.io/badge/Latency-sub--20ms-brightgreen.svg" alt="Latency: sub-20ms" />
 </p>
 
+> [!NOTE]
+> **Website: [kahn1.com](https://kahn1.com/)** ([français](https://kahn1.com/fr/)) — try the [playground](https://kahn1.com/playground/) or watch [Kahn1 play Snake](https://kahn1.com/snake/), both in your browser.
+
 > [!TIP]
 > **Official Model Weights on Hugging Face**:
 > - Full Merged Standalone Checkpoint (6.17 GB): [`Okura66/Kahn1-Qwen2.5-3B`](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B)
@@ -133,7 +136,7 @@ construction, single-token resolution, permutation debiasing and calibration are
 the same code, so CPU and GPU results agree.
 
 ```bash
-uv pip install -e ".[cpu]" --index-url https://download.pytorch.org/whl/cpu
+uv pip install -e ".[cpu]" --extra-index-url https://download.pytorch.org/whl/cpu
 uv run python scripts/run_cpu_demo.py --model Okura66/Kahn1-Qwen2.5-3B
 ```
 
@@ -329,7 +332,7 @@ kahn1/
 ├── eval/             Metrics, evaluation harness, benchmarks, debiasing tests
 ├── scripts/          Utilities (LoRA merge, val set prep, HF publication, CPU demo, race set)
 │   └── scratch/      (gitignored) Local scratchpad & temporary investigation scripts
-├── docs/             PLAYBOOK.md (step-by-step reproduction guide)
+├── docs/             kahn1.com (home EN/FR, playground, Snake) and PLAYBOOK.md (reproduction guide)
 ├── tests/            Pytest unit & integration test suite
 └── reports/          Empirical benchmarks, calibration logs, and evaluation reports
 ```

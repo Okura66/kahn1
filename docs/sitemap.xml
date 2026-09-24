@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://kahn1.com/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kahn1.com/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kahn1.com/"/>
+    <lastmod>2026-09-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kahn1.com/fr/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kahn1.com/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kahn1.com/"/>
+    <lastmod>2026-09-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kahn1.com/benchmarks/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kahn1.com/benchmarks/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/resultats/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kahn1.com/benchmarks/"/>
+    <lastmod>2026-09-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kahn1.com/fr/resultats/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kahn1.com/benchmarks/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/resultats/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kahn1.com/benchmarks/"/>
+    <lastmod>2026-09-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kahn1.com/get-started/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kahn1.com/get-started/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/demarrer/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kahn1.com/get-started/"/>
+    <lastmod>2026-09-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kahn1.com/fr/demarrer/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kahn1.com/get-started/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/demarrer/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kahn1.com/get-started/"/>
+    <lastmod>2026-09-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kahn1.com/playground/</loc>
+    <lastmod>2026-09-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kahn1.com/snake/</loc>
+    <lastmod>2026-09-24</lastmod>
+  </url>
+</urlset>

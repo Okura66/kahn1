@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<!-- Google Tag Manager, loaded only once the visitor accepts analytics cookies
+     (ePrivacy / CNIL: no non-essential cookie before consent). See the consent banner. -->
+<script>
+function loadGTM() {
+  if (window.__gtmLoaded) return;
+  window.__gtmLoaded = true;
+  (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-TTC5WPRN');
+}
+try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); } catch (e) {}
+</script>
+<!-- End Google Tag Manager -->
+<!-- GoatCounter: cookieless visit count, exempt from consent. Runs for every visitor. -->
+<script data-goatcounter="https://kahn1.goatcounter.com/count"
+        async src="https://gc.zgo.at/count.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Démarrer avec Kahn1 — installer, servir, interroger, calibrer</title>
+<meta name="description" content="Installer et servir Kahn1, envoyer des questions typées Choice, Score et Noul en HTTP ou depuis Python, lire les réponses, régler le débiaisage et calibrer sur vos propres données.">
+<link rel="canonical" href="https://kahn1.com/fr/demarrer/">
+<link rel="alternate" hreflang="en" href="https://kahn1.com/get-started/">
+<link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/demarrer/">
+<link rel="alternate" hreflang="x-default" href="https://kahn1.com/get-started/">
+<meta name="author" content="Axel Montzamir">
+<meta name="theme-color" content="#faf8f5">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kahn1">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:locale:alternate" content="en_US">
+<meta property="og:url" content="https://kahn1.com/fr/demarrer/">
+<meta property="og:title" content="Démarrer avec Kahn1">
+<meta property="og:description" content="Installer et servir Kahn1, envoyer des questions typées Choice, Score et Noul en HTTP ou depuis Python, lire les réponses, régler le débiaisage et calibrer sur vos propres données.">
+<meta property="og:image" content="https://kahn1.com/assets/og-fr.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2317150f'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='20' font-weight='700' fill='%23faf8f5' text-anchor='middle'%3EK%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css">
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "TechArticle",
+ "headline": "Démarrer avec Kahn1",
+ "inLanguage": "fr",
+ "url": "https://kahn1.com/fr/demarrer/",
+ "description": "Installer et servir Kahn1, envoyer des questions typées Choice, Score et Noul en HTTP ou depuis Python, lire les réponses, régler le débiaisage et calibrer sur vos propres données.",
+ "author": {
+  "@id": "https://kahn1.com/#author"
+ },
+ "about": {
+  "@id": "https://kahn1.com/#software"
+ },
+ "isPartOf": {
+  "@id": "https://kahn1.com/#website"
+ },
+ "dateModified": "2026-09-24"
+}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Aller au contenu</a>
+
+<div class="consent" id="consent" role="dialog" aria-labelledby="consentText" hidden>
+  <p id="consentText">Google Analytics peut-il compter cette visite&nbsp;? Il dépose des cookies. Refuser ne change rien d'autre sur le site, et rien de ce que vous tapez dans les démos ne lui est envoyé.</p>
+  <div class="row2">
+    <button class="primary" id="consentYes">ACCEPTER</button>
+    <button id="consentNo">REFUSER</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <header class="top">
+    <div class="left">
+      <a class="brand" href="../" aria-label="Kahn1, accueil">KAHN1</a>
+      <nav class="nav" aria-label="Site">
+        <a href="../../playground/">PLAYGROUND</a>
+        <a href="../../snake/">SNAKE</a>
+        <a href="../resultats/">RÉSULTATS</a>
+        <a href="../demarrer/" aria-current="page">DÉMARRER</a>
+      </nav>
+    </div>
+    <nav class="links" aria-label="Langue et liens de l'auteur">
+      <span class="views" id="views" data-one="vue" data-many="vues" hidden></span>
+      <span class="lang">
+        <a href="../../get-started/" hreflang="en" lang="en">EN</a>
+        <a href="./" hreflang="fr" lang="fr" aria-current="page">FR</a>
+      </span>
+      <a href="https://www.linkedin.com/in/amontzamir/" target="_blank" rel="noopener" title="LinkedIn" aria-label="LinkedIn">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 1 1 0-4.125 2.062 2.062 0 0 1 0 4.125zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+      </a>
+      <a href="https://github.com/Okura66/kahn1" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+      </a>
+      <a href="https://huggingface.co/Okura66" target="_blank" rel="noopener" title="Hugging Face" aria-label="Hugging Face">
+        <span class="hf" aria-hidden="true">🤗</span>
+      </a>
+      <a href="#" class="cookies" data-cookies title="Modifier votre choix de cookies">cookies</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero guide-hero" aria-labelledby="title">
+      <h1 id="title">Démarrer</h1>
+      <p class="lead">D'un clone à une réponse calibrée&nbsp;: installer Kahn1, le servir, envoyer des questions typées, lire ce qui revient et l'ajuster à vos données. Tout tourne sur votre propre machine.</p>
+      <nav class="toc" aria-label="Sur cette page">
+        <ol>
+          <li><a href="#agent">Laisser un agent IA s'en charger</a></li>
+          <li><a href="#installer">Installer</a></li>
+          <li><a href="#servir">Servir</a></li>
+          <li><a href="#requete">Envoyer une requête</a></li>
+          <li><a href="#reponse">Lire la réponse</a></li>
+          <li><a href="#python">Depuis Python</a></li>
+          <li><a href="#regler">Régler la réponse</a></li>
+          <li><a href="#calibrer">Calibrer sur vos données</a></li>
+          <li><a href="#navigateur">Dans le navigateur</a></li>
+          <li><a href="#aller-plus-loin">Aller plus loin</a></li>
+        </ol>
+      </nav>
+    </section>
+
+    <section class="sec doc" id="agent" aria-labelledby="h-agent">
+      <h2 id="h-agent">01 · Laisser un agent IA s'en charger</h2>
+      <p>Collez ce prompt dans un agent de code qui peut lancer des commandes sur votre machine (Claude Code, Codex,
+        Cursor, Gemini CLI…)&nbsp;: il examine votre matériel, choisit le backend GPU ou CPU, installe, démarre le serveur
+        et envoie une requête de test. Il demande avant sudo ou tout paquet système. Un assistant de chat sans terminal
+        (ChatGPT ou Claude dans le navigateur) peut vous guider pas à pas, mais pas exécuter.</p>
+      <div class="prompt-box">
+        <div class="bar"><span>PROMPT D'INSTALLATION · 3 685 CARACTÈRES</span>
+          <button type="button" class="copy-btn" data-copy="setup-prompt" data-done="COPIÉ" data-fail="SÉLECTIONNEZ ET COPIEZ">COPIER</button></div>
+        <pre id="setup-prompt">Installe Kahn1 sur cette machine et prouve qu'il fonctionne avec une vraie requête.
+
+Kahn1 (https://github.com/Okura66/kahn1, MIT) est un moteur de décision open source : un Qwen2.5-3B affiné qui répond à des questions typées (choice, score, noul) sur un texte en lisant les probabilités des tokens d'option. Il est servi par une application FastAPI, `sysone`. Guide : https://kahn1.com/fr/demarrer/
+
+Règles : avance étape par étape et montre chaque commande avant de la lancer. Demande-moi avant d'utiliser sudo, d'installer des paquets système ou de modifier quoi que ce soit hors du dossier du projet. Si une étape échoue, montre l'erreur exacte, explique la cause probable et propose une correction avant de continuer. N'invente jamais de sortie : si le modèle n'a pas pu tourner, dis-le.
+
+1. Inspecte la machine et dis-moi ce que tu trouves : système (Linux, macOS, Windows, WSL2), version de Python (3.11+ requise), RAM et disque libres, et si un GPU NVIDIA est utilisable (`nvidia-smi`). Choisis ensuite le backend et explique pourquoi :
+   - GPU (vLLM) : seulement sous Linux ou WSL2 avec un GPU NVIDIA et CUDA, 8 Go de VRAM ou plus.
+   - CPU (transformers) sinon : environ 13 Go de RAM libre, quelques secondes par question.
+   Le téléchargement du modèle fait environ 6 Go dans les deux cas.
+
+2. Installe uv s'il manque (https://docs.astral.sh/uv/). Si ce dossier n'est pas déjà un clone du dépôt, clone-le :
+   git clone https://github.com/Okura66/kahn1 &amp;&amp; cd kahn1
+   uv venv --python 3.11
+   GPU : uv pip install -e ".[gpu]"
+   CPU : uv pip install -e ".[cpu]" --extra-index-url https://download.pytorch.org/whl/cpu
+   Le tokenizer du modèle demande transformers 5 ou plus. Vérifie avec
+   uv run python -c "import transformers; print(transformers.__version__)"
+   et lance `uv pip install -U transformers` s'il affiche 4.x.
+
+3. Démarre le serveur en arrière-plan et garde son journal :
+   GPU : SYSONE_MODEL=Okura66/Kahn1-Qwen2.5-3B uv run sysone serve --port 8000
+   CPU : SYSONE_BACKEND=cpu SYSONE_MODEL=Okura66/Kahn1-Qwen2.5-3B uv run sysone serve --port 8000
+   Sous Windows PowerShell, définis d'abord chaque variable avec $env:NOM = "valeur". Interroge GET http://127.0.0.1:8000/health jusqu'à obtenir {"status": "ok"}.
+
+4. Envoie ce JSON en POST à http://127.0.0.1:8000/v1/evaluate/jev (écris-le dans un fichier et envoie-le avec curl -d @fichier, ou utilise Python). Le premier appel charge le modèle et peut prendre des minutes :
+   {"state": "Bonjour, j'ai été débité deux fois pour ma commande #48213. Je veux être remboursé, sinon je fais opposition auprès de ma banque.",
+    "schema": {
+      "intent": {"type": "choice", "instructions": "Quelle est la demande principale du client ?",
+                 "criteria": {"remboursement": "le client veut être remboursé", "livraison": "question sur une livraison", "compte": "problème d'accès au compte"}},
+      "urgency": {"type": "score", "instructions": "Quel est le niveau d'urgence de ce message ?", "criteria": ["faible", "moyen", "élevé", "critique"]},
+      "churn_risk": {"type": "noul", "instructions": "Le client menace de quitter le service ou d'escalader."}},
+    "n_permutations": 1}
+   Montre-moi la réponse JSON et vérifie-la : intent a un choice et des probabilités dont la somme vaut 1, urgency a un level et un score, churn_risk est un nombre entre 0 et 1. Donne latency_ms, puis renvoie la même requête pour montrer la latence à chaud.
+
+5. Termine par un court résumé : backend utilisé, chemin d'installation, comment arrêter et relancer le serveur, et où aller ensuite (https://kahn1.com/fr/demarrer/ pour l'API, le format de réponse, les réglages et la calibration sur mes propres données).</pre>
+      </div>
+      <div class="launch">
+        <a class="primary" href="claude-cli://open?q=Installe%20Kahn1%20sur%20cette%20machine%20et%20prouve%20qu%27il%20fonctionne%20avec%20une%20vraie%20requ%C3%AAte.%0A%0AKahn1%20%28https%3A%2F%2Fgithub.com%2FOkura66%2Fkahn1%2C%20MIT%29%20est%20un%20moteur%20de%20d%C3%A9cision%20open%20source%20%3A%20un%20Qwen2.5-3B%20affin%C3%A9%20qui%20r%C3%A9pond%20%C3%A0%20des%20questions%20typ%C3%A9es%20%28choice%2C%20score%2C%20noul%29%20sur%20un%20texte%20en%20lisant%20les%20probabilit%C3%A9s%20des%20tokens%20d%27option.%20Il%20est%20servi%20par%20une%20application%20FastAPI%2C%20%60sysone%60.%20Guide%20%3A%20https%3A%2F%2Fkahn1.com%2Ffr%2Fdemarrer%2F%0A%0AR%C3%A8gles%20%3A%20avance%20%C3%A9tape%20par%20%C3%A9tape%20et%20montre%20chaque%20commande%20avant%20de%20la%20lancer.%20Demande-moi%20avant%20d%27utiliser%20sudo%2C%20d%27installer%20des%20paquets%20syst%C3%A8me%20ou%20de%20modifier%20quoi%20que%20ce%20soit%20hors%20du%20dossier%20du%20projet.%20Si%20une%20%C3%A9tape%20%C3%A9choue%2C%20montre%20l%27erreur%20exacte%2C%20explique%20la%20cause%20probable%20et%20propose%20une%20correction%20avant%20de%20continuer.%20N%27invente%20jamais%20de%20sortie%20%3A%20si%20le%20mod%C3%A8le%20n%27a%20pas%20pu%20tourner%2C%20dis-le.%0A%0A1.%20Inspecte%20la%20machine%20et%20dis-moi%20ce%20que%20tu%20trouves%20%3A%20syst%C3%A8me%20%28Linux%2C%20macOS%2C%20Windows%2C%20WSL2%29%2C%20version%20de%20Python%20%283.11%2B%20requise%29%2C%20RAM%20et%20disque%20libres%2C%20et%20si%20un%20GPU%20NVIDIA%20est%20utilisable%20%28%60nvidia-smi%60%29.%20Choisis%20ensuite%20le%20backend%20et%20explique%20pourquoi%20%3A%0A%20%20%20-%20GPU%20%28vLLM%29%20%3A%20seulement%20sous%20Linux%20ou%20WSL2%20avec%20un%20GPU%20NVIDIA%20et%20CUDA%2C%208%20Go%20de%20VRAM%20ou%20plus.%0A%20%20%20-%20CPU%20%28transformers%29%20sinon%20%3A%20environ%2013%20Go%20de%20RAM%20libre%2C%20quelques%20secondes%20par%20question.%0A%20%20%20Le%20t%C3%A9l%C3%A9chargement%20du%20mod%C3%A8le%20fait%20environ%206%20Go%20dans%20les%20deux%20cas.%0A%0A2.%20Installe%20uv%20s%27il%20manque%20%28https%3A%2F%2Fdocs.astral.sh%2Fuv%2F%29.%20Si%20ce%20dossier%20n%27est%20pas%20d%C3%A9j%C3%A0%20un%20clone%20du%20d%C3%A9p%C3%B4t%2C%20clone-le%20%3A%0A%20%20%20git%20clone%20https%3A%2F%2Fgithub.com%2FOkura66%2Fkahn1%20%26%26%20cd%20kahn1%0A%20%20%20uv%20venv%20--python%203.11%0A%20%20%20GPU%20%3A%20uv%20pip%20install%20-e%20%22.%5Bgpu%5D%22%0A%20%20%20CPU%20%3A%20uv%20pip%20install%20-e%20%22.%5Bcpu%5D%22%20--extra-index-url%20https%3A%2F%2Fdownload.pytorch.org%2Fwhl%2Fcpu%0A%20%20%20Le%20tokenizer%20du%20mod%C3%A8le%20demande%20transformers%205%20ou%20plus.%20V%C3%A9rifie%20avec%0A%20%20%20uv%20run%20python%20-c%20%22import%20transformers%3B%20print%28transformers.__version__%29%22%0A%20%20%20et%20lance%20%60uv%20pip%20install%20-U%20transformers%60%20s%27il%20affiche%204.x.%0A%0A3.%20D%C3%A9marre%20le%20serveur%20en%20arri%C3%A8re-plan%20et%20garde%20son%20journal%20%3A%0A%20%20%20GPU%20%3A%20SYSONE_MODEL%3DOkura66%2FKahn1-Qwen2.5-3B%20uv%20run%20sysone%20serve%20--port%208000%0A%20%20%20CPU%20%3A%20SYSONE_BACKEND%3Dcpu%20SYSONE_MODEL%3DOkura66%2FKahn1-Qwen2.5-3B%20uv%20run%20sysone%20serve%20--port%208000%0A%20%20%20Sous%20Windows%20PowerShell%2C%20d%C3%A9finis%20d%27abord%20chaque%20variable%20avec%20%24env%3ANOM%20%3D%20%22valeur%22.%20Interroge%20GET%20http%3A%2F%2F127.0.0.1%3A8000%2Fhealth%20jusqu%27%C3%A0%20obtenir%20%7B%22status%22%3A%20%22ok%22%7D.%0A%0A4.%20Envoie%20ce%20JSON%20en%20POST%20%C3%A0%20http%3A%2F%2F127.0.0.1%3A8000%2Fv1%2Fevaluate%2Fjev%20%28%C3%A9cris-le%20dans%20un%20fichier%20et%20envoie-le%20avec%20curl%20-d%20%40fichier%2C%20ou%20utilise%20Python%29.%20Le%20premier%20appel%20charge%20le%20mod%C3%A8le%20et%20peut%20prendre%20des%20minutes%20%3A%0A%20%20%20%7B%22state%22%3A%20%22Bonjour%2C%20j%27ai%20%C3%A9t%C3%A9%20d%C3%A9bit%C3%A9%20deux%20fois%20pour%20ma%20commande%20%2348213.%20Je%20veux%20%C3%AAtre%20rembours%C3%A9%2C%20sinon%20je%20fais%20opposition%20aupr%C3%A8s%20de%20ma%20banque.%22%2C%0A%20%20%20%20%22schema%22%3A%20%7B%0A%20%20%20%20%20%20%22intent%22%3A%20%7B%22type%22%3A%20%22choice%22%2C%20%22instructions%22%3A%20%22Quelle%20est%20la%20demande%20principale%20du%20client%20%3F%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22criteria%22%3A%20%7B%22remboursement%22%3A%20%22le%20client%20veut%20%C3%AAtre%20rembours%C3%A9%22%2C%20%22livraison%22%3A%20%22question%20sur%20une%20livraison%22%2C%20%22compte%22%3A%20%22probl%C3%A8me%20d%27acc%C3%A8s%20au%20compte%22%7D%7D%2C%0A%20%20%20%20%20%20%22urgency%22%3A%20%7B%22type%22%3A%20%22score%22%2C%20%22instructions%22%3A%20%22Quel%20est%20le%20niveau%20d%27urgence%20de%20ce%20message%20%3F%22%2C%20%22criteria%22%3A%20%5B%22faible%22%2C%20%22moyen%22%2C%20%22%C3%A9lev%C3%A9%22%2C%20%22critique%22%5D%7D%2C%0A%20%20%20%20%20%20%22churn_risk%22%3A%20%7B%22type%22%3A%20%22noul%22%2C%20%22instructions%22%3A%20%22Le%20client%20menace%20de%20quitter%20le%20service%20ou%20d%27escalader.%22%7D%7D%2C%0A%20%20%20%20%22n_permutations%22%3A%201%7D%0A%20%20%20Montre-moi%20la%20r%C3%A9ponse%20JSON%20et%20v%C3%A9rifie-la%20%3A%20intent%20a%20un%20choice%20et%20des%20probabilit%C3%A9s%20dont%20la%20somme%20vaut%201%2C%20urgency%20a%20un%20level%20et%20un%20score%2C%20churn_risk%20est%20un%20nombre%20entre%200%20et%201.%20Donne%20latency_ms%2C%20puis%20renvoie%20la%20m%C3%AAme%20requ%C3%AAte%20pour%20montrer%20la%20latence%20%C3%A0%20chaud.%0A%0A5.%20Termine%20par%20un%20court%20r%C3%A9sum%C3%A9%20%3A%20backend%20utilis%C3%A9%2C%20chemin%20d%27installation%2C%20comment%20arr%C3%AAter%20et%20relancer%20le%20serveur%2C%20et%20o%C3%B9%20aller%20ensuite%20%28https%3A%2F%2Fkahn1.com%2Ffr%2Fdemarrer%2F%20pour%20l%27API%2C%20le%20format%20de%20r%C3%A9ponse%2C%20les%20r%C3%A9glages%20et%20la%20calibration%20sur%20mes%20propres%20donn%C3%A9es%29."><b>CLAUDE CODE &rarr;</b><span>Ouvre une session dans un terminal avec le prompt déjà saisi. Claude Code doit être installé.</span></a>
+        <a href="claude://code/new?q=Installe%20Kahn1%20sur%20cette%20machine%20et%20prouve%20qu%27il%20fonctionne%20avec%20une%20vraie%20requ%C3%AAte.%0A%0AKahn1%20%28https%3A%2F%2Fgithub.com%2FOkura66%2Fkahn1%2C%20MIT%29%20est%20un%20moteur%20de%20d%C3%A9cision%20open%20source%20%3A%20un%20Qwen2.5-3B%20affin%C3%A9%20qui%20r%C3%A9pond%20%C3%A0%20des%20questions%20typ%C3%A9es%20%28choice%2C%20score%2C%20noul%29%20sur%20un%20texte%20en%20lisant%20les%20probabilit%C3%A9s%20des%20tokens%20d%27option.%20Il%20est%20servi%20par%20une%20application%20FastAPI%2C%20%60sysone%60.%20Guide%20%3A%20https%3A%2F%2Fkahn1.com%2Ffr%2Fdemarrer%2F%0A%0AR%C3%A8gles%20%3A%20avance%20%C3%A9tape%20par%20%C3%A9tape%20et%20montre%20chaque%20commande%20avant%20de%20la%20lancer.%20Demande-moi%20avant%20d%27utiliser%20sudo%2C%20d%27installer%20des%20paquets%20syst%C3%A8me%20ou%20de%20modifier%20quoi%20que%20ce%20soit%20hors%20du%20dossier%20du%20projet.%20Si%20une%20%C3%A9tape%20%C3%A9choue%2C%20montre%20l%27erreur%20exacte%2C%20explique%20la%20cause%20probable%20et%20propose%20une%20correction%20avant%20de%20continuer.%20N%27invente%20jamais%20de%20sortie%20%3A%20si%20le%20mod%C3%A8le%20n%27a%20pas%20pu%20tourner%2C%20dis-le.%0A%0A1.%20Inspecte%20la%20machine%20et%20dis-moi%20ce%20que%20tu%20trouves%20%3A%20syst%C3%A8me%20%28Linux%2C%20macOS%2C%20Windows%2C%20WSL2%29%2C%20version%20de%20Python%20%283.11%2B%20requise%29%2C%20RAM%20et%20disque%20libres%2C%20et%20si%20un%20GPU%20NVIDIA%20est%20utilisable%20%28%60nvidia-smi%60%29.%20Choisis%20ensuite%20le%20backend%20et%20explique%20pourquoi%20%3A%0A%20%20%20-%20GPU%20%28vLLM%29%20%3A%20seulement%20sous%20Linux%20ou%20WSL2%20avec%20un%20GPU%20NVIDIA%20et%20CUDA%2C%208%20Go%20de%20VRAM%20ou%20plus.%0A%20%20%20-%20CPU%20%28transformers%29%20sinon%20%3A%20environ%2013%20Go%20de%20RAM%20libre%2C%20quelques%20secondes%20par%20question.%0A%20%20%20Le%20t%C3%A9l%C3%A9chargement%20du%20mod%C3%A8le%20fait%20environ%206%20Go%20dans%20les%20deux%20cas.%0A%0A2.%20Installe%20uv%20s%27il%20manque%20%28https%3A%2F%2Fdocs.astral.sh%2Fuv%2F%29.%20Si%20ce%20dossier%20n%27est%20pas%20d%C3%A9j%C3%A0%20un%20clone%20du%20d%C3%A9p%C3%B4t%2C%20clone-le%20%3A%0A%20%20%20git%20clone%20https%3A%2F%2Fgithub.com%2FOkura66%2Fkahn1%20%26%26%20cd%20kahn1%0A%20%20%20uv%20venv%20--python%203.11%0A%20%20%20GPU%20%3A%20uv%20pip%20install%20-e%20%22.%5Bgpu%5D%22%0A%20%20%20CPU%20%3A%20uv%20pip%20install%20-e%20%22.%5Bcpu%5D%22%20--extra-index-url%20https%3A%2F%2Fdownload.pytorch.org%2Fwhl%2Fcpu%0A%20%20%20Le%20tokenizer%20du%20mod%C3%A8le%20demande%20transformers%205%20ou%20plus.%20V%C3%A9rifie%20avec%0A%20%20%20uv%20run%20python%20-c%20%22import%20transformers%3B%20print%28transformers.__version__%29%22%0A%20%20%20et%20lance%20%60uv%20pip%20install%20-U%20transformers%60%20s%27il%20affiche%204.x.%0A%0A3.%20D%C3%A9marre%20le%20serveur%20en%20arri%C3%A8re-plan%20et%20garde%20son%20journal%20%3A%0A%20%20%20GPU%20%3A%20SYSONE_MODEL%3DOkura66%2FKahn1-Qwen2.5-3B%20uv%20run%20sysone%20serve%20--port%208000%0A%20%20%20CPU%20%3A%20SYSONE_BACKEND%3Dcpu%20SYSONE_MODEL%3DOkura66%2FKahn1-Qwen2.5-3B%20uv%20run%20sysone%20serve%20--port%208000%0A%20%20%20Sous%20Windows%20PowerShell%2C%20d%C3%A9finis%20d%27abord%20chaque%20variable%20avec%20%24env%3ANOM%20%3D%20%22valeur%22.%20Interroge%20GET%20http%3A%2F%2F127.0.0.1%3A8000%2Fhealth%20jusqu%27%C3%A0%20obtenir%20%7B%22status%22%3A%20%22ok%22%7D.%0A%0A4.%20Envoie%20ce%20JSON%20en%20POST%20%C3%A0%20http%3A%2F%2F127.0.0.1%3A8000%2Fv1%2Fevaluate%2Fjev%20%28%C3%A9cris-le%20dans%20un%20fichier%20et%20envoie-le%20avec%20curl%20-d%20%40fichier%2C%20ou%20utilise%20Python%29.%20Le%20premier%20appel%20charge%20le%20mod%C3%A8le%20et%20peut%20prendre%20des%20minutes%20%3A%0A%20%20%20%7B%22state%22%3A%20%22Bonjour%2C%20j%27ai%20%C3%A9t%C3%A9%20d%C3%A9bit%C3%A9%20deux%20fois%20pour%20ma%20commande%20%2348213.%20Je%20veux%20%C3%AAtre%20rembours%C3%A9%2C%20sinon%20je%20fais%20opposition%20aupr%C3%A8s%20de%20ma%20banque.%22%2C%0A%20%20%20%20%22schema%22%3A%20%7B%0A%20%20%20%20%20%20%22intent%22%3A%20%7B%22type%22%3A%20%22choice%22%2C%20%22instructions%22%3A%20%22Quelle%20est%20la%20demande%20principale%20du%20client%20%3F%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22criteria%22%3A%20%7B%22remboursement%22%3A%20%22le%20client%20veut%20%C3%AAtre%20rembours%C3%A9%22%2C%20%22livraison%22%3A%20%22question%20sur%20une%20livraison%22%2C%20%22compte%22%3A%20%22probl%C3%A8me%20d%27acc%C3%A8s%20au%20compte%22%7D%7D%2C%0A%20%20%20%20%20%20%22urgency%22%3A%20%7B%22type%22%3A%20%22score%22%2C%20%22instructions%22%3A%20%22Quel%20est%20le%20niveau%20d%27urgence%20de%20ce%20message%20%3F%22%2C%20%22criteria%22%3A%20%5B%22faible%22%2C%20%22moyen%22%2C%20%22%C3%A9lev%C3%A9%22%2C%20%22critique%22%5D%7D%2C%0A%20%20%20%20%20%20%22churn_risk%22%3A%20%7B%22type%22%3A%20%22noul%22%2C%20%22instructions%22%3A%20%22Le%20client%20menace%20de%20quitter%20le%20service%20ou%20d%27escalader.%22%7D%7D%2C%0A%20%20%20%20%22n_permutations%22%3A%201%7D%0A%20%20%20Montre-moi%20la%20r%C3%A9ponse%20JSON%20et%20v%C3%A9rifie-la%20%3A%20intent%20a%20un%20choice%20et%20des%20probabilit%C3%A9s%20dont%20la%20somme%20vaut%201%2C%20urgency%20a%20un%20level%20et%20un%20score%2C%20churn_risk%20est%20un%20nombre%20entre%200%20et%201.%20Donne%20latency_ms%2C%20puis%20renvoie%20la%20m%C3%AAme%20requ%C3%AAte%20pour%20montrer%20la%20latence%20%C3%A0%20chaud.%0A%0A5.%20Termine%20par%20un%20court%20r%C3%A9sum%C3%A9%20%3A%20backend%20utilis%C3%A9%2C%20chemin%20d%27installation%2C%20comment%20arr%C3%AAter%20et%20relancer%20le%20serveur%2C%20et%20o%C3%B9%20aller%20ensuite%20%28https%3A%2F%2Fkahn1.com%2Ffr%2Fdemarrer%2F%20pour%20l%27API%2C%20le%20format%20de%20r%C3%A9ponse%2C%20les%20r%C3%A9glages%20et%20la%20calibration%20sur%20mes%20propres%20donn%C3%A9es%29."><b>CLAUDE DESKTOP &rarr;</b><span>Ouvre l'onglet Code de l'application Claude avec le prompt. Choisissez le dossier quand il le demande.</span></a>
+        <a href="https://claude.ai/code?repositories=Okura66/kahn1&amp;prompt=Installe%20Kahn1%20sur%20cette%20machine%20et%20prouve%20qu%27il%20fonctionne%20avec%20une%20vraie%20requ%C3%AAte.%0A%0AKahn1%20%28https%3A%2F%2Fgithub.com%2FOkura66%2Fkahn1%2C%20MIT%29%20est%20un%20moteur%20de%20d%C3%A9cision%20open%20source%20%3A%20un%20Qwen2.5-3B%20affin%C3%A9%20qui%20r%C3%A9pond%20%C3%A0%20des%20questions%20typ%C3%A9es%20%28choice%2C%20score%2C%20noul%29%20sur%20un%20texte%20en%20lisant%20les%20probabilit%C3%A9s%20des%20tokens%20d%27option.%20Il%20est%20servi%20par%20une%20application%20FastAPI%2C%20%60sysone%60.%20Guide%20%3A%20https%3A%2F%2Fkahn1.com%2Ffr%2Fdemarrer%2F%0A%0AR%C3%A8gles%20%3A%20avance%20%C3%A9tape%20par%20%C3%A9tape%20et%20montre%20chaque%20commande%20avant%20de%20la%20lancer.%20Demande-moi%20avant%20d%27utiliser%20sudo%2C%20d%27installer%20des%20paquets%20syst%C3%A8me%20ou%20de%20modifier%20quoi%20que%20ce%20soit%20hors%20du%20dossier%20du%20projet.%20Si%20une%20%C3%A9tape%20%C3%A9choue%2C%20montre%20l%27erreur%20exacte%2C%20explique%20la%20cause%20probable%20et%20propose%20une%20correction%20avant%20de%20continuer.%20N%27invente%20jamais%20de%20sortie%20%3A%20si%20le%20mod%C3%A8le%20n%27a%20pas%20pu%20tourner%2C%20dis-le.%0A%0A1.%20Inspecte%20la%20machine%20et%20dis-moi%20ce%20que%20tu%20trouves%20%3A%20syst%C3%A8me%20%28Linux%2C%20macOS%2C%20Windows%2C%20WSL2%29%2C%20version%20de%20Python%20%283.11%2B%20requise%29%2C%20RAM%20et%20disque%20libres%2C%20et%20si%20un%20GPU%20NVIDIA%20est%20utilisable%20%28%60nvidia-smi%60%29.%20Choisis%20ensuite%20le%20backend%20et%20explique%20pourquoi%20%3A%0A%20%20%20-%20GPU%20%28vLLM%29%20%3A%20seulement%20sous%20Linux%20ou%20WSL2%20avec%20un%20GPU%20NVIDIA%20et%20CUDA%2C%208%20Go%20de%20VRAM%20ou%20plus.%0A%20%20%20-%20CPU%20%28transformers%29%20sinon%20%3A%20environ%2013%20Go%20de%20RAM%20libre%2C%20quelques%20secondes%20par%20question.%0A%20%20%20Le%20t%C3%A9l%C3%A9chargement%20du%20mod%C3%A8le%20fait%20environ%206%20Go%20dans%20les%20deux%20cas.%0A%0A2.%20Installe%20uv%20s%27il%20manque%20%28https%3A%2F%2Fdocs.astral.sh%2Fuv%2F%29.%20Si%20ce%20dossier%20n%27est%20pas%20d%C3%A9j%C3%A0%20un%20clone%20du%20d%C3%A9p%C3%B4t%2C%20clone-le%20%3A%0A%20%20%20git%20clone%20https%3A%2F%2Fgithub.com%2FOkura66%2Fkahn1%20%26%26%20cd%20kahn1%0A%20%20%20uv%20venv%20--python%203.11%0A%20%20%20GPU%20%3A%20uv%20pip%20install%20-e%20%22.%5Bgpu%5D%22%0A%20%20%20CPU%20%3A%20uv%20pip%20install%20-e%20%22.%5Bcpu%5D%22%20--extra-index-url%20https%3A%2F%2Fdownload.pytorch.org%2Fwhl%2Fcpu%0A%20%20%20Le%20tokenizer%20du%20mod%C3%A8le%20demande%20transformers%205%20ou%20plus.%20V%C3%A9rifie%20avec%0A%20%20%20uv%20run%20python%20-c%20%22import%20transformers%3B%20print%28transformers.__version__%29%22%0A%20%20%20et%20lance%20%60uv%20pip%20install%20-U%20transformers%60%20s%27il%20affiche%204.x.%0A%0A3.%20D%C3%A9marre%20le%20serveur%20en%20arri%C3%A8re-plan%20et%20garde%20son%20journal%20%3A%0A%20%20%20GPU%20%3A%20SYSONE_MODEL%3DOkura66%2FKahn1-Qwen2.5-3B%20uv%20run%20sysone%20serve%20--port%208000%0A%20%20%20CPU%20%3A%20SYSONE_BACKEND%3Dcpu%20SYSONE_MODEL%3DOkura66%2FKahn1-Qwen2.5-3B%20uv%20run%20sysone%20serve%20--port%208000%0A%20%20%20Sous%20Windows%20PowerShell%2C%20d%C3%A9finis%20d%27abord%20chaque%20variable%20avec%20%24env%3ANOM%20%3D%20%22valeur%22.%20Interroge%20GET%20http%3A%2F%2F127.0.0.1%3A8000%2Fhealth%20jusqu%27%C3%A0%20obtenir%20%7B%22status%22%3A%20%22ok%22%7D.%0A%0A4.%20Envoie%20ce%20JSON%20en%20POST%20%C3%A0%20http%3A%2F%2F127.0.0.1%3A8000%2Fv1%2Fevaluate%2Fjev%20%28%C3%A9cris-le%20dans%20un%20fichier%20et%20envoie-le%20avec%20curl%20-d%20%40fichier%2C%20ou%20utilise%20Python%29.%20Le%20premier%20appel%20charge%20le%20mod%C3%A8le%20et%20peut%20prendre%20des%20minutes%20%3A%0A%20%20%20%7B%22state%22%3A%20%22Bonjour%2C%20j%27ai%20%C3%A9t%C3%A9%20d%C3%A9bit%C3%A9%20deux%20fois%20pour%20ma%20commande%20%2348213.%20Je%20veux%20%C3%AAtre%20rembours%C3%A9%2C%20sinon%20je%20fais%20opposition%20aupr%C3%A8s%20de%20ma%20banque.%22%2C%0A%20%20%20%20%22schema%22%3A%20%7B%0A%20%20%20%20%20%20%22intent%22%3A%20%7B%22type%22%3A%20%22choice%22%2C%20%22instructions%22%3A%20%22Quelle%20est%20la%20demande%20principale%20du%20client%20%3F%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22criteria%22%3A%20%7B%22remboursement%22%3A%20%22le%20client%20veut%20%C3%AAtre%20rembours%C3%A9%22%2C%20%22livraison%22%3A%20%22question%20sur%20une%20livraison%22%2C%20%22compte%22%3A%20%22probl%C3%A8me%20d%27acc%C3%A8s%20au%20compte%22%7D%7D%2C%0A%20%20%20%20%20%20%22urgency%22%3A%20%7B%22type%22%3A%20%22score%22%2C%20%22instructions%22%3A%20%22Quel%20est%20le%20niveau%20d%27urgence%20de%20ce%20message%20%3F%22%2C%20%22criteria%22%3A%20%5B%22faible%22%2C%20%22moyen%22%2C%20%22%C3%A9lev%C3%A9%22%2C%20%22critique%22%5D%7D%2C%0A%20%20%20%20%20%20%22churn_risk%22%3A%20%7B%22type%22%3A%20%22noul%22%2C%20%22instructions%22%3A%20%22Le%20client%20menace%20de%20quitter%20le%20service%20ou%20d%27escalader.%22%7D%7D%2C%0A%20%20%20%20%22n_permutations%22%3A%201%7D%0A%20%20%20Montre-moi%20la%20r%C3%A9ponse%20JSON%20et%20v%C3%A9rifie-la%20%3A%20intent%20a%20un%20choice%20et%20des%20probabilit%C3%A9s%20dont%20la%20somme%20vaut%201%2C%20urgency%20a%20un%20level%20et%20un%20score%2C%20churn_risk%20est%20un%20nombre%20entre%200%20et%201.%20Donne%20latency_ms%2C%20puis%20renvoie%20la%20m%C3%AAme%20requ%C3%AAte%20pour%20montrer%20la%20latence%20%C3%A0%20chaud.%0A%0A5.%20Termine%20par%20un%20court%20r%C3%A9sum%C3%A9%20%3A%20backend%20utilis%C3%A9%2C%20chemin%20d%27installation%2C%20comment%20arr%C3%AAter%20et%20relancer%20le%20serveur%2C%20et%20o%C3%B9%20aller%20ensuite%20%28https%3A%2F%2Fkahn1.com%2Ffr%2Fdemarrer%2F%20pour%20l%27API%2C%20le%20format%20de%20r%C3%A9ponse%2C%20les%20r%C3%A9glages%20et%20la%20calibration%20sur%20mes%20propres%20donn%C3%A9es%29." rel="noopener"><b>CLAUDE CODE SUR LE WEB &rarr;</b><span>Un bac à sable dans le cloud avec le dépôt&nbsp;: pas de GPU, donc le backend CPU.</span></a>
+      </div>
+      <p class="small faint" style="margin-top:14px">Chaque lien remplit le prompt et attend&nbsp;: rien ne s'exécute tant
+        que vous ne l'avez pas lu et validé. Si un lien ne fait rien, l'application n'est pas installée (Claude Code
+        enregistre ses liens après sa première session). Depuis un terminal bash ou zsh&nbsp;:
+        <code>claude "$(curl -s https://kahn1.com/fr/demarrer/setup-prompt.md)"</code>. Le prompt est aussi sur <a href="setup-prompt.md">https://kahn1.com/fr/demarrer/setup-prompt.md</a>.</p>
+    </section>
+
+    <section class="sec doc" id="installer" aria-labelledby="h-installer">
+      <h2 id="h-installer">02 · Installer</h2>
+      <p>Python 3.11 ou plus et <a href="https://docs.astral.sh/uv/" rel="noopener">uv</a>. Le backend GPU est
+        vLLM, qui demande Linux ou WSL2 avec CUDA&nbsp;; le backend CPU tourne partout.</p>
+      <pre class="term"><span class="d">$ </span>git clone https://github.com/Okura66/kahn1 &amp;&amp; cd kahn1
+<span class="d">$ </span>uv venv --python 3.11
+<span class="d">$ </span>source .venv/bin/activate          # .venv\Scripts\activate sous Windows
+<span class="d">$ </span>uv pip install -e ".[gpu]"         # vLLM, GPU CUDA
+<span class="d">$ </span>uv pip install -e ".[cpu]" --extra-index-url https://download.pytorch.org/whl/cpu   # ou CPU seul</pre>
+      <p>Les poids viennent de Hugging Face au premier usage&nbsp;: le
+        <a href="https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B" rel="noopener">modèle fusionné</a> (6,17&nbsp;Go, celui
+        que sert vLLM) ou l'<a href="https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B-LoRA" rel="noopener">adaptateur LoRA</a>
+        (239&nbsp;Mo, par-dessus Qwen2.5-3B-Instruct).</p>
+    </section>
+
+    <section class="sec doc" id="servir" aria-labelledby="h-servir">
+      <h2 id="h-servir">03 · Servir</h2>
+      <pre class="term"><span class="d">$ </span>SYSONE_MODEL=Okura66/Kahn1-Qwen2.5-3B uv run sysone serve --port 8000
+<span class="d">$ </span>SYSONE_BACKEND=cpu SYSONE_MODEL=Okura66/Kahn1-Qwen2.5-3B uv run sysone serve --port 8000   # sans GPU
+<span class="d">$ </span>curl http://127.0.0.1:8000/health</pre>
+      <p>Le modèle se charge à la première requête (<code>SYSONE_EAGER=1</code> le charge au démarrage). Le serveur
+        écoute sur 127.0.0.1 par défaut&nbsp;; <code>--host 0.0.0.0</code> l'expose.</p>
+      <div class="tbl-wrap"><table class="tbl">
+        <thead><tr><th scope="col">Variable</th><th scope="col">Défaut</th><th scope="col">Rôle</th></tr></thead>
+        <tbody>
+          <tr><td><code>SYSONE_MODEL</code></td><td>checkpoints/qwen_merged s'il existe</td><td>identifiant Hugging Face ou chemin local</td></tr>
+          <tr><td><code>SYSONE_BACKEND</code></td><td>vllm</td><td><code>vllm</code> (GPU) ou <code>cpu</code> (transformers)</td></tr>
+          <tr><td><code>SYSONE_CALIBRATION</code></td><td>calibration.json</td><td>fichier de températures, appliqué s'il existe</td></tr>
+          <tr><td><code>SYSONE_DTYPE</code></td><td>float32</td><td>CPU seulement&nbsp;; gardez float32, bfloat16 est ~7× plus lent sans AMX</td></tr>
+          <tr><td><code>SYSONE_THREADS</code></td><td>tous les cœurs</td><td>CPU seulement&nbsp;: threads torch</td></tr>
+          <tr><td><code>SYSONE_EAGER</code></td><td>désactivé</td><td><code>1</code> charge le modèle au démarrage</td></tr>
+          <tr><td><code>SYSONE_CORS_ORIGIN_REGEX</code></td><td>localhost, kahn1.com</td><td>origines navigateur autorisées à appeler l'API</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section class="sec doc" id="requete" aria-labelledby="h-requete">
+      <h2 id="h-requete">04 · Envoyer une requête</h2>
+      <p><code>POST /v1/evaluate</code> prend un état et une liste de questions. Chaque question a un
+        <code>kind</code> et une <code>key</code> qui nomme sa réponse.</p>
+      <div class="label"><span>REQUEST.JSON</span></div>
+      <pre class="term">{
+  "state": "Bonjour, j'ai été débité deux fois pour ma commande #48213 passée le 12 septembre. Cela fait une semaine que j'attends une réponse du service client. Je veux être remboursé au plus vite, sinon je fais opposition auprès de ma banque et je ferme mon compte.",
+  "questions": [
+    {
+      "kind": "choice",
+      "key": "intent",
+      "prompt": "Quelle est la demande principale du client ?",
+      "options": ["remboursement: le client veut être remboursé", "livraison: question sur une livraison", "compte: problème d'accès au compte", "information: demande d'information produit"],
+      "allow_other": true
+    },
+    {
+      "kind": "score",
+      "key": "urgency",
+      "prompt": "Quel est le niveau d'urgence de ce message ?",
+      "levels": ["faible", "moyen", "élevé", "critique"]
+    },
+    {
+      "kind": "noul",
+      "key": "churn_risk",
+      "statement": "Le client menace de quitter le service ou d'escalader."
+    }
+  ],
+  "n_permutations": 1
+}</pre>
+      <pre class="term"><span class="d">$ </span>curl -X POST http://127.0.0.1:8000/v1/evaluate \
+  -H "Content-Type: application/json" -d @request.json</pre>
+      <p>Vous avez déjà des schémas JEV / TypeSafe&nbsp;? <code>POST /v1/evaluate/jev</code> prend le même dictionnaire
+        (<code>type</code>, <code>instructions</code>, <code>criteria</code>). <code>/v1/evaluate</code> l'accepte aussi
+        dans un champ <code>schema</code>.</p>
+      <pre class="term"><span class="d">$ </span>curl -X POST http://127.0.0.1:8000/v1/evaluate/jev \
+  -H "Content-Type: application/json" \
+  -d '{
+  "state": "Impossible de me connecter à mon compte depuis ce matin.",
+  "schema": {
+    "categorie": {"type": "choice", "instructions": "Catégorie du ticket",
+                  "criteria": {"bug": "Quelque chose est cassé", "facturation": "Factures, remboursements", "compte": "Connexion, droits"}},
+    "urgence": {"type": "score", "instructions": "Niveau d’urgence", "criteria": ["faible", "moyen", "critique"]},
+    "menace_juridique": {"type": "noul", "instructions": "Le client menace d’une action en justice"}
+  }
+}'</pre>
+    </section>
+
+    <section class="sec doc" id="reponse" aria-labelledby="h-reponse">
+      <h2 id="h-reponse">05 · Lire la réponse</h2>
+      <p>La réponse à la requête ci-dessus, enregistrée depuis le checkpoint v3 sur CPU (d'où la latence&nbsp;: sur GPU avec vLLM, comptez ~36&nbsp;ms à k&nbsp;=&nbsp;3).</p>
+      <pre class="term">{
+  "answers": {
+    "intent": {
+      "choice": "remboursement: le client veut être remboursé",
+      "probabilities": {
+        "remboursement: le client veut être remboursé": 0.9411,
+        "livraison: question sur une livraison": 0.0026,
+        "compte: problème d'accès au compte": 0.0005,
+        "information: demande d'information produit": 0.0004,
+        "None of these answers": 0.0552
+      },
+      "confidence": 0.9264
+    },
+    "urgency": {
+      "score": 2.2562,
+      "level": "élevé",
+      "probabilities": {
+        "faible": 0.0065,
+        "moyen": 0.0125,
+        "élevé": 0.6992,
+        "critique": 0.2818
+      },
+      "confidence": 0.5989,
+      "expected_score": 3.2562
+    },
+    "churn_risk": {
+      "noul": 0.8614
+    }
+  },
+  "latency_ms": 21192.1,
+  "cache_hit_rate": 0.0
+}</pre>
+      <div class="tbl-wrap"><table class="tbl">
+        <thead><tr><th scope="col">Champ</th><th scope="col">Sens</th></tr></thead>
+        <tbody>
+          <tr><td><code>choice</code></td><td>l'option la plus probable, telle qu'écrite dans la requête</td></tr>
+          <tr><td><code>probabilities</code></td><td>la distribution complète, de somme 1. Choice ajoute <em>None of these answers</em> quand <code>allow_other</code> vaut true</td></tr>
+          <tr><td><code>confidence</code></td><td><code>(p_max − 1/n) / (1 − 1/n)</code>&nbsp;: l'écart à un tirage uniforme, pas la probabilité d'avoir raison</td></tr>
+          <tr><td><code>score</code> / <code>expected_score</code></td><td>Σ i·p<sub>i</sub>, à partir de 0 / de 1&nbsp;: une position continue sur l'échelle</td></tr>
+          <tr><td><code>level</code></td><td>le niveau le plus probable</td></tr>
+          <tr><td><code>noul</code></td><td>p(oui), entre 0 et 1</td></tr>
+          <tr><td><code>cache_hit_rate</code></td><td>part des tokens du prompt servis par le cache de préfixe (vLLM)</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section class="sec doc" id="python" aria-labelledby="h-python">
+      <h2 id="h-python">06 · Depuis Python</h2>
+      <pre class="term">from sysone.calibrate import CalibratedEngine, TemperatureConfig
+from sysone.engine import Engine, EngineConfig
+from sysone.types import ChoiceQuestion, NoulQuestion, Query, ScoreQuestion
+
+engine = Engine(EngineConfig(model="Okura66/Kahn1-Qwen2.5-3B"))      # vLLM, GPU
+# from sysone.cpu import CPUEngine
+# engine = CPUEngine("Okura66/Kahn1-Qwen2.5-3B", dtype="float32")    # or a CPU
+engine = CalibratedEngine(engine, TemperatureConfig.load("calibration.json"))
+
+query = Query(state="Hi, I was charged twice for order #48213 ...", questions=[
+    ChoiceQuestion(key="intent", prompt="What is the customer's main request?",
+                   options=["refund", "delivery", "account", "information"]),
+    ScoreQuestion(key="urgency", prompt="How urgent is this message?",
+                  levels=["low", "medium", "high", "critical"]),
+    NoulQuestion(key="churn_risk", statement="The customer threatens to leave."),
+])
+# Or from a JEV dictionary: Query.from_jev(state=..., schema={...})
+
+resp = engine.evaluate(query, n_permutations=3)
+print(resp.answers["intent"].choice, resp.answers["intent"].probabilities)
+print(resp.answers["urgency"].expected_score, resp.answers["churn_risk"].noul)</pre>
+      <p><code>Engine.evaluate_batch(queries)</code> traite plusieurs états en un appel (le benchmark Snake fait
+        avancer 20 parties de cette façon).</p>
+    </section>
+
+    <section class="sec doc" id="regler" aria-labelledby="h-regler">
+      <h2 id="h-regler">07 · Régler la réponse</h2>
+      <ul class="plain">
+        <li><b><code>n_permutations</code></b> (k, 3 par défaut). Choice est posée k fois avec les options mélangées, et les
+          distributions sont moyennées, ce qui annule le biais de position. Score, à partir de k&nbsp;=&nbsp;2, est posée
+          dans l'ordre croissant puis décroissant. Noul est posée une fois. Les prompts partagent le cache de l'état&nbsp;:
+          k&nbsp;=&nbsp;3 coûte bien moins que 3×&nbsp;; k&nbsp;=&nbsp;1 est le plus rapide.</li>
+        <li><b><code>allow_other</code></b> (Choice, true par défaut) ajoute <em>None of these answers</em> en dernière option.
+          Mettez false quand une option s'applique toujours.</li>
+        <li><b>Plus de 26 options.</b> La voie directe lit les lettres A à Z. Au-delà, appelez
+          <code>engine.evaluate_two_stage(query)</code> depuis Python&nbsp;: un Noul par option retient 10 candidats, puis un
+          Choice tranche entre eux. L'API HTTP ne fait pas ce routage.</li>
+        <li><b>Écrivez les options comme une étiquette courte suivie d'une description</b>
+          (<code>"remboursement: le client veut être remboursé"</code>)&nbsp;: le modèle lit le texte, et les dictionnaires
+          <code>criteria</code> de JEV sont convertis sous cette forme.</li>
+      </ul>
+    </section>
+
+    <section class="sec doc" id="calibrer" aria-labelledby="h-calibrer">
+      <h2 id="h-calibrer">08 · Calibrer sur vos données</h2>
+      <p>Les températures livrées ont été ajustées sur une partie de la distribution d'entraînement. Sur votre domaine,
+        ajustez les vôtres avant de vous fier à un seuil. Il faut des exemples annotés en JSONL&nbsp;:</p>
+      <pre class="term"># un exemple annoté par ligne ; label = indice de la bonne option ou du bon niveau,
+# et pour noul 1 = oui, 0 = non
+{"state": "...", "kind": "choice", "prompt": "...", "options": ["a", "b", "c"], "label": 2}
+{"state": "...", "kind": "score", "prompt": "...", "levels": ["bas", "moyen", "haut"], "label": 0}
+{"state": "...", "kind": "noul", "statement": "...", "label": 1}</pre>
+      <pre class="term"><span class="d">$ </span>uv run sysone calibrate --data mes_exemples.jsonl --out calibration.json --model Okura66/Kahn1-Qwen2.5-3B
+<span class="d">$ </span>curl -X POST "http://127.0.0.1:8000/v1/calibrate/load?path=calibration.json"   # rechargement à chaud</pre>
+      <p>Choisissez ensuite votre seuil d'automatisation sur des exemples réservés de votre domaine, et envoyez le
+        reste à une personne ou à un modèle plus gros.</p>
+    </section>
+
+    <section class="sec doc" id="navigateur" aria-labelledby="h-navigateur">
+      <h2 id="h-navigateur">09 · Dans le navigateur</h2>
+      <p>Le <a href="../../playground/">playground</a> et <a href="../../snake/">Snake</a> font tourner un GGUF 4&nbsp;bits
+        (<a href="https://huggingface.co/mradermacher/Kahn1-Qwen2.5-3B-GGUF" rel="noopener">mradermacher/Kahn1-Qwen2.5-3B-GGUF</a>,
+        1,6 à 1,9&nbsp;Go) avec <a href="https://github.com/ngxson/wllama" rel="noopener">wllama</a>, llama.cpp compilé en
+        WebAssembly et WebGPU. Le même code de prompt et de réponse tourne en JavaScript. Chrome ou Edge avec WebGPU&nbsp;:
+        quelques secondes par question après le téléchargement. Sans WebGPU, le repli CPU prend des minutes. Ce GGUF est
+        le checkpoint v1, pas le v3.</p>
+    </section>
+
+    <section class="sec doc" id="aller-plus-loin" aria-labelledby="h-aller-plus-loin">
+      <h2 id="h-aller-plus-loin">10 · Aller plus loin</h2>
+      <p>Pour entraîner sur votre domaine ou sur un autre modèle ouvert (Llama 3.2 3B, Qwen2.5 7B…), suivez le
+        <a href="https://github.com/Okura66/kahn1/blob/main/docs/PLAYBOOK.md" rel="noopener">playbook</a> (en anglais)&nbsp;:
+        format des données, entraînement LoRA, fusion pour vLLM, calibration. Les rapports d'évaluation et les scripts
+        sont dans <a href="https://github.com/Okura66/kahn1/tree/main/reports" rel="noopener"><code>reports/</code></a>.</p>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>KAHN1 · Licence MIT · par <a href="https://www.linkedin.com/in/amontzamir/" rel="noopener">Axel Montzamir</a></span>
+    <nav aria-label="Footer">
+      <a href="../../playground/">Playground</a>
+      <a href="../../snake/">Snake</a>
+      <a href="https://github.com/Okura66/kahn1" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/Okura66" rel="noopener">Hugging Face</a>
+      <a href="../../get-started/">English</a>
+      <a href="#" data-cookies>Cookies</a>
+    </nav>
+    <span class="disc">Kahn1 est un projet indépendant. Il accepte le format de schéma JEV et n'est pas affilié à TypeSafe.</span>
+  </footer>
+</div>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

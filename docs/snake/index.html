@@ -6,7 +6,7 @@
 <title>Kahn1 Plays Snake</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2317150f'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='20' font-weight='700' fill='%23faf8f5' text-anchor='middle'%3EK%3C/text%3E%3C/svg%3E">
 <meta name="description" content="Kahn1 plays Snake: one Choice question per tick, the move read from option-token logits.">
-<link rel="canonical" href="https://demo.kahn1.com/snake/">
+<link rel="canonical" href="https://kahn1.com/snake/">
 <script data-goatcounter="https://kahn1.goatcounter.com/count"
         async src="https://gc.zgo.at/count.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -47,9 +47,11 @@
     font-size: 16px; letter-spacing: 2px; color: var(--muted);
   }
   .facts i { color: var(--dot); font-style: normal; }
-  .back { position: absolute; top: 40px; left: 40px; font-size: 13px; letter-spacing: 2px;
-          color: var(--muted); text-decoration: none; padding: 10px 2px; }
-  .back:hover, .back:focus-visible { color: var(--ink); outline: none; text-decoration: underline; }
+  /* Site nav, top left: home and the two demos. */
+  .site { position: absolute; top: 40px; left: 40px; display: flex; gap: 22px; font-size: 13px; letter-spacing: 2px; }
+  .site a { color: var(--muted); text-decoration: none; padding: 10px 2px; }
+  .site a:hover, .site a:focus-visible { color: var(--ink); outline: none; text-decoration: underline; }
+  .site a[aria-current="page"] { color: var(--ink); font-weight: 700; }
 
   .links { position: absolute; top: 40px; right: 40px; display: flex; gap: 6px; }
   .links a {
@@ -196,12 +198,12 @@
     body { overflow: auto; }
     .viewport { width: auto; height: auto; display: block; overflow: visible; }
     .stage { width: auto; height: auto; padding: 16px 16px 28px; gap: 22px; }
-    .back { position: static; }
+    .site { position: static; flex-wrap: wrap; gap: 4px 18px; }
     .head h1 { font-size: 18px; text-align: center; }
     .facts { flex-wrap: wrap; justify-content: center; gap: 4px 10px; font-size: 11px; letter-spacing: 1px; }
     .lanes { display: contents; }
     .links { position: static; justify-content: flex-end; margin-bottom: -10px; }
-    .back { order: 0; } .links { order: 1; } .head { order: 2; }
+    .site { order: 0; } .links { order: 1; } .head { order: 2; }
     .lane:first-child { order: 3; } .controls { order: 4; } .lane:last-child { order: 5; margin-top: 8px; }
     .lane { width: auto; height: auto; }
     .panel { height: auto; padding: 20px 14px 18px; }
@@ -223,7 +225,11 @@
 <div class="viewport">
   <div class="stage" id="stage">
 
-    <a class="back" href="../">&larr; PLAYGROUND</a>
+    <nav class="site" aria-label="Site">
+      <a href="../">&larr; KAHN1</a>
+      <a href="../playground/">PLAYGROUND</a>
+      <a href="../snake/" aria-current="page">SNAKE</a>
+    </nav>
 
     <nav class="links" aria-label="Author links">
       <span class="views" id="views" hidden></span>
@@ -425,7 +431,7 @@ const defaultUrl = /^https?:$/.test(location.protocol) && !/github\.io|kahn1\.co
 el("url").value = store.get("url", defaultUrl);
 const serverUrl = () => el("url").value.trim().replace(/\/+$/, "");
 
-/* Same weights, runtime and temperature as the playground (docs/index.html).
+/* Same weights, runtime and temperature as the playground (docs/playground/index.html).
    Weights sit in the origin's private storage, so a visit to the playground
    already downloaded them. */
 const WLLAMA = "https://cdn.jsdelivr.net/npm/@wllama/wllama@3.6.1";

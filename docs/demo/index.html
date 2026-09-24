@@ -3,12 +3,13 @@
 <head>
 <meta charset="utf-8">
 <title>Kahn1 Playground</title>
-<!-- Old links to /demo/ land on the root. The query string gives a URL no browser
-     has cached, so a stale copy of the former root (which redirected here) cannot
-     bounce back and loop. The page strips the parameter. -->
-<meta http-equiv="refresh" content="0; url=../?from=demo">
-<link rel="canonical" href="../">
-<script>location.replace("../?from=demo" + location.hash);</script>
+<!-- Old links to /demo/ land on the playground. The query string gives a URL no
+     browser has cached, so a stale copy of a former page cannot bounce back and
+     loop. The playground strips the parameter. -->
+<meta http-equiv="refresh" content="0; url=../playground/?from=demo">
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://kahn1.com/playground/">
+<script>location.replace("../playground/?from=demo" + location.hash);</script>
 </head>
-<body><a href="../">Kahn1 Playground</a></body>
+<body><a href="../playground/">Kahn1 Playground</a></body>
 </html>

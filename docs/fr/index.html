@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<!-- Google Tag Manager, chargé seulement si le visiteur accepte les cookies de mesure
+     (ePrivacy / CNIL : aucun cookie non essentiel avant consentement). Voir le bandeau. -->
+<script>
+function loadGTM() {
+  if (window.__gtmLoaded) return;
+  window.__gtmLoaded = true;
+  (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-TTC5WPRN');
+}
+try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); } catch (e) {}
+</script>
+<!-- End Google Tag Manager -->
+<!-- GoatCounter : comptage de visites sans cookie, exempté de consentement. -->
+<script data-goatcounter="https://kahn1.goatcounter.com/count"
+        async src="https://gc.zgo.at/count.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kahn1 — Décisions typées lues dans les logits d'un LLM, sans générer de texte</title>
+<meta name="description" content="Kahn1 est un moteur de décision « Système 1 » open source : classer, noter et vérifier n'importe quel texte avec un modèle 3B qui lit des réponses calibrées dans les logits.">
+<link rel="canonical" href="https://kahn1.com/fr/">
+<link rel="alternate" hreflang="en" href="https://kahn1.com/">
+<link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/">
+<link rel="alternate" hreflang="x-default" href="https://kahn1.com/">
+<meta name="author" content="Axel Montzamir">
+<meta name="theme-color" content="#faf8f5">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Kahn1">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:locale:alternate" content="en_US">
+<meta property="og:url" content="https://kahn1.com/fr/">
+<meta property="og:title" content="Kahn1 — N'importe quel texte en entrée. Des réponses typées en sortie.">
+<meta property="og:description" content="Classer, noter et vérifier n'importe quel texte avec un modèle 3B qui lit des réponses calibrées dans les logits des options. Zéro token généré, zéro erreur de schéma.">
+<meta property="og:image" content="https://kahn1.com/assets/og-fr.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Kahn1 : n'importe quel texte en entrée, des réponses typées en sortie. Choice, Score, Noul lus dans les logits.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2317150f'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='20' font-weight='700' fill='%23faf8f5' text-anchor='middle'%3EK%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": "https://kahn1.com/fr/#webpage",
+      "url": "https://kahn1.com/fr/",
+      "name": "Kahn1 — Décisions typées lues dans les logits d'un LLM",
+      "inLanguage": "fr",
+      "isPartOf": { "@id": "https://kahn1.com/#website" },
+      "about": { "@id": "https://kahn1.com/#software" }
+    },
+    {
+      "@type": "FAQPage",
+      "inLanguage": "fr",
+      "mainEntity": [
+        { "@type": "Question", "name": "Qu'est-ce que Kahn1 ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Kahn1 est un moteur de décision open source construit sur un Qwen2.5-3B affiné. Il prend un texte (l'état) et des questions typées, et renvoie pour chaque question une valeur typée et une distribution de probabilités calibrée, lue dans les logits des tokens d'option. Il ne génère aucun texte." } },
+        { "@type": "Question", "name": "En quoi Kahn1 diffère-t-il du mode JSON ou des sorties structurées ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Le décodage structuré contraint les tokens qu'un modèle génère, et le résultat doit encore être analysé. Kahn1 ne génère rien : il lit une distribution de probabilités par question sur les tokens d'option. Chaque réponse arrive avec sa distribution complète et une confiance calibrée, et il n'y a rien à analyser." } },
+        { "@type": "Question", "name": "Kahn1 fonctionne-t-il sans GPU ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Oui. Le moteur CPU exécute le même code de décision avec une passe transformers classique, en quelques secondes par question au lieu de quelques dizaines de millisecondes. Le playground et la démo Snake font aussi tourner un GGUF 4 bits du modèle dans le navigateur, avec WebGPU." } },
+        { "@type": "Question", "name": "Puis-je utiliser mes propres catégories ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Oui. Catégories, échelles et affirmations font partie de chaque requête : les changer ne demande aucun réentraînement. La calibration a été ajustée sur la distribution d'entraînement : recalibrez sur vos propres exemples annotés avec sysone calibrate avant de vous fier à un seuil de confiance." } },
+        { "@type": "Question", "name": "Quelle est la précision de Kahn1 ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Sur 14 663 exemples réservés, jamais vus à l'entraînement, le checkpoint v3 atteint 70,3 % au global : 90,9 % en Choice (intentions banking77 et MASSIVE), 51,5 % de correspondance exacte en Score sur des échelles à 5 niveaux (95,2 % à un niveau près sur SST-5) et 67,0 % en Noul (82,7 % sur RTE, 65,0 % sur SciTail). Latence médiane : 36,4 ms sur une seule RTX 5070 Ti avec vLLM." } },
+        { "@type": "Question", "name": "Comment Kahn1 se compare-t-il à JEV ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Sur les 14 663 exemples du holdout de Kahn1, soumis à l'API TypeSafe, Kahn1 obtient 70,3 % et JEV 1.13.0 67,3 % : Kahn1 mène en Choice, égalité en Score, JEV mène en Noul. Sur les 231 exemples publics de JevBench, notés par JevBench, Jev obtient 86,6 % et Kahn1 67,5 % (73,0 % contre 42,3 % sur le niveau difficile). Kahn1 est plus fort au global sur les familles de tâches pour lesquelles il a été entraîné ; Jev est nettement plus fort sur le jugement ouvert. Kahn1 est ouvert et tourne sur votre matériel ; JEV est une API hébergée." } },
+        { "@type": "Question", "name": "Kahn1 est-il gratuit ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Oui. Le code est sous licence MIT et les poids sont sur Hugging Face : un modèle fusionné (Okura66/Kahn1-Qwen2.5-3B) et un adaptateur LoRA (Okura66/Kahn1-Qwen2.5-3B-LoRA)." } }
+      ]
+    }
+  ]
+}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Aller au contenu</a>
+
+<div class="consent" id="consent" role="dialog" aria-labelledby="consentText" hidden>
+  <p id="consentText">Google Analytics peut-il compter cette visite&nbsp;? Il dépose des cookies. Refuser ne
+     change rien d'autre sur le site, et rien de ce que vous tapez dans les démos ne lui est envoyé.</p>
+  <div class="row2">
+    <button class="primary" id="consentYes">ACCEPTER</button>
+    <button id="consentNo">REFUSER</button>
+  </div>
+</div>
+
+<a class="edge left" href="../playground/" aria-label="Ouvrir le playground : posez des questions typées sur n'importe quel texte, dans votre navigateur.">
+  <span class="card2">
+    <span class="minibars" id="minibars" aria-hidden="true" data-frames='[{&quot;q&quot;: &quot;intent&quot;, &quot;rows&quot;: [[&quot;remboursement&quot;, 0.9411], [&quot;aucune&quot;, 0.0552], [&quot;livraison&quot;, 0.0026], [&quot;compte&quot;, 0.0005]]}, {&quot;q&quot;: &quot;urgency&quot;, &quot;rows&quot;: [[&quot;élevé&quot;, 0.6992], [&quot;critique&quot;, 0.2818], [&quot;moyen&quot;, 0.0125], [&quot;faible&quot;, 0.0065]]}, {&quot;q&quot;: &quot;churn_risk&quot;, &quot;rows&quot;: [[&quot;oui&quot;, 0.8614], [&quot;non&quot;, 0.1386]]}]'></span>
+    <span class="kicker">ESSAYER</span>
+    <b>Le playground.</b>
+    <span class="txt">Collez un texte, écrivez un schéma, lisez les réponses et leurs distributions. Le modèle tourne dans votre navigateur.</span>
+    <span class="go">OUVRIR LE PLAYGROUND &rarr;</span>
+    <span class="url2">kahn1.com/playground · en anglais</span>
+  </span>
+  <span class="tab" aria-hidden="true">PLAYGROUND</span>
+</a>
+<a class="edge right" href="../snake/" aria-label="Kahn1 joue à Snake. À voir dans votre navigateur.">
+  <span class="card2">
+    <span class="mini" id="mini" aria-hidden="true"></span>
+    <span class="kicker">DÉMO</span>
+    <b>Kahn1 joue à Snake.</b>
+    <span class="txt">Une question Choice par tour, le coup lu dans les logits. Tourne dans votre navigateur, comme le playground.</span>
+    <span class="go">JOUER À SNAKE &rarr;</span>
+    <span class="url2">kahn1.com/snake · en anglais</span>
+  </span>
+  <span class="tab" aria-hidden="true">KAHN1 JOUE À SNAKE</span>
+</a>
+
+<div class="wrap">
+  <header class="top">
+    <div class="left">
+      <a class="brand" href="./" aria-label="Kahn1, accueil">KAHN1</a>
+      <nav class="nav" aria-label="Site">
+        <a href="../playground/">PLAYGROUND</a>
+        <a href="../snake/">SNAKE</a>
+        <a href="resultats/">RÉSULTATS</a>
+        <a href="demarrer/">DÉMARRER</a>
+      </nav>
+    </div>
+    <nav class="links" aria-label="Langue et liens de l'auteur">
+      <span class="views" id="views" data-one="vue" data-many="vues" hidden></span>
+      <span class="lang">
+        <a href="../" hreflang="en" lang="en" title="Read in English">EN</a>
+        <a href="./" hreflang="fr" lang="fr" aria-current="page">FR</a>
+      </span>
+      <a href="https://www.linkedin.com/in/amontzamir/" target="_blank" rel="noopener" title="LinkedIn" aria-label="LinkedIn">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 1 1 0-4.125 2.062 2.062 0 0 1 0 4.125zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+      </a>
+      <a href="https://github.com/Okura66/kahn1" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+      </a>
+      <a href="https://huggingface.co/Okura66" target="_blank" rel="noopener" title="Hugging Face" aria-label="Hugging Face">
+        <span class="hf" aria-hidden="true">🤗</span>
+      </a>
+      <a href="#" class="cookies" data-cookies title="Modifier votre choix de cookies">cookies</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="title">
+      <h1 id="title">Du texte en entrée.<br>Des réponses typées en sortie.</h1>
+      <div class="facts">
+        <span>CHOICE · SCORE · NOUL</span><i>&bull;</i>
+        <span>LU DANS LES LOGITS DES OPTIONS</span><i>&bull;</i>
+        <span>ZÉRO TOKEN GÉNÉRÉ</span>
+      </div>
+      <p class="lead"><strong>Kahn1</strong> est un moteur de décision open source construit sur un
+        Qwen2.5-3B affiné. Donnez-lui un <em>état</em> (un message, un avis, un document) et une liste de
+        questions typées. Chaque réponse revient sous forme d'une valeur et d'une distribution de
+        probabilités calibrée, lue directement dans les logits des tokens d'option. Rien n'est généré,
+        rien n'est analysé&nbsp;: une réponse mal formée est impossible.</p>
+      <div class="cta">
+        <a class="btn primary" href="../playground/">OUVRIR LE PLAYGROUND &rarr;</a>
+        <a class="btn" href="../snake/">LE VOIR JOUER À SNAKE</a>
+        <a class="btn" href="https://github.com/Okura66/kahn1" rel="noopener">GITHUB</a>
+        <a class="btn" href="https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B" rel="noopener">HUGGING FACE</a>
+      </div>
+      <p class="note">Les deux démos (en anglais) font tourner le modèle dans votre navigateur (WebGPU,
+        1,6 à 1,9&nbsp;Go à télécharger) ou sur votre propre serveur.</p>
+    </section>
+
+    <section class="sec" id="benchmarks" aria-labelledby="h-vs">
+      <h2 id="h-vs">Kahn1 face à JEV</h2>
+      <p class="intro">Mêmes exemples, mêmes prompts, notés sur les mêmes étiquettes. Deux benchmarks,
+        chacun favorable à un camp&nbsp;: lisez les deux.</p>
+      <figure class="vchart" role="group" aria-label="Précision de Kahn1 et de JEV, par primitive sur le holdout de Kahn1 et par niveau sur JevBench.">
+        <div class="vc-legend"><span><i></i>Kahn1 v3 · modèle ouvert 3B</span><span><i class="jev"></i>JEV 1.13.0 · API TypeSafe</span></div>
+        <div class="vc-sets">
+          <div class="vc-set">
+            <div class="vc-title">HOLDOUT KAHN1</div><div class="vc-sub">14 663 exemples · JEV lancé par nous via son API</div>
+            <div class="vc-plot"><div class="vc-grid"><span style="bottom:0%"><em>0</em></span><span style="bottom:25%"><em>25</em></span><span style="bottom:50%"><em>50</em></span><span style="bottom:75%"><em>75</em></span><span style="bottom:100%"><em>100</em></span></div><div class="vc-cols"><div class="vc-g"><span class="vc-b hi" style="height:90.94%" tabindex="0" data-tip="Kahn1 · Choice&#10;90,9 % sur 6 050 exemples" aria-label="Kahn1, Choice: 90,9 %"><span class="val">91</span></span><span class="vc-b jev" style="height:80.15%" tabindex="0" data-tip="JEV · Choice&#10;80,1 % sur 6 050 exemples" aria-label="JEV, Choice: 80,1 %"><span class="val">80</span></span></div><div class="vc-g"><span class="vc-b" style="height:51.45%" tabindex="0" data-tip="Kahn1 · Score&#10;51,4 % sur 6 210 exemples" aria-label="Kahn1, Score: 51,4 %"><span class="val">51</span></span><span class="vc-b jev hi" style="height:52.01%" tabindex="0" data-tip="JEV · Score&#10;52,0 % sur 6 210 exemples" aria-label="JEV, Score: 52,0 %"><span class="val">52</span></span></div><div class="vc-g"><span class="vc-b" style="height:67.04%" tabindex="0" data-tip="Kahn1 · Noul&#10;67,0 % sur 2 403 exemples" aria-label="Kahn1, Noul: 67,0 %"><span class="val">67</span></span><span class="vc-b jev hi" style="height:74.45%" tabindex="0" data-tip="JEV · Noul&#10;74,4 % sur 2 403 exemples" aria-label="JEV, Noul: 74,4 %"><span class="val">74</span></span></div><div class="vc-g total"><span class="vc-b hi" style="height:70.30%" tabindex="0" data-tip="Kahn1 · Total&#10;70,3 % sur 14 663 exemples" aria-label="Kahn1, Total: 70,3 %"><span class="val">70</span></span><span class="vc-b jev" style="height:67.30%" tabindex="0" data-tip="JEV · Total&#10;67,3 % sur 14 663 exemples" aria-label="JEV, Total: 67,3 %"><span class="val">67</span></span></div></div></div>
+            <div class="vc-x"><span class="">Choice</span><span class="">Score</span><span class="">Noul</span><span class="total">Total</span></div>
+          </div>
+          <div class="vc-set">
+            <div class="vc-title">JEVBENCH PUBLIC</div><div class="vc-sub">231 exemples · Jev noté par JevBench</div>
+            <div class="vc-plot"><div class="vc-grid"><span style="bottom:0%"><em>0</em></span><span style="bottom:25%"><em>25</em></span><span style="bottom:50%"><em>50</em></span><span style="bottom:75%"><em>75</em></span><span style="bottom:100%"><em>100</em></span></div><div class="vc-cols"><div class="vc-g"><span class="vc-b hi" style="height:100.00%" tabindex="0" data-tip="Kahn1 · Facile&#10;100,0 % sur 48 exemples" aria-label="Kahn1, Facile: 100,0 %"><span class="val">100</span></span><span class="vc-b jev hi" style="height:100.00%" tabindex="0" data-tip="JEV · Facile&#10;100,0 % sur 48 exemples" aria-label="JEV, Facile: 100,0 %"><span class="val">100</span></span></div><div class="vc-g"><span class="vc-b" style="height:84.72%" tabindex="0" data-tip="Kahn1 · Standard&#10;84,7 % sur 72 exemples" aria-label="Kahn1, Standard: 84,7 %"><span class="val">85</span></span><span class="vc-b jev hi" style="height:98.61%" tabindex="0" data-tip="JEV · Standard&#10;98,6 % sur 72 exemples" aria-label="JEV, Standard: 98,6 %"><span class="val">99</span></span></div><div class="vc-g"><span class="vc-b" style="height:42.34%" tabindex="0" data-tip="Kahn1 · Difficile&#10;42,3 % sur 111 exemples" aria-label="Kahn1, Difficile: 42,3 %"><span class="val">42</span></span><span class="vc-b jev hi" style="height:72.97%" tabindex="0" data-tip="JEV · Difficile&#10;73,0 % sur 111 exemples" aria-label="JEV, Difficile: 73,0 %"><span class="val">73</span></span></div><div class="vc-g total"><span class="vc-b" style="height:67.53%" tabindex="0" data-tip="Kahn1 · Total&#10;67,5 % sur 231 exemples" aria-label="Kahn1, Total: 67,5 %"><span class="val">68</span></span><span class="vc-b jev hi" style="height:86.58%" tabindex="0" data-tip="JEV · Total&#10;86,6 % sur 231 exemples" aria-label="JEV, Total: 86,6 %"><span class="val">87</span></span></div></div></div>
+            <div class="vc-x"><span class="">Facile</span><span class="">Standard</span><span class="">Difficile</span><span class="total">Total</span></div>
+          </div>
+        </div>
+        <div class="vc-foot">
+          <details><summary>VUE TABLEAU</summary><div class="tbl-wrap"><table class="tbl">
+            <thead><tr><th scope="col">Benchmark</th><th scope="col">Groupe</th><th scope="col" class="r">Exemples</th><th scope="col" class="r">Kahn1</th><th scope="col" class="r">JEV</th></tr></thead>
+            <tbody><tr><td>HOLDOUT KAHN1</td><td>Choice</td><td class="r">6 050</td><td class="r">90,9&nbsp;%</td><td class="r">80,1&nbsp;%</td></tr><tr><td>HOLDOUT KAHN1</td><td>Score</td><td class="r">6 210</td><td class="r">51,4&nbsp;%</td><td class="r">52,0&nbsp;%</td></tr><tr><td>HOLDOUT KAHN1</td><td>Noul</td><td class="r">2 403</td><td class="r">67,0&nbsp;%</td><td class="r">74,4&nbsp;%</td></tr><tr><td>HOLDOUT KAHN1</td><td>Total</td><td class="r">14 663</td><td class="r">70,3&nbsp;%</td><td class="r">67,3&nbsp;%</td></tr><tr><td>JEVBENCH PUBLIC</td><td>Facile</td><td class="r">48</td><td class="r">100,0&nbsp;%</td><td class="r">100,0&nbsp;%</td></tr><tr><td>JEVBENCH PUBLIC</td><td>Standard</td><td class="r">72</td><td class="r">84,7&nbsp;%</td><td class="r">98,6&nbsp;%</td></tr><tr><td>JEVBENCH PUBLIC</td><td>Difficile</td><td class="r">111</td><td class="r">42,3&nbsp;%</td><td class="r">73,0&nbsp;%</td></tr><tr><td>JEVBENCH PUBLIC</td><td>Total</td><td class="r">231</td><td class="r">67,5&nbsp;%</td><td class="r">86,6&nbsp;%</td></tr></tbody></table></div></details>
+          <a class="vc-more" href="resultats/">Tous les résultats &rarr;</a>
+        </div>
+      </figure>
+      <p class="callout"><b>Qui gagne où.</b> Sur les familles pour lesquelles il a été entraîné, Kahn1 mène de
+        3,0 points au global&nbsp;: nettement devant en Choice (90,9&nbsp;% contre
+        80,1&nbsp;%), à égalité en Score (51,4&nbsp;% contre 52,0&nbsp;%),
+        derrière en Noul (67,0&nbsp;% contre 74,4&nbsp;%). Sur JevBench, Jev mène de 19,0 points, et de 30,6
+        sur le niveau difficile&nbsp;: le jugement ouvert, c'est là qu'un modèle 3B décroche.</p>
+      <div class="stats" style="margin-top:30px">
+        <div class="stat"><span class="n">36,4&nbsp;ms</span><span class="l">Latence médiane Kahn1</span><span class="s">vLLM local, une RTX 5070 Ti, k = 3</span></div>
+        <div class="stat"><span class="n">248&nbsp;ms</span><span class="l">Aller-retour médian JEV</span><span class="s">API hébergée, mesurée côté client, réseau inclus</span></div>
+        <div class="stat"><span class="n">MIT</span><span class="l">Poids de Kahn1</span><span class="s">ouverts, sur votre matériel ou dans le navigateur</span></div>
+        <div class="stat"><span class="n">0,042&nbsp;$</span><span class="l">Prix de JEV</span><span class="s">par million de tokens d'entrée, sortie gratuite (tarif public)</span></div>
+      </div>
+      <p class="small faint" style="margin-top:14px">Les deux latences ne mesurent pas la même chose&nbsp;: l'une
+        est un GPU local, l'autre une requête sur Internet. Rapports (en anglais)&nbsp;:
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/JEV_VS_KAHN1.md" rel="noopener">duel sur le holdout</a> ·
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/JEVBENCH_VS_JEV.md" rel="noopener">duel sur JevBench</a> ·
+        <a href="https://github.com/Okura66/kahn1/blob/main/scripts/jev_holdout.py" rel="noopener">script</a>. Plus de chiffres dans les
+        <a href="resultats/">la page des résultats</a>.</p>
+    </section>
+
+    <section class="sec" id="fonctionnement" aria-labelledby="h-how">
+      <h2 id="h-how">Fonctionnement</h2>
+      <p class="intro">Le nom rend hommage au <em>Système 1</em> de Daniel Kahneman&nbsp;: des jugements
+        rapides et peu coûteux qui tranchent la plupart des cas et aiguillent les autres avant qu'un
+        Système 2 plus lent (un modèle de pointe ou une personne) prenne le relais.</p>
+      <div class="reader" id="reader" role="figure" aria-label="Animation : Kahn1 lit un état une seule fois, puis répond à chaque question à partir des probabilités de ses tokens d&#x27;option.">
+        <div class="rd-grid">
+          <div class="rd-state">
+            <div class="label"><span>ÉTAT</span><span class="hint"><span data-tokens></span> tokens</span></div>
+            <p class="rd-text"></p>
+            <div class="rd-cache" aria-hidden="true"></div>
+            <div class="rd-cap">CACHE KV · CALCULÉ UNE FOIS, PARTAGÉ PAR TOUTES LES QUESTIONS</div>
+          </div>
+          <div class="rd-qs"></div>
+        </div>
+        <div class="rd-foot">
+          <span class="zero">TOKENS GÉNÉRÉS <span class="n">0</span></span>
+          <span>PASSES <span class="n" data-passes>0</span></span>
+          <span class="rd-nav"><button type="button" data-demo="0" aria-pressed="true">TICKET</button><button type="button" data-demo="1" aria-pressed="false">AVIS</button><button type="button" data-demo="2" aria-pressed="false">FAITS</button><button type="button" data-pause aria-pressed="false">PAUSE</button></span>
+        </div>
+      </div>
+      <script type="application/json" id="reader-data">{"labels": {"pause": "PAUSE", "play": "LECTURE"}, "demos": [{"state": "Bonjour, j'ai été débité deux fois pour ma commande #48213 passée le 12 septembre. Cela fait une semaine que j'attends une réponse du service client. Je veux être remboursé au plus vite, sinon je fais opposition auprès de ma banque et je ferme mon compte.", "tokens": 92, "questions": [{"key": "intent", "kind": "choice", "q": "Quelle est la demande principale du client ?", "cols": [["A", 0.9411], ["B", 0.0026], ["C", 0.0005], ["D", 0.0004], ["E", 0.0552]], "names": ["remboursement", "livraison", "compte", "information", "aucune"], "out": "\"remboursement\""}, {"key": "urgency", "kind": "score", "q": "Quel est le niveau d'urgence de ce message ?", "cols": [["A", 0.0065], ["B", 0.0125], ["C", 0.6992], ["D", 0.2818]], "names": ["faible", "moyen", "élevé", "critique"], "out": "\"élevé\" · E = 3.26"}, {"key": "churn_risk", "kind": "noul", "q": "Le client menace de quitter le service ou d'escalader.", "cols": [["yes", 0.8614], ["no", 0.1386]], "names": ["yes", "no"], "out": "0.86"}]}, {"state": "J'adorais cette appli, mais depuis la dernière mise à jour elle plante à chaque fois que j'ouvre l'appareil photo. Le support n'a jamais répondu. Le nouveau thème sombre est joli, cela dit.", "tokens": 75, "questions": [{"key": "etoiles", "kind": "score", "q": "Combien d'étoiles cet utilisateur donnerait-il ?", "cols": [["A", 0.3941], ["B", 0.4488], ["C", 0.1395], ["D", 0.0154], ["E", 0.0022]], "names": ["1", "2", "3", "4", "5"], "out": "\"2\" · E = 1.78"}, {"key": "sujet", "kind": "choice", "q": "De quoi parle principalement cet avis ?", "cols": [["A", 0.0305], ["B", 0.0339], ["C", 0.0057], ["D", 0.7118], ["E", 0.0162], ["F", 0.2019]], "names": ["stabilité", "design", "prix", "support client", "fonctionnalités", "aucune"], "out": "\"support client\""}, {"key": "signale_bug", "kind": "noul", "q": "L'avis signale un bug ou un plantage.", "cols": [["yes", 0.9801], ["no", 0.0199]], "names": ["yes", "no"], "out": "0.98"}]}, {"state": "La tour Eiffel a été achevée en 1889 pour l'Exposition universelle de Paris. Elle est restée la plus haute structure construite par l'homme jusqu'à l'achèvement du Chrysler Building à New York en 1930.", "tokens": 81, "questions": [{"key": "achevee_1889", "kind": "noul", "q": "La tour Eiffel a été achevée au XIXe siècle.", "cols": [["yes", 0.9861], ["no", 0.0139]], "names": ["yes", "no"], "out": "0.99"}, {"key": "toujours_plus_haute", "kind": "noul", "q": "La tour Eiffel est toujours la plus haute structure du monde.", "cols": [["yes", 0.0455], ["no", 0.9545]], "names": ["yes", "no"], "out": "0.05"}, {"key": "a_londres", "kind": "noul", "q": "Le Chrysler Building se trouve à Londres.", "cols": [["yes", 0.0018], ["no", 0.9982]], "names": ["yes", "no"], "out": "0.00"}]}]}</script>
+      <p class="rd-note">Sorties enregistrées du checkpoint v3 (calibration par température, k = 1). Chaque colonne est la probabilité d'un token d'option : rien d'autre n'est lu, rien n'est écrit.</p>
+
+      <div class="grid g3">
+        <div class="card">
+          <span class="num">01</span>
+          <h3>État + questions typées</h3>
+          <p>Vous envoyez un état et autant de questions que nécessaire, au format de schéma JEV ou via
+            l'API native. Les options sont présentées sous les lettres A, B, C… : chaque réponse tient
+            en un seul token.</p>
+        </div>
+        <div class="card">
+          <span class="num">02</span>
+          <h3>Un lot, un préfixe partagé</h3>
+          <p>Toutes les questions, et leurs permutations d'options, partent vers vLLM en un seul lot. Elles
+            partagent le cache KV de l'état (prefix caching)&nbsp;: dix questions coûtent à peine plus qu'une.</p>
+        </div>
+        <div class="card">
+          <span class="num">03</span>
+          <h3>Lire les logits</h3>
+          <p>Kahn1 calcule le softmax sur les seuls tokens d'option, le moyenne sur plusieurs ordres
+            d'options pour annuler le biais de position, puis applique la calibration par température.
+            Aucun texte n'est généré.</p>
+        </div>
+      </div>
+
+      <h3 class="sub">Trois primitives</h3>
+      <div class="grid g3">
+        <div class="card">
+          <h3>Choice</h3>
+          <p>Choisir une option, avec en option un repli <em>aucune de ces réponses</em>. Jusqu'à 26 options
+            en une passe&nbsp;; au-delà, un routeur en deux étapes prend le relais.</p>
+          <pre class="src">{"choice": "remboursement", "confidence": 0.93,
+ "probabilities": {…}}</pre>
+        </div>
+        <div class="card">
+          <h3>Score</h3>
+          <p>Placer l'état sur une échelle ordonnée. En plus du niveau, l'espérance
+            Σ&nbsp;i·p<sub>i</sub> donne un score continu entre les niveaux.</p>
+          <pre class="src">{"level": "élevé", "score": 2.26,
+ "confidence": 0.60, "probabilities": {…}}</pre>
+        </div>
+        <div class="card">
+          <h3>Noul</h3>
+          <p>Cette affirmation est-elle vraie pour l'état&nbsp;? Une question oui/non, avec une probabilité
+            sur laquelle placer un seuil.</p>
+          <pre class="src">{"noul": 0.86}</pre>
+        </div>
+      </div>
+      <p class="small faint" style="margin-top:26px">La confiance vaut <code>(p_max − 1/n) / (1 − 1/n)</code>&nbsp;:
+        c'est l'écart à un tirage uniforme, pas la probabilité d'avoir raison. Compatibilité&nbsp;: le
+        serveur accepte les dictionnaires JEV sur <code>POST /v1/evaluate/jev</code>.</p>
+    </section>
+
+    <section class="sec" id="cas-usage" aria-labelledby="h-use">
+      <h2 id="h-use">Cas d'usage</h2>
+      <p class="intro">Kahn1 est pensé comme la première couche, rapide, d'une chaîne de traitement&nbsp;:
+        il prend les décisions de routine et confie le reste à plus lent et plus coûteux.</p>
+      <div class="grid g3">
+        <div class="card">
+          <span class="num">01</span>
+          <h3>Tri et routage</h3>
+          <p>Classer tickets, e-mails ou déclarations par intention, urgence et risque en une passe. Pour
+            changer les catégories, on modifie le schéma&nbsp;: ni réannotation, ni réentraînement.</p>
+        </div>
+        <div class="card">
+          <span class="num">02</span>
+          <h3>Garde-fous pour agents</h3>
+          <p>Avant qu'un appel d'outil s'exécute, posez des questions oui/non&nbsp;: fuit-il des données
+            personnelles, enfreint-il une règle, l'utilisateur l'a-t-il approuvé&nbsp;? Chaque réponse est
+            une probabilité sur laquelle bloquer.</p>
+        </div>
+        <div class="card">
+          <span class="num">03</span>
+          <h3>Notation de documents</h3>
+          <p>Évaluer le ton, l'urgence, la complexité ou la qualité sous forme d'espérances continues plutôt
+            que d'étiquettes grossières, et indexer les documents dessus.</p>
+        </div>
+        <div class="card">
+          <span class="num">04</span>
+          <h3>Escalade sélective</h3>
+          <p>Automatiser les cas sûrs et envoyer les autres à un modèle plus gros ou à une personne. Avec une
+            confiance calibrée, le seuil devient une décision de risque mesurable.</p>
+        </div>
+        <div class="card">
+          <span class="num">05</span>
+          <h3>Démarrage à froid</h3>
+          <p>Une nouvelle gamme, une nouvelle taxonomie&nbsp;: ça marche en zero-shot dès le premier jour.
+            Recalibrez sur vos propres exemples annotés avec <code>sysone calibrate</code> dès que vous en avez.</p>
+        </div>
+        <div class="card">
+          <span class="num">06</span>
+          <h3>Boucles de contrôle</h3>
+          <p>Une question Choice par tour suffit à piloter une politique&nbsp;: <a href="../snake/">Kahn1 joue
+            à Snake</a> aussi bien qu'une heuristique gloutonne, à condition que l'état décrive ce qui
+            entoure la tête.</p>
+        </div>
+      </div>
+
+      <h3 class="sub">Kahn1 ou ML classique&nbsp;?</h3>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th scope="col"></th><th scope="col">ML classique (BERT, XGBoost…)</th><th scope="col">Kahn1</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Nouvelle catégorie</th><td>Réannoter, réentraîner, redéployer</td><td>Modifier le schéma dans la requête</td></tr>
+            <tr><th scope="row">Données annotées</th><td>Des centaines à des milliers par classe</td><td>Aucune pour démarrer, quelques-unes pour recalibrer</td></tr>
+            <tr><th scope="row">Latence</th><td>Moins de 1 à 10&nbsp;ms, CPU</td><td>~36&nbsp;ms en médiane, GPU</td></tr>
+            <tr><th scope="row">Matériel</th><td>Petits CPU, objets embarqués</td><td>Un GPU pour le débit de production</td></tr>
+            <tr><th scope="row">Explications</th><td>Importance des variables, arbres</td><td>Distributions complètes, sans attribution</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted" style="margin-top:16px">Préférez le ML classique quand l'ontologie est figée pour
+        des années, que la latence doit rester sous 5&nbsp;ms, que le matériel est modeste ou que les données
+        sont tabulaires. Préférez Kahn1 quand les catégories changent souvent, quand vous partez sans
+        annotations, ou quand le signal est dans du texte libre.</p>
+    </section>
+
+    <section class="sec" id="vigilance" aria-labelledby="h-caveats">
+      <h2 id="h-caveats">Points de vigilance</h2>
+      <p class="intro">Kahn1 est un modèle de 3 milliards de paramètres. À lire avant de lui confier de vraies décisions.</p>
+      <ol class="caveats">
+        <li><div><b>Ce n'est pas un modèle de pointe.</b>
+          <p>Sur des jugements subjectifs ou ambigus, il se trompe plus souvent qu'un grand modèle. Sur le
+            niveau difficile du benchmark externe JevBench, il obtient 42&nbsp;% de bonnes réponses, contre 73&nbsp;% pour Jev.</p></div></li>
+        <li><div><b>La précision dépend de la primitive.</b>
+          <p>Choice est solide (91&nbsp;% sur des jeux d'intentions réservés). Score atteint 51 à 52&nbsp;% de
+            correspondance exacte sur des échelles à 5 niveaux, 95&nbsp;% à un niveau près sur SST-5. Noul est
+            le point faible&nbsp;: 83&nbsp;% sur RTE, 65&nbsp;% sur SciTail (implication scientifique, hors domaine).</p></div></li>
+        <li><div><b>La calibration vaut pour sa propre distribution.</b>
+          <p>Les températures ont été ajustées sur un jeu disjoint de l'entraînement, pas sur vos données, et
+            l'erreur de calibration de Noul reste de 0,23. Recalibrez sur votre domaine avant de vous fier à un seuil.</p></div></li>
+        <li><div><b>La confiance n'est pas la probabilité d'avoir raison.</b>
+          <p>Elle mesure l'écart à un tirage uniforme. Fixez vos seuils sur des données réservées de votre
+            domaine et regardez la courbe risque-couverture.</p></div></li>
+        <li><div><b>Calcul déterministe ne veut pas dire vérité déterministe.</b>
+          <p>Mêmes poids, même prompt, mêmes noyaux&nbsp;: mêmes logits. Cela ne rend pas la réponse juste&nbsp;:
+            un texte adverse ou hors distribution peut encore le tromper, et il n'offre aucune garantie formelle.</p></div></li>
+        <li><div><b>La réglementation s'applique toujours.</b>
+          <p>Lire les logits plutôt qu'analyser du JSON supprime les erreurs de format, pas les obligations
+            liées à l'usage d'un modèle neuronal pour décider (AI Act, règles sectorielles). Gardez une
+            personne ou un modèle plus gros sur la voie à faible confiance, et journalisez les décisions.</p></div></li>
+        <li><div><b>La vitesse vient de l'ingénierie.</b>
+          <p>Le prefix caching et une seule position de sortie expliquent la latence, pas une architecture
+            nouvelle. Sur CPU, comptez des secondes par question&nbsp;; dans un navigateur sans WebGPU, des minutes.</p></div></li>
+        <li><div><b>Les démos navigateur utilisent un checkpoint plus ancien.</b>
+          <p>Le playground et Snake chargent un GGUF v1 quantifié en 4&nbsp;bits (merci à mradermacher)&nbsp;; la
+            page inverse ses réponses Noul, que la v1 a apprises à l'envers. Les résultats ci-dessous sont
+            ceux du checkpoint v3 non quantifié, sur vLLM.</p></div></li>
+      </ol>
+    </section>
+
+    <section class="sec" id="demarrer" aria-labelledby="h-start">
+      <h2 id="h-start">Démarrer</h2>
+      <p class="intro">Installer, servir, envoyer une première requête, lire la réponse, calibrer sur vos
+        données&nbsp;: le guide détaille chaque étape, sur GPU, sur CPU ou dans le navigateur.</p>
+<pre class="term"><span class="d">$ </span>git clone https://github.com/Okura66/kahn1 && cd kahn1
+<span class="d">$ </span>uv venv --python 3.11 && uv pip install -e ".[gpu]"
+<span class="d">$ </span>SYSONE_MODEL=Okura66/Kahn1-Qwen2.5-3B uv run sysone serve --port 8000</pre>
+      <div class="cta" style="margin-top:26px"><a class="btn primary" href="demarrer/">LIRE LE GUIDE &rarr;</a>
+        <a class="btn" href="../playground/">OU L'ESSAYER DANS LE NAVIGATEUR</a></div>
+    </section>
+
+    <section class="sec faq" id="faq" aria-labelledby="h-faq">
+      <h2 id="h-faq">Questions fréquentes</h2>
+      <details>
+        <summary><h3>Qu'est-ce que Kahn1&nbsp;?</h3></summary>
+        <div class="a">Un moteur de décision open source construit sur un Qwen2.5-3B affiné. Il prend un texte
+          (l'état) et des questions typées, et renvoie pour chaque question une valeur typée et une
+          distribution de probabilités calibrée, lue dans les logits des tokens d'option. Il ne génère aucun texte.</div>
+      </details>
+      <details>
+        <summary><h3>En quoi est-ce différent du mode JSON ou des sorties structurées&nbsp;?</h3></summary>
+        <div class="a">Le décodage structuré contraint les tokens qu'un modèle génère, et le résultat doit encore
+          être analysé. Kahn1 ne génère rien&nbsp;: il lit une distribution de probabilités par question sur les
+          tokens d'option. Chaque réponse arrive avec sa distribution complète et une confiance calibrée, et il
+          n'y a rien à analyser.</div>
+      </details>
+      <details>
+        <summary><h3>Fonctionne-t-il sans GPU&nbsp;?</h3></summary>
+        <div class="a">Oui. Le moteur CPU exécute le même code de décision avec une passe transformers classique,
+          en quelques secondes par question au lieu de quelques dizaines de millisecondes. Le
+          <a href="../playground/">playground</a> et <a href="../snake/">Snake</a> font aussi tourner un GGUF
+          4&nbsp;bits dans votre navigateur avec WebGPU&nbsp;; sans WebGPU, ils se replient sur le CPU, ce qui
+          prend des minutes.</div>
+      </details>
+      <details>
+        <summary><h3>Puis-je utiliser mes propres catégories&nbsp;?</h3></summary>
+        <div class="a">Oui. Catégories, échelles et affirmations font partie de chaque requête&nbsp;: les changer
+          ne demande aucun réentraînement. La calibration a été ajustée sur la distribution d'entraînement&nbsp;:
+          recalibrez sur vos propres exemples annotés avec <code>sysone calibrate</code> avant de vous fier à
+          un seuil de confiance.</div>
+      </details>
+      <details>
+        <summary><h3>Quelle est sa précision&nbsp;?</h3></summary>
+        <div class="a">Sur 14 663 exemples réservés&nbsp;: 70,3&nbsp;% au global, 90,9&nbsp;% en Choice,
+          51,5&nbsp;% de correspondance exacte en Score sur 5 niveaux (95,2&nbsp;% à un niveau près sur SST-5)
+          et 67,0&nbsp;% en Noul. Voir les <a href="#benchmarks">résultats</a> et les
+          <a href="#vigilance">points de vigilance</a>.</div>
+      </details>
+      <details>
+        <summary><h3>Comment Kahn1 se compare-t-il à JEV&nbsp;?</h3></summary>
+        <div class="a">Sur les 14 663 exemples du holdout de Kahn1, soumis à l'API TypeSafe, Kahn1 obtient 70,3&nbsp;% et JEV 1.13.0 67,3&nbsp;%&nbsp;: Kahn1 mène en Choice, égalité en Score, JEV mène en Noul. Sur les 231 exemples publics de JevBench, notés par JevBench, Jev obtient 86,6&nbsp;% et Kahn1 67,5&nbsp;% (73,0&nbsp;% contre 42,3&nbsp;% sur le niveau difficile). Kahn1 est plus fort au global sur les familles de tâches pour lesquelles il a été entraîné&nbsp;; Jev est nettement plus fort sur le jugement ouvert. Kahn1 est ouvert et tourne sur votre matériel&nbsp;; JEV est une API hébergée. <a href="#benchmarks">Voir le duel</a>.</div>
+      </details>
+      <details>
+        <summary><h3>Le playground envoie-t-il mon texte quelque part&nbsp;?</h3></summary>
+        <div class="a">Non. En mode WebGPU, le modèle tourne dans votre onglet&nbsp;; en mode serveur, la page ne
+          parle qu'à l'URL de serveur que vous indiquez. Les visites sont comptées par GoatCounter, sans cookie,
+          et par Google Analytics uniquement si vous acceptez ses cookies.</div>
+      </details>
+      <details>
+        <summary><h3>Est-ce gratuit&nbsp;?</h3></summary>
+        <div class="a">Oui. Le code est sous licence MIT et les poids sont sur Hugging Face, en modèle fusionné
+          et en adaptateur LoRA.</div>
+      </details>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>KAHN1 · Licence MIT · par <a href="https://www.linkedin.com/in/amontzamir/" rel="noopener">Axel Montzamir</a></span>
+    <nav aria-label="Pied de page">
+      <a href="../playground/">Playground</a>
+      <a href="../snake/">Snake</a>
+      <a href="https://github.com/Okura66/kahn1" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/Okura66" rel="noopener">Hugging Face</a>
+      <a href="../" hreflang="en" lang="en">English</a>
+      <a href="#" data-cookies>Cookies</a>
+    </nav>
+    <span class="disc">Kahn1 est un projet indépendant. Il accepte le format de schéma JEV et n'est pas affilié à TypeSafe.</span>
+  </footer>
+</div>
+<script src="../assets/site.js"></script>
+</body>
+</html>

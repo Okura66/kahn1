@@ -1,0 +1,32 @@
+# Kahn1
+
+> Kahn1 is an open-source "System 1" decision engine built on a fine-tuned Qwen2.5-3B. It takes a text (the state) and typed questions (Choice, Score, Noul) and returns, for each question, a typed value and a calibrated probability distribution read from the logits of the option tokens. It generates no text, so schema errors cannot happen. MIT license, by Axel Montzamir.
+
+Key results (v3 checkpoint, 14,663 held-out items, k = 3 permutations, temperature calibration, one RTX 5070 Ti with vLLM): 70.3% overall accuracy; Choice 90.9% (banking77 91.1%, MASSIVE 90.8%); Score 51.5% exact on 5-level scales (SST-5 95.2% within one level, Spearman 0.834); Noul 67.0% (RTE 82.7%, SciTail 65.0%); median latency 36.4 ms, p95 82.6 ms. External JevBench: 67.5% (easy 100%, original 84.7%, hard 42.3%).
+
+Kahn1 vs JEV 1.13.0 (TypeSafe API). On the 14,663 Kahn1 held-out items, same prompts, JEV run through its API: Kahn1 70.3%, JEV 67.3%; Choice 90.9% vs 80.1%, Score 51.4% vs 52.0%, Noul 67.0% vs 74.4% (JEV asked whether the text supports the statement). On the 231 public JevBench items, Jev's outcomes as published by JevBench: Jev 86.6%, Kahn1 67.5%; hard tier 73.0% vs 42.3%. JEV median round trip 248 ms over the network; Kahn1 36.4 ms on a local GPU.
+
+Caveats: a 3B model, not a frontier model; Noul is the weakest primitive; calibration was fitted on the training distribution and should be redone on your domain; confidence is the distance from a uniform guess, not the probability of being right.
+
+## Pages
+
+- [Home (English)](https://kahn1.com/): what Kahn1 is, use cases, caveats, benchmark results
+- [Accueil (français)](https://kahn1.com/fr/): la même page en français
+- [Benchmarks](https://kahn1.com/benchmarks/): every result, Kahn1 vs JEV on the same items, latency, how to reproduce
+- [Résultats (français)](https://kahn1.com/fr/resultats/): les mêmes résultats en français
+- [Setup prompt for AI agents](https://kahn1.com/get-started/setup-prompt.md): paste into Claude Code or any coding agent to install and test Kahn1
+- [Get started](https://kahn1.com/get-started/): install, serve, API, response format, calibration
+- [Démarrer (français)](https://kahn1.com/fr/demarrer/): le même guide en français
+- [Playground](https://kahn1.com/playground/): ask typed questions about any text, model in the browser (WebGPU) or on your server
+- [Kahn1 plays Snake](https://kahn1.com/snake/): one Choice question per tick, the move read from the logits
+
+## Code and weights
+
+- [GitHub repository](https://github.com/Okura66/kahn1)
+- [Merged model on Hugging Face](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B)
+- [LoRA adapter](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B-LoRA)
+- [GGUF quantizations by mradermacher](https://huggingface.co/mradermacher/Kahn1-Qwen2.5-3B-GGUF)
+- [Held-out evaluation report (v3)](https://github.com/Okura66/kahn1/blob/main/reports/QWEN_FULL_EVAL_v3_temponly.md)
+- [Kahn1 vs JEV on the held-out set](https://github.com/Okura66/kahn1/blob/main/reports/JEV_VS_KAHN1.md)
+- [Kahn1 vs Jev on JevBench](https://github.com/Okura66/kahn1/blob/main/reports/JEVBENCH_VS_JEV.md)
+- [JevBench report (v3)](https://github.com/Okura66/kahn1/blob/main/reports/JEVBENCH_v3.md)

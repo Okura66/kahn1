@@ -65,25 +65,29 @@ def build_model(model_name: str = "Qwen/Qwen2.5-3B-Instruct"):
     return model, tok
 
 
-def build_lora(model):
-    """Apply LoRA rank 32 configuration across attention and MLP projection layers."""
+DEFAULT_TARGETS = ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+# Qwen3.5 runs 3 of every 4 layers as Gated DeltaNet linear attention, whose projections
+# have their own names; "attention" LoRA there means both kinds of layer.
+QWEN35_ATTENTION_TARGETS = ["q_proj", "k_proj", "v_proj", "o_proj",
+                            "in_proj_qkv", "in_proj_z", "in_proj_b", "in_proj_a", "out_proj"]
+
+
+def build_lora(model, rank: int = 32, alpha: int = 64, targets: list[str] | None = None, dropout: float = 0.05):
+    """Apply LoRA (default: rank 32 across attention and MLP projections, the v1-v3 recipe)."""
     from peft import LoraConfig, get_peft_model
 
     cfg = LoraConfig(
-        r=32,
-        lora_alpha=64,
-        lora_dropout=0.05,
+        r=rank,
+        lora_alpha=alpha,
+        lora_dropout=dropout,
         bias="none",
         task_type="CAUSAL_LM",
-        target_modules=[
-            "q_proj", "k_proj", "v_proj", "o_proj",
-            "gate_proj", "up_proj", "down_proj",
-        ],
+        target_modules=list(targets or DEFAULT_TARGETS),
     )
     return get_peft_model(model, cfg)
 
 
-def build_prompt_for_training(aug, tokenizer) -> tuple[str, int]:
+def build_prompt_for_training(aug, tokenizer, fmt: str = "tags") -> tuple[str, int]:
     """Construct training prompt ending with 'Answer:' followed by target label token ID.
 
     Tokenizes the complete prompt context (without trailing letter) and appends
@@ -106,18 +110,19 @@ def build_prompt_for_training(aug, tokenizer) -> tuple[str, int]:
             q,
             options=aug.options,
             include_other=include_other,
+            fmt=fmt,
         )
         resolved = resolve_choice_tokens(tokenizer, spec.suffix, spec.n_options)
         label_idx = aug.label if aug.label >= 0 else len(aug.options)  # 'other' is mapped to last index
         label_token_id = resolved.token_ids[label_idx]
     elif aug.kind == "score":
         q = ScoreQuestion(key="q", prompt=aug.prompt, levels=aug.levels)
-        spec = build_prompt_spec(aug.state, q)
+        spec = build_prompt_spec(aug.state, q, fmt=fmt)
         resolved = resolve_choice_tokens(tokenizer, spec.suffix, len(aug.levels))
         label_token_id = resolved.token_ids[aug.label]
     elif aug.kind == "noul":
         q = NoulQuestion(key="q", statement=aug.statement, prompt=aug.prompt)
-        spec = build_prompt_spec(aug.state, q)
+        spec = build_prompt_spec(aug.state, q, fmt=fmt)
         resolved = resolve_noul_tokens(tokenizer, spec.suffix)
         # Dataset label 1 == yes, but NOUL_LABELS index 0 == 'yes': go through the helper.
         label_token_id = resolved.token_ids[noul_token_index(aug.label)]
@@ -128,39 +133,44 @@ def build_prompt_for_training(aug, tokenizer) -> tuple[str, int]:
 
 
 def collate_fn(batch: list[tuple[str, int]], tokenizer, max_len: int = 2048):
-    """Tokenize a batch of augmented examples with strict prefix masking.
+    """Tokenize a batch of prompts for a loss on the answer token only.
 
-    For each instance:
-      - prompt_ids = tokenize(full prompt)
-      - input_ids = prompt_ids + [label_token_id]
-      - labels = [-100] * (len(input_ids) - 1) + [label_token_id]
-    Pads dynamically to the maximum sequence length of the batch.
+    Each prompt is cut on the left to max_len tokens (the question and the answer cue at
+    the end are kept) and left-padded, so the last position of every row is the one that
+    predicts the answer. `answer_loss` reads only that position: computing logits over
+    the whole vocabulary at every position (up to 248k entries for Qwen3.5) is what the
+    loss does not need and memory cannot afford at 4k tokens.
     """
     import torch
 
-    all_input_ids = []
-    all_labels = []
+    rows, labels = [], []
     for prompt_text, label_token_id in batch:
-        prompt_ids = tokenizer.encode(prompt_text, add_special_tokens=False)
-        input_ids = prompt_ids + [label_token_id]
-        if len(input_ids) > max_len:
-            # Truncate on left to preserve critical question suffix and answer token
-            input_ids = input_ids[-max_len:]
-        labels = [-100] * (len(input_ids) - 1) + [label_token_id]
-        all_input_ids.append(input_ids)
-        all_labels.append(labels)
-
-    max_l = max(len(x) for x in all_input_ids)
+        ids = tokenizer.encode(prompt_text, add_special_tokens=False)
+        rows.append(ids[-max_len:])
+        labels.append(label_token_id)
+    width = max(len(r) for r in rows)
     pad_id = tokenizer.pad_token_id
-    padded_ids = [x + [pad_id] * (max_l - len(x)) for x in all_input_ids]
-    padded_labels = [x + [-100] * (max_l - len(x)) for x in all_labels]
-    attn = [[1] * len(x) + [0] * (max_l - len(x)) for x in all_input_ids]
-
-    return {
-        "input_ids": torch.tensor(padded_ids, dtype=torch.long),
-        "labels": torch.tensor(padded_labels, dtype=torch.long),
-        "attention_mask": torch.tensor(attn, dtype=torch.long),
+    input_ids = [[pad_id] * (width - len(r)) + r for r in rows]
+    attn = [[0] * (width - len(r)) + [1] * len(r) for r in rows]
+    # Positions count real tokens only, as if each row had no padding.
+    positions = [[0] * (width - len(r)) + list(range(len(r))) for r in rows]
+    out = {
+        "input_ids": torch.tensor(input_ids, dtype=torch.long),
+        "answer_ids": torch.tensor(labels, dtype=torch.long),
     }
+    if any(len(r) < width for r in rows):  # a single row needs neither
+        out["attention_mask"] = torch.tensor(attn, dtype=torch.long)
+        out["position_ids"] = torch.tensor(positions, dtype=torch.long)
+    return out
+
+
+def answer_loss(model, batch: dict):
+    """Mean cross-entropy of the answer token, from the logits at the last position."""
+    import torch.nn.functional as F
+
+    inputs = {k: v for k, v in batch.items() if k != "answer_ids"}
+    out = model(**inputs, logits_to_keep=1)
+    return F.cross_entropy(out.logits[:, -1, :].float(), batch["answer_ids"])
 
 
 def compute_nll(
@@ -172,6 +182,8 @@ def compute_nll(
     seed: int = 42,
     batch_size: int = 4,
     per_kind: bool = False,
+    fmt: str = "tags",
+    max_len: int = 2048,
 ) -> float | tuple[float, dict[str, float]]:
     """Compute validation NLL over a deterministic, frozen evaluation set.
 
@@ -213,7 +225,7 @@ def compute_nll(
     for kind, ex in selected:
         try:
             aug = augment(ex, pool, val_rng)
-            item = build_prompt_for_training(aug, tokenizer)
+            item = build_prompt_for_training(aug, tokenizer, fmt)
             val_items.append(item)
             val_kinds.append(kind)
         except Exception:
@@ -227,7 +239,7 @@ def compute_nll(
         list(zip(val_items, val_kinds)),
         batch_size=batch_size,
         shuffle=False,
-        collate_fn=lambda b: (collate_fn([x[0] for x in b], tokenizer),
+        collate_fn=lambda b: (collate_fn([x[0] for x in b], tokenizer, max_len),
                               [x[1] for x in b]),
     )
 
@@ -238,14 +250,14 @@ def compute_nll(
     with torch.no_grad():
         for batch, kinds in val_loader:
             batch = {k: v.to(model.device) for k, v in batch.items()}
-            out = model(**batch)
-            n_active = (batch["labels"] != -100).sum().item()
-            if math.isfinite(out.loss.item()):
-                total_loss += out.loss.item() * n_active
+            loss = answer_loss(model, batch).item()
+            n_active = batch["answer_ids"].numel()
+            if math.isfinite(loss):
+                total_loss += loss * n_active
                 total_tokens += n_active
                 # One target token per instance, so the batch mean applies uniformly.
                 for k in kinds:
-                    kind_loss[k] = kind_loss.get(k, 0.0) + out.loss.item()
+                    kind_loss[k] = kind_loss.get(k, 0.0) + loss
                     kind_n[k] = kind_n.get(k, 0) + 1
 
     model.train()
@@ -322,6 +334,11 @@ def train(
     save_every: int = 100,
     eval_samples: int = 100,
     seed: int = 42,
+    rank: int = 32,
+    alpha: int = 64,
+    targets: list[str] | None = None,
+    max_len: int = 2048,
+    prompt_format: str = "tags",
 ):
     import torch
     from torch.utils.data import DataLoader
@@ -329,8 +346,10 @@ def train(
 
     print(f"[train] Initializing LoRA training with {model_name}...")
     model, tokenizer = build_model(model_name)
-    model = build_lora(model)
+    model = build_lora(model, rank=rank, alpha=alpha, targets=targets)
     model.print_trainable_parameters()
+    print(f"[train] LoRA r={rank} alpha={alpha} targets={targets or DEFAULT_TARGETS} | "
+          f"max_len={max_len} | prompt_format={prompt_format}")
 
     # Data loading
     print(f"[train] Loading datasets: {train_path} and {eval_path}...")
@@ -360,7 +379,7 @@ def train(
         batch_size=micro_batch,
         shuffle=True,
         collate_fn=lambda b: collate_fn(
-            [build_prompt_for_training(x, tokenizer) for x in b], tokenizer
+            [build_prompt_for_training(x, tokenizer, prompt_format) for x in b], tokenizer, max_len
         ),
     )
 
@@ -408,7 +427,7 @@ def train(
     t0_val = time.time()
     init_val_nll, init_by_kind = compute_nll(
         model, eval_examples, tokenizer, pool,
-        max_eval=eval_samples, seed=seed, per_kind=True,
+        max_eval=eval_samples, seed=seed, per_kind=True, fmt=prompt_format, max_len=max_len,
     )
     print(f"[train] Initial VAL NLL (step 0): {init_val_nll:.4f} (computed in {time.time() - t0_val:.1f}s)")
     print(f"[train]   per primitive: {_fmt_by_kind(init_by_kind)}")
@@ -432,13 +451,12 @@ def train(
         print(f"[train] --- Starting Epoch {epoch + 1}/{epochs} ---")
         for batch in dl:
             batch = {k: v.to(model.device) for k, v in batch.items()}
-            out = model(**batch)
-            loss = out.loss / grad_accum
+            loss = answer_loss(model, batch) / grad_accum
             loss_val = loss.item()
             loss.backward()
             accum_loss += loss_val
             micro_step += 1
-            del batch, out, loss
+            del batch, loss
 
             if micro_step % grad_accum == 0:
                 torch.nn.utils.clip_grad_norm_(trainable_params, 1.0)
@@ -464,7 +482,7 @@ def train(
                 if step % val_every == 0:
                     val_nll, val_by_kind = compute_nll(
                         model, eval_examples, tokenizer, pool,
-                        max_eval=eval_samples, seed=seed, per_kind=True,
+                        max_eval=eval_samples, seed=seed, per_kind=True, fmt=prompt_format, max_len=max_len,
                     )
                     delta_vs_init = val_nll - init_val_nll
                     delta_str = f"({delta_vs_init:+.4f} vs step 0)"
@@ -504,7 +522,7 @@ def train(
     print("[train] Running final validation evaluation...")
     final_val_nll, final_by_kind = compute_nll(
         model, eval_examples, tokenizer, pool,
-        max_eval=eval_samples, seed=seed, per_kind=True,
+        max_eval=eval_samples, seed=seed, per_kind=True, fmt=prompt_format, max_len=max_len,
     )
     print(
         f"[train] Final VAL NLL: {final_val_nll:.4f} "
@@ -558,7 +576,15 @@ def main():
     ap.add_argument("--save-every", type=int, default=100)
     ap.add_argument("--eval-samples", type=int, default=100)
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--rank", type=int, default=32)
+    ap.add_argument("--alpha", type=int, default=64)
+    ap.add_argument("--targets", default=None,
+                    help='comma-separated module names, or "qwen35-attention" (default: the v1-v3 set)')
+    ap.add_argument("--max-len", type=int, default=2048, help="tokens kept per prompt (cut on the left)")
+    ap.add_argument("--prompt-format", default="tags", choices=["tags", "chatml", "qwen3"])
     args = ap.parse_args()
+    targets = (QWEN35_ATTENTION_TARGETS if args.targets == "qwen35-attention"
+               else args.targets.split(",") if args.targets else None)
 
     train(
         train_path=args.train,
@@ -575,6 +601,11 @@ def main():
         save_every=args.save_every,
         eval_samples=args.eval_samples,
         seed=args.seed,
+        rank=args.rank,
+        alpha=args.alpha,
+        targets=targets,
+        max_len=args.max_len,
+        prompt_format=args.prompt_format,
     )
 
 

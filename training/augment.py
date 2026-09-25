@@ -43,7 +43,9 @@ class DistractorPool:
     def build(cls, examples: list[dict]) -> "DistractorPool":
         pool: set[str] = set()
         for ex in examples:
-            if ex["kind"] == "choice":
+            # Fixed-option sources (a question with its own answers, e.g. reading
+            # comprehension) would pour whole sentences into the intent-label pool.
+            if ex["kind"] == "choice" and not ex.get("fixed_options"):
                 # For single-label sources, options = [intent]; store intent.
                 # For multi-option sources, index all option candidates.
                 for opt in ex["options"]:
@@ -167,6 +169,8 @@ def augment_choice(
     p_include_other: float = 0.5,
 ) -> AugmentedExample:
     """Apply dynamic augmentation transformations to a Choice task instance."""
+    if ex.get("fixed_options"):
+        return _augment_fixed_choice(ex, rng)
     # 1, 5, 6: template + language variation
     prompt, lang = rng.choice(CHOICE_TEMPLATES)
 
@@ -231,6 +235,31 @@ def augment_choice(
     )
 
 
+def _augment_fixed_choice(ex: dict, rng: random.Random, p_remove_correct: float = 0.05,
+                          p_include_other: float = 0.3) -> AugmentedExample:
+    """A question that carries its own prompt and answers: keep both, only reorder them.
+
+    Swapping the question for a generic template or the answers for pool distractors
+    would destroy what a reading-comprehension or rule question asks.
+    """
+    options = list(ex["options"])
+    label = ex["label"]
+    if label >= 0 and rng.random() < p_remove_correct and len(options) > 2:
+        options.pop(label)
+        label = -1
+    perm = list(range(len(options)))
+    rng.shuffle(perm)
+    new_options = [options[i] for i in perm]
+    new_label = perm.index(label) if label >= 0 else -1
+    include_other = True if new_label == -1 else (rng.random() < p_include_other)
+    return AugmentedExample(
+        state=ex["state"], kind="choice", prompt=ex["prompt"],
+        options=new_options, levels=[], statement="",
+        label=new_label, lang="EN", source=ex["source"],
+        include_other=include_other,
+    )
+
+
 def augment_score(ex: dict, rng: random.Random, reverse_prob: float = 0.0) -> AugmentedExample:
     """Augment a Score instance with template variation, language selection, and directional scale reversal.
 
@@ -240,6 +269,10 @@ def augment_score(ex: dict, rng: random.Random, reverse_prob: float = 0.0) -> Au
     the prompt taxonomy rather than relying on absolute token positional priors.
     """
     prompt, lang = rng.choice(SCORE_TEMPLATES)
+    if ex.get("fixed_options"):
+        # A rubric question written for its levels ("Which risk tier applies?"): a generic
+        # template would drop what the levels are measuring.
+        prompt = ex["prompt"]
     levels = list(ex["levels"])
     label = ex["label"]
     if len(levels) >= 2 and rng.random() < reverse_prob:

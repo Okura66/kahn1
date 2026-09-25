@@ -21,6 +21,7 @@ vLLM SamplingParams parameter signature is inspected dynamically at runtime
 from __future__ import annotations
 
 import inspect
+import json
 import math
 import os
 import time
@@ -30,6 +31,7 @@ os.environ.setdefault("VLLM_WSL2_ENABLE_PIN_MEMORY", "1")
 os.environ.setdefault("VLLM_USE_FLASHINFER_SAMPLER", "0")
 
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 from .debias import (
@@ -142,6 +144,32 @@ class EngineConfig:
     two_stage_top_k: int = 10
     # Maximum supported cardinality ceiling
     max_cardinality: int = 255
+    # Prompt layout (sysone.prompt.FORMATS): "tags" for the Kahn1 3B checkpoints, "chatml"
+    # or "qwen3" for the model's own chat template; "auto" picks one from the model
+    # (resolve_prompt_format).
+    prompt_format: str = "auto"
+    # Passed through to vllm.LLM, e.g. {"language_model_only": True} for a multimodal checkpoint.
+    extra_llm_kwargs: dict = field(default_factory=dict)
+
+
+def resolve_prompt_format(model: str, fmt: str = "auto") -> str:
+    """The prompt layout a checkpoint was trained with, without touching the network.
+
+    Qwen3 / Qwen3.5 checkpoints (Kahn1 4B) use their native chat template; everything else,
+    the Kahn1 3B checkpoints included, the tag layout. A local directory is identified by
+    the model_type in its config.json, a hub id by its name.
+    """
+    if fmt != "auto":
+        return fmt
+    model_type = ""
+    cfg = Path(model) / "config.json"
+    if cfg.is_file():
+        try:
+            model_type = json.loads(cfg.read_text(encoding="utf-8")).get("model_type", "")
+        except (OSError, ValueError):
+            pass
+    name = (model_type or Path(model).name).lower().replace("_", "").replace("-", "").replace(".", "")
+    return "qwen3" if "qwen3" in name else "tags"
 
 
 class Engine:
@@ -153,6 +181,7 @@ class Engine:
 
     def __init__(self, config: EngineConfig | None = None, tokenizer=None):
         self.config = config or EngineConfig()
+        self.config.prompt_format = resolve_prompt_format(self.config.model, self.config.prompt_format)
         self._tokenizer = tokenizer
         self._llm: Any = None
         self._SamplingParams = None
@@ -203,6 +232,7 @@ class Engine:
         )
         if self.config.quantization is not None:
             llm_kwargs["quantization"] = self.config.quantization
+        llm_kwargs.update(self.config.extra_llm_kwargs)
         self._llm = LLM(**llm_kwargs)
 
     def close(self) -> None:
@@ -324,6 +354,7 @@ class Engine:
                     spec = build_prompt_spec(
                         query.state, question,
                         options=permuted, include_other=False,
+                        fmt=self.config.prompt_format,
                     )
                     resolved = self._resolve(spec)
                     entries.append(dict(
@@ -340,14 +371,15 @@ class Engine:
                     perms = generate_bidirectional_permutations(n_lvls)
                     for perm in perms:
                         permuted_levels = [levels[i] for i in perm.order]
-                        spec = build_prompt_spec(query.state, question, options=permuted_levels)
+                        spec = build_prompt_spec(query.state, question, options=permuted_levels,
+                                                 fmt=self.config.prompt_format)
                         resolved = self._resolve(spec)
                         entries.append(dict(
                             qi=qi, question=question, perm=perm,
                             spec=spec, resolved=resolved,
                         ))
                 else:
-                    spec = build_prompt_spec(query.state, question)
+                    spec = build_prompt_spec(query.state, question, fmt=self.config.prompt_format)
                     resolved = self._resolve(spec)
                     perm = Permutation(order=list(range(n_lvls)))
                     entries.append(dict(
@@ -355,7 +387,7 @@ class Engine:
                         spec=spec, resolved=resolved,
                     ))
             elif isinstance(question, NoulQuestion):
-                spec = build_prompt_spec(query.state, question)
+                spec = build_prompt_spec(query.state, question, fmt=self.config.prompt_format)
                 resolved = self._resolve(spec)
                 perm = Permutation(order=[0, 1])
                 entries.append(dict(
@@ -594,7 +626,7 @@ class Engine:
                         key=f"{question.key}__noul_{oi}",
                         statement=f"The option “{opt}” fits this state.",
                     )
-                    spec = build_prompt_spec(query.state, noul_q)
+                    spec = build_prompt_spec(query.state, noul_q, fmt=self.config.prompt_format)
                     resolved = self._resolve(spec)
                     noul_entries.append(dict(
                         qi=qi, oi=oi, option=opt,

@@ -95,3 +95,66 @@ def test_choice_without_other():
     spec = build_prompt_spec(state, q)
     assert "None of these answers" not in spec.full_text
     assert spec.n_options == 2
+
+
+# ---------------------------------------------------------------------------
+# Chat formats
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("fmt", ["chatml", "qwen3"])
+def test_chat_formats_share_the_state_prefix(fmt):
+    """Every question of a state starts with the same system + user + state text."""
+    state = "Order #4411 was billed twice."
+    specs = [
+        build_prompt_spec(state, ChoiceQuestion(key="a", prompt="Team?", options=["billing", "tech"]), fmt=fmt),
+        build_prompt_spec(state, ScoreQuestion(key="b", prompt="Urgency?", levels=["low", "high"]), fmt=fmt),
+        build_prompt_spec(state, NoulQuestion(key="c", statement="A refund is requested."), fmt=fmt),
+    ]
+    pre = shared_state_prefix(state, fmt)
+    assert pre.startswith("<|im_start|>system\n") and pre.endswith(f"## State\n{state}\n")
+    for s in specs:
+        assert s.full_text.startswith(pre)
+        assert s.suffix == s.full_text
+
+
+def test_chat_format_endings():
+    q = NoulQuestion(key="c", statement="A refund is requested.")
+    assert build_prompt_spec("s", q, fmt="chatml").full_text.endswith("<|im_end|>\n<|im_start|>assistant\n")
+    assert build_prompt_spec("s", q, fmt="qwen3").full_text.endswith(
+        "<|im_start|>assistant\n<think>\n\n</think>\n\n")
+    # The default layout is unchanged.
+    assert build_prompt_spec("s", q).full_text.endswith("</user>\n<assistant>Answer:")
+
+
+def test_unknown_format_raises():
+    with pytest.raises(ValueError):
+        shared_state_prefix("s", "json")
+
+
+def test_chat_format_labels_resolve_with_a_qwen_tokenizer():
+    """With a real Qwen tokenizer the letters and yes/no are single tokens after the header."""
+    transformers = pytest.importorskip("transformers")
+    try:
+        tok = transformers.AutoTokenizer.from_pretrained("Qwen/Qwen2.5-3B-Instruct", local_files_only=True)
+    except Exception:
+        pytest.skip("Qwen tokenizer not cached")
+    from sysone.tokens import resolve_choice_tokens, resolve_noul_tokens
+    q = ChoiceQuestion(key="a", prompt="Team?", options=["billing", "tech", "sales"])
+    spec = build_prompt_spec("Order #4411 was billed twice.", q, fmt="chatml")
+    res = resolve_choice_tokens(tok, spec.suffix, spec.n_options)
+    assert [tok.decode([t]) for t in res.token_ids] == ["A", "B", "C", "D"]
+    noul = build_prompt_spec("s", NoulQuestion(key="c", statement="x"), fmt="chatml")
+    assert [tok.decode([t]) for t in resolve_noul_tokens(tok, noul.suffix).token_ids] == ["yes", "no"]
+
+
+def test_prompt_format_is_resolved_from_the_model(tmp_path):
+    from sysone.engine import resolve_prompt_format
+
+    assert resolve_prompt_format("Okura66/Kahn1-Qwen3.5-4B") == "qwen3"
+    assert resolve_prompt_format("Qwen/Qwen3.5-4B") == "qwen3"
+    assert resolve_prompt_format("Okura66/Kahn1-Qwen2.5-3B") == "tags"
+    assert resolve_prompt_format("Okura66/Kahn1-Qwen3.5-4B", "tags") == "tags"   # explicit wins
+    (tmp_path / "config.json").write_text('{"model_type": "qwen3_5_text"}')
+    assert resolve_prompt_format(str(tmp_path)) == "qwen3"                       # local dir: config
+    (tmp_path / "config.json").write_text('{"model_type": "qwen2"}')
+    assert resolve_prompt_format(str(tmp_path)) == "tags"

@@ -65,7 +65,8 @@ def get_engine() -> Engine:
                 num_threads=int(os.environ.get("SYSONE_THREADS", "0")) or None,
             )
         else:
-            _engine = Engine(EngineConfig(model=model))
+            _engine = Engine(EngineConfig(model=model,
+                                          max_model_len=int(os.environ.get("SYSONE_MAX_MODEL_LEN", "2048"))))
     return _engine
 
 

@@ -22,7 +22,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kahn1 — Décisions typées lues dans les logits d'un LLM, sans générer de texte</title>
-<meta name="description" content="Kahn1 est un moteur de décision « Système 1 » open source : classer, noter et vérifier n'importe quel texte avec un modèle 3B qui lit des réponses calibrées dans les logits.">
+<meta name="description" content="Kahn1 est un moteur de décision « Système 1 » open source : classer, noter et vérifier n'importe quel texte avec un modèle ouvert 4B ou 3B qui lit des réponses calibrées dans les logits.">
 <link rel="canonical" href="https://kahn1.com/fr/">
 <link rel="alternate" hreflang="en" href="https://kahn1.com/">
 <link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/">
@@ -35,7 +35,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
 <meta property="og:locale:alternate" content="en_US">
 <meta property="og:url" content="https://kahn1.com/fr/">
 <meta property="og:title" content="Kahn1 — N'importe quel texte en entrée. Des réponses typées en sortie.">
-<meta property="og:description" content="Classer, noter et vérifier n'importe quel texte avec un modèle 3B qui lit des réponses calibrées dans les logits des options. Zéro token généré, zéro erreur de schéma.">
+<meta property="og:description" content="Classer, noter et vérifier n'importe quel texte avec un modèle ouvert 4B ou 3B qui lit des réponses calibrées dans les logits des options. Zéro token généré, zéro erreur de schéma.">
 <meta property="og:image" content="https://kahn1.com/assets/og-fr.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -45,7 +45,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/site.css?v=20260925">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -64,19 +64,19 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
       "inLanguage": "fr",
       "mainEntity": [
         { "@type": "Question", "name": "Qu'est-ce que Kahn1 ?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Kahn1 est un moteur de décision open source construit sur un Qwen2.5-3B affiné. Il prend un texte (l'état) et des questions typées, et renvoie pour chaque question une valeur typée et une distribution de probabilités calibrée, lue dans les logits des tokens d'option. Il ne génère aucun texte." } },
+          "acceptedAnswer": { "@type": "Answer", "text": "Kahn1 est un moteur de décision open source disponible en deux tailles : Kahn1 4B (Qwen3.5-4B fine-tuné) et Kahn1 3B (Qwen2.5-3B fine-tuné), qui tournent toutes deux sur GPU comme sur CPU. Il prend un texte (l'état) et des questions typées, et renvoie pour chaque question une valeur typée et une distribution de probabilités calibrée, lue dans les logits des tokens d'option. Il ne génère aucun texte." } },
         { "@type": "Question", "name": "En quoi Kahn1 diffère-t-il du mode JSON ou des sorties structurées ?",
           "acceptedAnswer": { "@type": "Answer", "text": "Le décodage structuré contraint les tokens qu'un modèle génère, et le résultat doit encore être analysé. Kahn1 ne génère rien : il lit une distribution de probabilités par question sur les tokens d'option. Chaque réponse arrive avec sa distribution complète et une confiance calibrée, et il n'y a rien à analyser." } },
         { "@type": "Question", "name": "Kahn1 fonctionne-t-il sans GPU ?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Oui. Le moteur CPU exécute le même code de décision avec une passe transformers classique, en quelques secondes par question au lieu de quelques dizaines de millisecondes. Le playground et la démo Snake font aussi tourner un GGUF 4 bits du modèle dans le navigateur, avec WebGPU." } },
+          "acceptedAnswer": { "@type": "Answer", "text": "Oui. Le moteur CPU exécute le même code de décision avec une passe transformers classique, en quelques secondes par question au lieu de quelques dizaines de millisecondes, pour l'une comme pour l'autre taille. Le playground et la démo Snake font aussi tourner un GGUF 4 bits du modèle 3B dans le navigateur, avec WebGPU." } },
         { "@type": "Question", "name": "Puis-je utiliser mes propres catégories ?",
           "acceptedAnswer": { "@type": "Answer", "text": "Oui. Catégories, échelles et affirmations font partie de chaque requête : les changer ne demande aucun réentraînement. La calibration a été ajustée sur la distribution d'entraînement : recalibrez sur vos propres exemples annotés avec sysone calibrate avant de vous fier à un seuil de confiance." } },
         { "@type": "Question", "name": "Quelle est la précision de Kahn1 ?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Sur 14 663 exemples réservés, jamais vus à l'entraînement, le checkpoint v3 atteint 70,3 % au global : 90,9 % en Choice (intentions banking77 et MASSIVE), 51,5 % de correspondance exacte en Score sur des échelles à 5 niveaux (95,2 % à un niveau près sur SST-5) et 67,0 % en Noul (82,7 % sur RTE, 65,0 % sur SciTail). Latence médiane : 36,4 ms sur une seule RTX 5070 Ti avec vLLM." } },
+          "acceptedAnswer": { "@type": "Answer", "text": "Sur 14 663 exemples réservés, jamais vus à l'entraînement, Kahn1 4B atteint 70,3 % au global : 91,9 % en Choice (intentions banking77 et MASSIVE, 8 options par question), 48,6 % de correspondance exacte en Score sur des échelles à 5 niveaux et 72,2 % en Noul (86,6 % sur RTE, 70,4 % sur SciTail), avec une erreur de calibration attendue de 0,064. Kahn1 3B atteint lui aussi 70,3 % (Choice 90,9 %, Score 51,4 %, Noul 67,0 %, ECE 0,082). Latence médiane sur une seule RTX 5070 Ti avec vLLM : 87,5 ms pour le 4B, 36,4 ms pour le 3B." } },
         { "@type": "Question", "name": "Comment Kahn1 se compare-t-il à JEV ?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Sur les 14 663 exemples du holdout de Kahn1, soumis à l'API TypeSafe, Kahn1 obtient 70,3 % et JEV 1.13.0 67,3 % : Kahn1 mène en Choice, égalité en Score, JEV mène en Noul. Sur les 231 exemples publics de JevBench, notés par JevBench, Jev obtient 86,6 % et Kahn1 67,5 % (73,0 % contre 42,3 % sur le niveau difficile). Kahn1 est plus fort au global sur les familles de tâches pour lesquelles il a été entraîné ; Jev est nettement plus fort sur le jugement ouvert. Kahn1 est ouvert et tourne sur votre matériel ; JEV est une API hébergée." } },
+          "acceptedAnswer": { "@type": "Answer", "text": "JEV est plus précis. Sur les 14 663 exemples du holdout de Kahn1, posés de la même façon des deux côtés (les mêmes 8 options en Choice), JEV 1.13.0 obtient 73,2 % et Kahn1 4B 70,3 %, et JEV est devant sur chaque primitive : Choice 94,5 % contre 91,9 %, Score 52,0 % contre 48,6 %, Noul 74,4 % contre 72,2 %. Sur les 231 exemples publics de JevBench, Jev obtient 86,6 %, JevK5 v0.2 86,1 % et Kahn1 4B 83,1 % (73,0 %, 73,9 % et 70,3 % sur le niveau difficile) ; Kahn1 3B obtient 67,5 %. Kahn1 est mieux calibré (ECE de 0,064 contre 0,113 pour JEV), ouvert, et tourne sur votre matériel sans coût par appel ; JEV est une API hébergée." } },
         { "@type": "Question", "name": "Kahn1 est-il gratuit ?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Oui. Le code est sous licence MIT et les poids sont sur Hugging Face : un modèle fusionné (Okura66/Kahn1-Qwen2.5-3B) et un adaptateur LoRA (Okura66/Kahn1-Qwen2.5-3B-LoRA)." } }
+          "acceptedAnswer": { "@type": "Answer", "text": "Oui, pour le télécharger et le faire tourner. Le code est sous licence MIT. Les poids sont sur Hugging Face : Kahn1 4B sous Apache 2.0, en modèle fusionné (Okura66/Kahn1-Qwen3.5-4B) et en adaptateur LoRA (Okura66/Kahn1-Qwen3.5-4B-LoRA) ; Kahn1 3B (Okura66/Kahn1-Qwen2.5-3B et Okura66/Kahn1-Qwen2.5-3B-LoRA) sous la licence de recherche Qwen héritée de Qwen2.5-3B-Instruct : voir ses conditions." } }
       ]
     }
   ]
@@ -126,6 +126,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
         <a href="../playground/">PLAYGROUND</a>
         <a href="../snake/">SNAKE</a>
         <a href="resultats/">RÉSULTATS</a>
+        <a href="modeles/">MODÈLES</a>
         <a href="demarrer/">DÉMARRER</a>
       </nav>
     </div>
@@ -156,8 +157,8 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
         <span>LU DANS LES LOGITS DES OPTIONS</span><i>&bull;</i>
         <span>ZÉRO TOKEN GÉNÉRÉ</span>
       </div>
-      <p class="lead"><strong>Kahn1</strong> est un moteur de décision open source construit sur un
-        Qwen2.5-3B affiné. Donnez-lui un <em>état</em> (un message, un avis, un document) et une liste de
+      <p class="lead"><strong>Kahn1</strong> est un moteur de décision open source en deux tailles&nbsp;:
+        Kahn1 4B (un Qwen3.5-4B fine-tuné) et Kahn1 3B (un Qwen2.5-3B fine-tuné). Donnez-lui un <em>état</em> (un message, un avis, un document) et une liste de
         questions typées. Chaque réponse revient sous forme d'une valeur et d'une distribution de
         probabilités calibrée, lue directement dans les logits des tokens d'option. Rien n'est généré,
         rien n'est analysé&nbsp;: une réponse mal formée est impossible.</p>
@@ -165,53 +166,57 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
         <a class="btn primary" href="../playground/">OUVRIR LE PLAYGROUND &rarr;</a>
         <a class="btn" href="../snake/">LE VOIR JOUER À SNAKE</a>
         <a class="btn" href="https://github.com/Okura66/kahn1" rel="noopener">GITHUB</a>
-        <a class="btn" href="https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B" rel="noopener">HUGGING FACE</a>
+        <a class="btn" href="https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B" rel="noopener">HUGGING FACE</a>
       </div>
-      <p class="note">Les deux démos (en anglais) font tourner le modèle dans votre navigateur (WebGPU,
+      <p class="note">Les deux démos (en anglais) font tourner le modèle 3B dans votre navigateur (WebGPU,
         1,6 à 1,9&nbsp;Go à télécharger) ou sur votre propre serveur.</p>
     </section>
 
     <section class="sec" id="benchmarks" aria-labelledby="h-vs">
       <h2 id="h-vs">Kahn1 face à JEV</h2>
-      <p class="intro">Mêmes exemples, mêmes prompts, notés sur les mêmes étiquettes. Deux benchmarks,
-        chacun favorable à un camp&nbsp;: lisez les deux.</p>
-      <figure class="vchart" role="group" aria-label="Précision de Kahn1 et de JEV, par primitive sur le holdout de Kahn1 et par niveau sur JevBench.">
-        <div class="vc-legend"><span><i></i>Kahn1 v3 · modèle ouvert 3B</span><span><i class="jev"></i>JEV 1.13.0 · API TypeSafe</span></div>
+      <p class="intro">Mêmes exemples, mêmes prompts, mêmes options, notés sur les mêmes étiquettes. Deux
+        benchmarks&nbsp;: le holdout de Kahn1 et JevBench, public.</p>
+      <figure class="vchart" role="group" aria-label="Précision de Kahn1 4B, de Kahn1 3B et de JEV, par primitive sur le holdout de Kahn1 et par niveau sur JevBench.">
+        <div class="vc-legend"><span><i></i>Kahn1 4B</span><span><i class="k3"></i>Kahn1 3B</span><span><i class="jev"></i>JEV 1.13.0 · API TypeSafe</span></div>
         <div class="vc-sets">
           <div class="vc-set">
-            <div class="vc-title">HOLDOUT KAHN1</div><div class="vc-sub">14 663 exemples · JEV lancé par nous via son API</div>
-            <div class="vc-plot"><div class="vc-grid"><span style="bottom:0%"><em>0</em></span><span style="bottom:25%"><em>25</em></span><span style="bottom:50%"><em>50</em></span><span style="bottom:75%"><em>75</em></span><span style="bottom:100%"><em>100</em></span></div><div class="vc-cols"><div class="vc-g"><span class="vc-b hi" style="height:90.94%" tabindex="0" data-tip="Kahn1 · Choice&#10;90,9 % sur 6 050 exemples" aria-label="Kahn1, Choice: 90,9 %"><span class="val">91</span></span><span class="vc-b jev" style="height:80.15%" tabindex="0" data-tip="JEV · Choice&#10;80,1 % sur 6 050 exemples" aria-label="JEV, Choice: 80,1 %"><span class="val">80</span></span></div><div class="vc-g"><span class="vc-b" style="height:51.45%" tabindex="0" data-tip="Kahn1 · Score&#10;51,4 % sur 6 210 exemples" aria-label="Kahn1, Score: 51,4 %"><span class="val">51</span></span><span class="vc-b jev hi" style="height:52.01%" tabindex="0" data-tip="JEV · Score&#10;52,0 % sur 6 210 exemples" aria-label="JEV, Score: 52,0 %"><span class="val">52</span></span></div><div class="vc-g"><span class="vc-b" style="height:67.04%" tabindex="0" data-tip="Kahn1 · Noul&#10;67,0 % sur 2 403 exemples" aria-label="Kahn1, Noul: 67,0 %"><span class="val">67</span></span><span class="vc-b jev hi" style="height:74.45%" tabindex="0" data-tip="JEV · Noul&#10;74,4 % sur 2 403 exemples" aria-label="JEV, Noul: 74,4 %"><span class="val">74</span></span></div><div class="vc-g total"><span class="vc-b hi" style="height:70.30%" tabindex="0" data-tip="Kahn1 · Total&#10;70,3 % sur 14 663 exemples" aria-label="Kahn1, Total: 70,3 %"><span class="val">70</span></span><span class="vc-b jev" style="height:67.30%" tabindex="0" data-tip="JEV · Total&#10;67,3 % sur 14 663 exemples" aria-label="JEV, Total: 67,3 %"><span class="val">67</span></span></div></div></div>
+            <div class="vc-title">HOLDOUT KAHN1</div><div class="vc-sub">14 663 exemples · mêmes options · JEV via son API</div>
+            <div class="vc-plot"><div class="vc-grid"><span style="bottom:0%"><em>0</em></span><span style="bottom:25%"><em>25</em></span><span style="bottom:50%"><em>50</em></span><span style="bottom:75%"><em>75</em></span><span style="bottom:100%"><em>100</em></span></div><div class="vc-cols"><div class="vc-g"><span class="vc-b" style="height:91.93%" tabindex="0" data-tip="Kahn1 4B · Choice&#10;91,9 % sur 6 050 exemples" aria-label="Kahn1 4B, Choice: 91,9 %"><span class="val">92</span></span><span class="vc-b k3" style="height:90.94%" tabindex="0" data-tip="Kahn1 3B · Choice&#10;90,9 % sur 6 050 exemples" aria-label="Kahn1 3B, Choice: 90,9 %"><span class="val">91</span></span><span class="vc-b jev hi" style="height:94.46%" tabindex="0" data-tip="JEV · Choice&#10;94,5 % sur 6 050 exemples" aria-label="JEV, Choice: 94,5 %"><span class="val">94</span></span></div><div class="vc-g"><span class="vc-b" style="height:48.55%" tabindex="0" data-tip="Kahn1 4B · Score&#10;48,6 % sur 6 210 exemples" aria-label="Kahn1 4B, Score: 48,6 %"><span class="val">49</span></span><span class="vc-b k3" style="height:51.45%" tabindex="0" data-tip="Kahn1 3B · Score&#10;51,4 % sur 6 210 exemples" aria-label="Kahn1 3B, Score: 51,4 %"><span class="val">51</span></span><span class="vc-b jev hi" style="height:52.01%" tabindex="0" data-tip="JEV · Score&#10;52,0 % sur 6 210 exemples" aria-label="JEV, Score: 52,0 %"><span class="val">52</span></span></div><div class="vc-g"><span class="vc-b" style="height:72.24%" tabindex="0" data-tip="Kahn1 4B · Noul&#10;72,2 % sur 2 403 exemples" aria-label="Kahn1 4B, Noul: 72,2 %"><span class="val">72</span></span><span class="vc-b k3" style="height:67.04%" tabindex="0" data-tip="Kahn1 3B · Noul&#10;67,0 % sur 2 403 exemples" aria-label="Kahn1 3B, Noul: 67,0 %"><span class="val">67</span></span><span class="vc-b jev hi" style="height:74.45%" tabindex="0" data-tip="JEV · Noul&#10;74,4 % sur 2 403 exemples" aria-label="JEV, Noul: 74,4 %"><span class="val">74</span></span></div><div class="vc-g total"><span class="vc-b" style="height:70.33%" tabindex="0" data-tip="Kahn1 4B · Total&#10;70,3 % sur 14 663 exemples" aria-label="Kahn1 4B, Total: 70,3 %"><span class="val">70</span></span><span class="vc-b k3" style="height:70.30%" tabindex="0" data-tip="Kahn1 3B · Total&#10;70,3 % sur 14 663 exemples" aria-label="Kahn1 3B, Total: 70,3 %"><span class="val">70</span></span><span class="vc-b jev hi" style="height:73.20%" tabindex="0" data-tip="JEV · Total&#10;73,2 % sur 14 663 exemples" aria-label="JEV, Total: 73,2 %"><span class="val">73</span></span></div></div></div>
             <div class="vc-x"><span class="">Choice</span><span class="">Score</span><span class="">Noul</span><span class="total">Total</span></div>
           </div>
           <div class="vc-set">
             <div class="vc-title">JEVBENCH PUBLIC</div><div class="vc-sub">231 exemples · Jev noté par JevBench</div>
-            <div class="vc-plot"><div class="vc-grid"><span style="bottom:0%"><em>0</em></span><span style="bottom:25%"><em>25</em></span><span style="bottom:50%"><em>50</em></span><span style="bottom:75%"><em>75</em></span><span style="bottom:100%"><em>100</em></span></div><div class="vc-cols"><div class="vc-g"><span class="vc-b hi" style="height:100.00%" tabindex="0" data-tip="Kahn1 · Facile&#10;100,0 % sur 48 exemples" aria-label="Kahn1, Facile: 100,0 %"><span class="val">100</span></span><span class="vc-b jev hi" style="height:100.00%" tabindex="0" data-tip="JEV · Facile&#10;100,0 % sur 48 exemples" aria-label="JEV, Facile: 100,0 %"><span class="val">100</span></span></div><div class="vc-g"><span class="vc-b" style="height:84.72%" tabindex="0" data-tip="Kahn1 · Standard&#10;84,7 % sur 72 exemples" aria-label="Kahn1, Standard: 84,7 %"><span class="val">85</span></span><span class="vc-b jev hi" style="height:98.61%" tabindex="0" data-tip="JEV · Standard&#10;98,6 % sur 72 exemples" aria-label="JEV, Standard: 98,6 %"><span class="val">99</span></span></div><div class="vc-g"><span class="vc-b" style="height:42.34%" tabindex="0" data-tip="Kahn1 · Difficile&#10;42,3 % sur 111 exemples" aria-label="Kahn1, Difficile: 42,3 %"><span class="val">42</span></span><span class="vc-b jev hi" style="height:72.97%" tabindex="0" data-tip="JEV · Difficile&#10;73,0 % sur 111 exemples" aria-label="JEV, Difficile: 73,0 %"><span class="val">73</span></span></div><div class="vc-g total"><span class="vc-b" style="height:67.53%" tabindex="0" data-tip="Kahn1 · Total&#10;67,5 % sur 231 exemples" aria-label="Kahn1, Total: 67,5 %"><span class="val">68</span></span><span class="vc-b jev hi" style="height:86.58%" tabindex="0" data-tip="JEV · Total&#10;86,6 % sur 231 exemples" aria-label="JEV, Total: 86,6 %"><span class="val">87</span></span></div></div></div>
+            <div class="vc-plot"><div class="vc-grid"><span style="bottom:0%"><em>0</em></span><span style="bottom:25%"><em>25</em></span><span style="bottom:50%"><em>50</em></span><span style="bottom:75%"><em>75</em></span><span style="bottom:100%"><em>100</em></span></div><div class="vc-cols"><div class="vc-g"><span class="vc-b hi" style="height:100.00%" tabindex="0" data-tip="Kahn1 4B · Facile&#10;100,0 % sur 48 exemples" aria-label="Kahn1 4B, Facile: 100,0 %"><span class="val">100</span></span><span class="vc-b k3 hi" style="height:100.00%" tabindex="0" data-tip="Kahn1 3B · Facile&#10;100,0 % sur 48 exemples" aria-label="Kahn1 3B, Facile: 100,0 %"><span class="val">100</span></span><span class="vc-b jev hi" style="height:100.00%" tabindex="0" data-tip="JEV · Facile&#10;100,0 % sur 48 exemples" aria-label="JEV, Facile: 100,0 %"><span class="val">100</span></span></div><div class="vc-g"><span class="vc-b" style="height:91.67%" tabindex="0" data-tip="Kahn1 4B · Standard&#10;91,7 % sur 72 exemples" aria-label="Kahn1 4B, Standard: 91,7 %"><span class="val">92</span></span><span class="vc-b k3" style="height:84.72%" tabindex="0" data-tip="Kahn1 3B · Standard&#10;84,7 % sur 72 exemples" aria-label="Kahn1 3B, Standard: 84,7 %"><span class="val">85</span></span><span class="vc-b jev hi" style="height:98.61%" tabindex="0" data-tip="JEV · Standard&#10;98,6 % sur 72 exemples" aria-label="JEV, Standard: 98,6 %"><span class="val">99</span></span></div><div class="vc-g"><span class="vc-b" style="height:70.27%" tabindex="0" data-tip="Kahn1 4B · Difficile&#10;70,3 % sur 111 exemples" aria-label="Kahn1 4B, Difficile: 70,3 %"><span class="val">70</span></span><span class="vc-b k3" style="height:42.34%" tabindex="0" data-tip="Kahn1 3B · Difficile&#10;42,3 % sur 111 exemples" aria-label="Kahn1 3B, Difficile: 42,3 %"><span class="val">42</span></span><span class="vc-b jev hi" style="height:72.97%" tabindex="0" data-tip="JEV · Difficile&#10;73,0 % sur 111 exemples" aria-label="JEV, Difficile: 73,0 %"><span class="val">73</span></span></div><div class="vc-g total"><span class="vc-b" style="height:83.12%" tabindex="0" data-tip="Kahn1 4B · Total&#10;83,1 % sur 231 exemples" aria-label="Kahn1 4B, Total: 83,1 %"><span class="val">83</span></span><span class="vc-b k3" style="height:67.53%" tabindex="0" data-tip="Kahn1 3B · Total&#10;67,5 % sur 231 exemples" aria-label="Kahn1 3B, Total: 67,5 %"><span class="val">68</span></span><span class="vc-b jev hi" style="height:86.58%" tabindex="0" data-tip="JEV · Total&#10;86,6 % sur 231 exemples" aria-label="JEV, Total: 86,6 %"><span class="val">87</span></span></div></div></div>
             <div class="vc-x"><span class="">Facile</span><span class="">Standard</span><span class="">Difficile</span><span class="total">Total</span></div>
           </div>
         </div>
         <div class="vc-foot">
           <details><summary>VUE TABLEAU</summary><div class="tbl-wrap"><table class="tbl">
-            <thead><tr><th scope="col">Benchmark</th><th scope="col">Groupe</th><th scope="col" class="r">Exemples</th><th scope="col" class="r">Kahn1</th><th scope="col" class="r">JEV</th></tr></thead>
-            <tbody><tr><td>HOLDOUT KAHN1</td><td>Choice</td><td class="r">6 050</td><td class="r">90,9&nbsp;%</td><td class="r">80,1&nbsp;%</td></tr><tr><td>HOLDOUT KAHN1</td><td>Score</td><td class="r">6 210</td><td class="r">51,4&nbsp;%</td><td class="r">52,0&nbsp;%</td></tr><tr><td>HOLDOUT KAHN1</td><td>Noul</td><td class="r">2 403</td><td class="r">67,0&nbsp;%</td><td class="r">74,4&nbsp;%</td></tr><tr><td>HOLDOUT KAHN1</td><td>Total</td><td class="r">14 663</td><td class="r">70,3&nbsp;%</td><td class="r">67,3&nbsp;%</td></tr><tr><td>JEVBENCH PUBLIC</td><td>Facile</td><td class="r">48</td><td class="r">100,0&nbsp;%</td><td class="r">100,0&nbsp;%</td></tr><tr><td>JEVBENCH PUBLIC</td><td>Standard</td><td class="r">72</td><td class="r">84,7&nbsp;%</td><td class="r">98,6&nbsp;%</td></tr><tr><td>JEVBENCH PUBLIC</td><td>Difficile</td><td class="r">111</td><td class="r">42,3&nbsp;%</td><td class="r">73,0&nbsp;%</td></tr><tr><td>JEVBENCH PUBLIC</td><td>Total</td><td class="r">231</td><td class="r">67,5&nbsp;%</td><td class="r">86,6&nbsp;%</td></tr></tbody></table></div></details>
+            <thead><tr><th scope="col">Benchmark</th><th scope="col">Groupe</th><th scope="col" class="r">Exemples</th><th scope="col" class="r">Kahn1 4B</th><th scope="col" class="r">Kahn1 3B</th><th scope="col" class="r">JEV</th></tr></thead>
+            <tbody><tr><td>HOLDOUT KAHN1</td><td>Choice</td><td class="r">6 050</td><td class="r">91,9&nbsp;%</td><td class="r">90,9&nbsp;%</td><td class="r">94,5&nbsp;%</td></tr><tr><td>HOLDOUT KAHN1</td><td>Score</td><td class="r">6 210</td><td class="r">48,6&nbsp;%</td><td class="r">51,4&nbsp;%</td><td class="r">52,0&nbsp;%</td></tr><tr><td>HOLDOUT KAHN1</td><td>Noul</td><td class="r">2 403</td><td class="r">72,2&nbsp;%</td><td class="r">67,0&nbsp;%</td><td class="r">74,4&nbsp;%</td></tr><tr><td>HOLDOUT KAHN1</td><td>Total</td><td class="r">14 663</td><td class="r">70,3&nbsp;%</td><td class="r">70,3&nbsp;%</td><td class="r">73,2&nbsp;%</td></tr><tr><td>JEVBENCH PUBLIC</td><td>Facile</td><td class="r">48</td><td class="r">100,0&nbsp;%</td><td class="r">100,0&nbsp;%</td><td class="r">100,0&nbsp;%</td></tr><tr><td>JEVBENCH PUBLIC</td><td>Standard</td><td class="r">72</td><td class="r">91,7&nbsp;%</td><td class="r">84,7&nbsp;%</td><td class="r">98,6&nbsp;%</td></tr><tr><td>JEVBENCH PUBLIC</td><td>Difficile</td><td class="r">111</td><td class="r">70,3&nbsp;%</td><td class="r">42,3&nbsp;%</td><td class="r">73,0&nbsp;%</td></tr><tr><td>JEVBENCH PUBLIC</td><td>Total</td><td class="r">231</td><td class="r">83,1&nbsp;%</td><td class="r">67,5&nbsp;%</td><td class="r">86,6&nbsp;%</td></tr></tbody></table></div></details>
           <a class="vc-more" href="resultats/">Tous les résultats &rarr;</a>
         </div>
       </figure>
-      <p class="callout"><b>Qui gagne où.</b> Sur les familles pour lesquelles il a été entraîné, Kahn1 mène de
-        3,0 points au global&nbsp;: nettement devant en Choice (90,9&nbsp;% contre
-        80,1&nbsp;%), à égalité en Score (51,4&nbsp;% contre 52,0&nbsp;%),
-        derrière en Noul (67,0&nbsp;% contre 74,4&nbsp;%). Sur JevBench, Jev mène de 19,0 points, et de 30,6
-        sur le niveau difficile&nbsp;: le jugement ouvert, c'est là qu'un modèle 3B décroche.</p>
+      <p class="callout"><b>Où en est chacun.</b> JEV est plus précis. Sur le holdout, il devance Kahn1 4B
+        de 2,9 points (73,2&nbsp;% contre 70,3&nbsp;%) et sur chaque primitive&nbsp;: Choice 94,5&nbsp;% contre
+        91,9&nbsp;%, Score 52,0&nbsp;% contre 48,6&nbsp;%, Noul 74,4&nbsp;% contre 72,2&nbsp;%. Sur JevBench,
+        Kahn1 4B est à 3,5 points de Jev au global (83,1&nbsp;% contre 86,6&nbsp;%) et à 2,7 sur le niveau
+        difficile, et dans la marge d'erreur de JevK5, un autre modèle ouvert 4B (86,1&nbsp;%, p = 0,26).
+        L'intérêt de Kahn1 est ailleurs&nbsp;: il est ouvert, tourne en local, est mieux calibré (ECE de
+        0,064 contre 0,113) et n'a pas de prix à l'appel.</p>
       <div class="stats" style="margin-top:30px">
-        <div class="stat"><span class="n">36,4&nbsp;ms</span><span class="l">Latence médiane Kahn1</span><span class="s">vLLM local, une RTX 5070 Ti, k = 3</span></div>
+        <div class="stat"><span class="n">87,5&nbsp;ms</span><span class="l">Latence médiane Kahn1 4B</span><span class="s">vLLM local, une RTX 5070 Ti, k = 3 (3B&nbsp;: 36,4&nbsp;ms)</span></div>
         <div class="stat"><span class="n">248&nbsp;ms</span><span class="l">Aller-retour médian JEV</span><span class="s">API hébergée, mesurée côté client, réseau inclus</span></div>
-        <div class="stat"><span class="n">MIT</span><span class="l">Poids de Kahn1</span><span class="s">ouverts, sur votre matériel ou dans le navigateur</span></div>
+        <div class="stat"><span class="n">Apache 2.0</span><span class="l">Poids de Kahn1 4B</span><span class="s">code sous MIT&nbsp;; le 3B est sous licence de recherche Qwen, voir ses conditions</span></div>
         <div class="stat"><span class="n">0,042&nbsp;$</span><span class="l">Prix de JEV</span><span class="s">par million de tokens d'entrée, sortie gratuite (tarif public)</span></div>
       </div>
       <p class="small faint" style="margin-top:14px">Les deux latences ne mesurent pas la même chose&nbsp;: l'une
         est un GPU local, l'autre une requête sur Internet. Rapports (en anglais)&nbsp;:
-        <a href="https://github.com/Okura66/kahn1/blob/main/reports/JEV_VS_KAHN1.md" rel="noopener">duel sur le holdout</a> ·
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/KAHN1_4B_REPORT.md" rel="noopener">rapport Kahn1 4B</a> ·
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/CHOICE_FAIRNESS.md" rel="noopener">Choice sur les mêmes options</a> ·
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/JEVK5_VS_KAHN1.md" rel="noopener">Kahn1 face à JevK5</a> ·
         <a href="https://github.com/Okura66/kahn1/blob/main/reports/JEVBENCH_VS_JEV.md" rel="noopener">duel sur JevBench</a> ·
-        <a href="https://github.com/Okura66/kahn1/blob/main/scripts/jev_holdout.py" rel="noopener">script</a>. Plus de chiffres dans les
+        <a href="https://github.com/Okura66/kahn1/blob/main/scripts/jev_holdout.py" rel="noopener">script</a>. Plus de chiffres sur
         <a href="resultats/">la page des résultats</a>.</p>
     </section>
 
@@ -249,8 +254,8 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
         </div>
         <div class="card">
           <span class="num">02</span>
-          <h3>Un lot, un préfixe partagé</h3>
-          <p>Toutes les questions, et leurs permutations d'options, partent vers vLLM en un seul lot. Elles
+          <h3>Un batch, un préfixe partagé</h3>
+          <p>Toutes les questions, et leurs permutations d'options, partent vers vLLM en un seul batch. Elles
             partagent le cache KV de l'état (prefix caching)&nbsp;: dix questions coûtent à peine plus qu'une.</p>
         </div>
         <div class="card">
@@ -342,7 +347,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
           <tbody>
             <tr><th scope="row">Nouvelle catégorie</th><td>Réannoter, réentraîner, redéployer</td><td>Modifier le schéma dans la requête</td></tr>
             <tr><th scope="row">Données annotées</th><td>Des centaines à des milliers par classe</td><td>Aucune pour démarrer, quelques-unes pour recalibrer</td></tr>
-            <tr><th scope="row">Latence</th><td>Moins de 1 à 10&nbsp;ms, CPU</td><td>~36&nbsp;ms en médiane, GPU</td></tr>
+            <tr><th scope="row">Latence</th><td>Moins de 1 à 10&nbsp;ms, CPU</td><td>36&nbsp;ms (3B) à 88&nbsp;ms (4B) en médiane, GPU</td></tr>
             <tr><th scope="row">Matériel</th><td>Petits CPU, objets embarqués</td><td>Un GPU pour le débit de production</td></tr>
             <tr><th scope="row">Explications</th><td>Importance des variables, arbres</td><td>Distributions complètes, sans attribution</td></tr>
           </tbody>
@@ -356,18 +361,24 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
 
     <section class="sec" id="vigilance" aria-labelledby="h-caveats">
       <h2 id="h-caveats">Points de vigilance</h2>
-      <p class="intro">Kahn1 est un modèle de 3 milliards de paramètres. À lire avant de lui confier de vraies décisions.</p>
+      <p class="intro">Kahn1 existe en deux tailles, 4 et 3 milliards de paramètres. À lire avant de confier de vraies décisions à l'un ou à l'autre.</p>
       <ol class="caveats">
         <li><div><b>Ce n'est pas un modèle de pointe.</b>
           <p>Sur des jugements subjectifs ou ambigus, il se trompe plus souvent qu'un grand modèle. Sur le
-            niveau difficile du benchmark externe JevBench, il obtient 42&nbsp;% de bonnes réponses, contre 73&nbsp;% pour Jev.</p></div></li>
+            niveau difficile du benchmark externe JevBench, Kahn1 4B obtient 70,3&nbsp;% de bonnes réponses, contre
+            73,0&nbsp;% pour Jev, et le 3B seulement 42,3&nbsp;%. JEV est devant sur chaque primitive du holdout.
+            Calculer une date, une durée ou un montant en une seule passe est un point faible.</p></div></li>
         <li><div><b>La précision dépend de la primitive.</b>
-          <p>Choice est solide (91&nbsp;% sur des jeux d'intentions réservés). Score atteint 51 à 52&nbsp;% de
-            correspondance exacte sur des échelles à 5 niveaux, 95&nbsp;% à un niveau près sur SST-5. Noul est
-            le point faible&nbsp;: 83&nbsp;% sur RTE, 65&nbsp;% sur SciTail (implication scientifique, hors domaine).</p></div></li>
+          <p>Choice est solide (92&nbsp;% pour le 4B, 91&nbsp;% pour le 3B sur les datasets d'intentions du holdout,
+            8 options par question). Score est la primitive la plus faible&nbsp;: 49&nbsp;% (4B) et 51&nbsp;% (3B) de
+            correspondance exacte sur des échelles à 5 niveaux, même si le 3B est à un niveau près dans 95&nbsp;%
+            des cas sur SST-5. Noul&nbsp;: 87&nbsp;% sur RTE et 70&nbsp;% sur SciTail (implication scientifique, hors
+            domaine) pour le 4B, 83&nbsp;% et 65&nbsp;% pour le 3B. Sur la classification courte d'intentions, le 4B
+            a un peu perdu face au 3B sur JevBench.</p></div></li>
         <li><div><b>La calibration vaut pour sa propre distribution.</b>
-          <p>Les températures ont été ajustées sur un jeu disjoint de l'entraînement, pas sur vos données, et
-            l'erreur de calibration de Noul reste de 0,23. Recalibrez sur votre domaine avant de vous fier à un seuil.</p></div></li>
+          <p>Les températures ont été ajustées sur la distribution d'entraînement (un split disjoint de
+            l'entraînement), pas sur vos données, et l'erreur de calibration de Noul reste de 0,13 pour le 4B,
+            0,23 pour le 3B. Recalibrez sur votre domaine avant de vous fier à un seuil.</p></div></li>
         <li><div><b>La confiance n'est pas la probabilité d'avoir raison.</b>
           <p>Elle mesure l'écart à un tirage uniforme. Fixez vos seuils sur des données réservées de votre
             domaine et regardez la courbe risque-couverture.</p></div></li>
@@ -382,9 +393,9 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
           <p>Le prefix caching et une seule position de sortie expliquent la latence, pas une architecture
             nouvelle. Sur CPU, comptez des secondes par question&nbsp;; dans un navigateur sans WebGPU, des minutes.</p></div></li>
         <li><div><b>Les démos navigateur utilisent un checkpoint plus ancien.</b>
-          <p>Le playground et Snake chargent un GGUF v1 quantifié en 4&nbsp;bits (merci à mradermacher)&nbsp;; la
-            page inverse ses réponses Noul, que la v1 a apprises à l'envers. Les résultats ci-dessous sont
-            ceux du checkpoint v3 non quantifié, sur vLLM.</p></div></li>
+          <p>Le playground et Snake chargent un GGUF v1 du 3B quantifié en 4&nbsp;bits (merci à
+            mradermacher)&nbsp;; la page inverse ses réponses Noul, que la v1 a apprises à l'envers. Les résultats
+            ci-dessus sont ceux de Kahn1 4B et de Kahn1 3B (v3) non quantifiés, sur vLLM.</p></div></li>
       </ol>
     </section>
 
@@ -394,7 +405,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
         données&nbsp;: le guide détaille chaque étape, sur GPU, sur CPU ou dans le navigateur.</p>
 <pre class="term"><span class="d">$ </span>git clone https://github.com/Okura66/kahn1 && cd kahn1
 <span class="d">$ </span>uv venv --python 3.11 && uv pip install -e ".[gpu]"
-<span class="d">$ </span>SYSONE_MODEL=Okura66/Kahn1-Qwen2.5-3B uv run sysone serve --port 8000</pre>
+<span class="d">$ </span>SYSONE_MODEL=Okura66/Kahn1-Qwen3.5-4B uv run sysone serve --port 8000</pre>
       <div class="cta" style="margin-top:26px"><a class="btn primary" href="demarrer/">LIRE LE GUIDE &rarr;</a>
         <a class="btn" href="../playground/">OU L'ESSAYER DANS LE NAVIGATEUR</a></div>
     </section>
@@ -403,7 +414,8 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
       <h2 id="h-faq">Questions fréquentes</h2>
       <details>
         <summary><h3>Qu'est-ce que Kahn1&nbsp;?</h3></summary>
-        <div class="a">Un moteur de décision open source construit sur un Qwen2.5-3B affiné. Il prend un texte
+        <div class="a">Un moteur de décision open source disponible en deux tailles&nbsp;: Kahn1 4B
+          (Qwen3.5-4B fine-tuné) et Kahn1 3B (Qwen2.5-3B fine-tuné), qui tournent toutes deux sur GPU comme sur CPU. Il prend un texte
           (l'état) et des questions typées, et renvoie pour chaque question une valeur typée et une
           distribution de probabilités calibrée, lue dans les logits des tokens d'option. Il ne génère aucun texte.</div>
       </details>
@@ -417,9 +429,9 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
       <details>
         <summary><h3>Fonctionne-t-il sans GPU&nbsp;?</h3></summary>
         <div class="a">Oui. Le moteur CPU exécute le même code de décision avec une passe transformers classique,
-          en quelques secondes par question au lieu de quelques dizaines de millisecondes. Le
-          <a href="../playground/">playground</a> et <a href="../snake/">Snake</a> font aussi tourner un GGUF
-          4&nbsp;bits dans votre navigateur avec WebGPU&nbsp;; sans WebGPU, ils se replient sur le CPU, ce qui
+          en quelques secondes par question au lieu de quelques dizaines de millisecondes, pour l'une comme pour
+          l'autre taille. Le <a href="../playground/">playground</a> et <a href="../snake/">Snake</a> font
+          aussi tourner un GGUF 4&nbsp;bits du 3B dans votre navigateur avec WebGPU&nbsp;; sans WebGPU, ils se replient sur le CPU, ce qui
           prend des minutes.</div>
       </details>
       <details>
@@ -431,14 +443,15 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
       </details>
       <details>
         <summary><h3>Quelle est sa précision&nbsp;?</h3></summary>
-        <div class="a">Sur 14 663 exemples réservés&nbsp;: 70,3&nbsp;% au global, 90,9&nbsp;% en Choice,
-          51,5&nbsp;% de correspondance exacte en Score sur 5 niveaux (95,2&nbsp;% à un niveau près sur SST-5)
-          et 67,0&nbsp;% en Noul. Voir les <a href="#benchmarks">résultats</a> et les
+        <div class="a">Sur 14 663 exemples réservés, Kahn1 4B&nbsp;: 70,3&nbsp;% au global, 91,9&nbsp;% en Choice,
+          48,6&nbsp;% de correspondance exacte en Score sur 5 niveaux et 72,2&nbsp;% en Noul, ECE de 0,064.
+          Kahn1 3B&nbsp;: 70,3&nbsp;% au global, 90,9&nbsp;%, 51,4&nbsp;% (95,2&nbsp;% à un niveau près sur SST-5)
+          et 67,0&nbsp;%. Voir les <a href="#benchmarks">résultats</a> et les
           <a href="#vigilance">points de vigilance</a>.</div>
       </details>
       <details>
         <summary><h3>Comment Kahn1 se compare-t-il à JEV&nbsp;?</h3></summary>
-        <div class="a">Sur les 14 663 exemples du holdout de Kahn1, soumis à l'API TypeSafe, Kahn1 obtient 70,3&nbsp;% et JEV 1.13.0 67,3&nbsp;%&nbsp;: Kahn1 mène en Choice, égalité en Score, JEV mène en Noul. Sur les 231 exemples publics de JevBench, notés par JevBench, Jev obtient 86,6&nbsp;% et Kahn1 67,5&nbsp;% (73,0&nbsp;% contre 42,3&nbsp;% sur le niveau difficile). Kahn1 est plus fort au global sur les familles de tâches pour lesquelles il a été entraîné&nbsp;; Jev est nettement plus fort sur le jugement ouvert. Kahn1 est ouvert et tourne sur votre matériel&nbsp;; JEV est une API hébergée. <a href="#benchmarks">Voir le duel</a>.</div>
+        <div class="a">JEV est plus précis. Sur les 14 663 exemples du holdout de Kahn1, posés de la même façon des deux côtés (les mêmes 8 options en Choice), JEV 1.13.0 obtient 73,2&nbsp;% et Kahn1 4B 70,3&nbsp;%, et JEV est devant sur chaque primitive&nbsp;: Choice 94,5&nbsp;% contre 91,9&nbsp;%, Score 52,0&nbsp;% contre 48,6&nbsp;%, Noul 74,4&nbsp;% contre 72,2&nbsp;%. Sur les 231 exemples publics de JevBench, Jev obtient 86,6&nbsp;%, JevK5 v0.2 86,1&nbsp;% et Kahn1 4B 83,1&nbsp;% (73,0&nbsp;%, 73,9&nbsp;% et 70,3&nbsp;% sur le niveau difficile)&nbsp;; Kahn1 3B obtient 67,5&nbsp;%. Kahn1 est mieux calibré (ECE de 0,064 contre 0,113), ouvert, et tourne sur votre matériel sans coût par appel&nbsp;; JEV est une API hébergée. <a href="#benchmarks">Voir le duel</a>.</div>
       </details>
       <details>
         <summary><h3>Le playground envoie-t-il mon texte quelque part&nbsp;?</h3></summary>
@@ -448,8 +461,13 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
       </details>
       <details>
         <summary><h3>Est-ce gratuit&nbsp;?</h3></summary>
-        <div class="a">Oui. Le code est sous licence MIT et les poids sont sur Hugging Face, en modèle fusionné
-          et en adaptateur LoRA.</div>
+        <div class="a">Oui, pour le télécharger et le faire tourner. Le code est sous licence MIT. Les poids sont sur
+          Hugging Face&nbsp;: Kahn1 4B sous Apache 2.0 (<a href="https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B" rel="noopener">modèle fusionné</a>,
+          <a href="https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B-LoRA" rel="noopener">adaptateur LoRA</a>), et
+          Kahn1 3B (<a href="https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B" rel="noopener">modèle fusionné</a>,
+          <a href="https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B-LoRA" rel="noopener">adaptateur LoRA</a>) sous la
+          <a href="https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/blob/main/LICENSE" rel="noopener">licence de recherche Qwen</a> héritée de Qwen2.5-3B-Instruct&nbsp;: voir ses
+          conditions.</div>
       </details>
     </section>
   </main>
@@ -467,6 +485,6 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     <span class="disc">Kahn1 est un projet indépendant. Il accepte le format de schéma JEV et n'est pas affilié à TypeSafe.</span>
   </footer>
 </div>
-<script src="../assets/site.js"></script>
+<script src="../assets/site.js?v=20260925"></script>
 </body>
 </html>

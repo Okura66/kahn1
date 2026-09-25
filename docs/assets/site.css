@@ -8,6 +8,7 @@
   --rule: #cdc7ba;
   --dot: #b5afa2;
   --track: #ebe6dd;
+  --k3-gap: #b9b3a6;
   --wrap: 1160px;
 }
 * { box-sizing: border-box; }
@@ -286,6 +287,9 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; font-varian
 /* -- narrow screens ------------------------------------------------------ */
 @media (max-width: 1099px) {
   .edge { display: none; }
+  .top { flex-wrap: wrap; row-gap: 10px; }   /* five nav entries: let the links row wrap below */
+  .nav { gap: 16px; letter-spacing: 1.5px; }
+  .top .links { margin-left: auto; }
   .grid.g3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .bars .row { grid-template-columns: 220px minmax(0, 1fr) 70px; }
 }
@@ -443,9 +447,14 @@ ul.plain b { color: var(--ink); }
  * Grouped columns, one baseline, hairline grid; values on the caps, a
  * tooltip per column, the same numbers in a table view below. */
 .vchart { margin: 0; }
-.vc-legend { display: flex; gap: 22px; justify-content: center; font-size: 12px; letter-spacing: 1px; color: var(--muted); margin-bottom: 22px; }
+.vc-legend { display: flex; flex-wrap: wrap; gap: 8px 22px; justify-content: center; font-size: 12px; letter-spacing: 1px; color: var(--muted); margin-bottom: 22px; }
 .vc-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 8px; vertical-align: -1px; background: var(--ink); }
 .vc-legend i.jev { background: var(--faint); }
+/* Kahn1 3B: the Kahn1 ink, hatched, so it reads as a sibling of the 4B and apart from JEV's grey. */
+.vc-legend i.k3, .vc-b.k3 {
+  background: repeating-linear-gradient(135deg, var(--ink) 0 2px, var(--k3-gap) 2px 4px);
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
 .vc-sets { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 44px; }
 .vc-set { min-width: 0; }
 .vc-title { text-align: center; font-size: 12px; letter-spacing: 2px; font-weight: 700; margin-bottom: 4px; }
@@ -456,7 +465,7 @@ ul.plain b { color: var(--ink); }
 .vc-grid em { position: absolute; left: -34px; width: 28px; text-align: right; transform: translateY(-50%);
   font-style: normal; font-size: 10px; color: var(--faint); font-variant-numeric: tabular-nums; }
 .vc-cols { position: absolute; inset: 0; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
-.vc-g { display: flex; justify-content: center; align-items: flex-end; gap: 2px; height: 100%; position: relative; }
+.vc-g { display: flex; justify-content: center; align-items: flex-end; gap: 3px; height: 100%; position: relative; }
 .vc-g.total::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; border-left: 1px solid var(--rule); }
 .vc-b { position: relative; width: 22px; background: var(--ink); border-radius: 4px 4px 0 0; outline: none; }
 .vc-b.jev { background: var(--faint); }
@@ -483,9 +492,22 @@ ul.plain b { color: var(--ink); }
 @media (max-width: 859px) {
   .vc-sets { grid-template-columns: minmax(0, 1fr); gap: 34px; }
   .vc-plot { height: 180px; }
-  .vc-b { width: 16px; }
-  .vc-b .val { font-size: 9px; }
+  .vc-b { width: 15px; }
+  .vc-g { gap: 2px; }
+  .vc-b .val { font-size: 8.5px; letter-spacing: -0.3px; }
+  .vc-legend { gap: 6px 16px; font-size: 11px; }
   .vc-x span { font-size: 10px; letter-spacing: 0.5px; }
+}
+
+/* -- models page: the two-size table stacks on narrow screens ------------- */
+@media (max-width: 859px) {
+  .tbl.models thead { display: none; }
+  .tbl.models, .tbl.models tbody, .tbl.models tr, .tbl.models th, .tbl.models td { display: block; width: auto; }
+  .tbl.models tr { padding: 10px 0; border-bottom: 1px solid var(--rule); }
+  .tbl.models th[scope="row"] { padding: 0 0 6px; border: 0; }
+  .tbl.models td { padding: 3px 0; border: 0; overflow-wrap: anywhere; }
+  .tbl.models td::before { content: attr(data-label) " · "; color: var(--faint); font-size: 11px; letter-spacing: 1px; }
+  .tbl.models td code { white-space: normal; overflow-wrap: anywhere; }
 }
 
 /* -- setup prompt (guide) -------------------------------------------------- */

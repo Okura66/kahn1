@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<!-- Google Tag Manager, loaded only once the visitor accepts analytics cookies
+     (ePrivacy / CNIL: no non-essential cookie before consent). See the consent banner. -->
+<script>
+function loadGTM() {
+  if (window.__gtmLoaded) return;
+  window.__gtmLoaded = true;
+  (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-TTC5WPRN');
+}
+try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); } catch (e) {}
+</script>
+<!-- End Google Tag Manager -->
+<!-- GoatCounter: cookieless visit count, exempt from consent. Runs for every visitor. -->
+<script data-goatcounter="https://kahn1.goatcounter.com/count"
+        async src="https://gc.zgo.at/count.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modèles Kahn1 — Kahn1 4B et Kahn1 3B, modèles fusionnés et adaptateurs LoRA</title>
+<meta name="description" content="Les deux tailles de Kahn1, Kahn1 4B (Qwen3.5-4B) et Kahn1 3B (Qwen2.5-3B) : modèles fusionnés et adaptateurs LoRA sur Hugging Face, tailles, formats de prompt, licences, résultats principaux et chargement.">
+<link rel="canonical" href="https://kahn1.com/fr/modeles/">
+<link rel="alternate" hreflang="en" href="https://kahn1.com/models/">
+<link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/modeles/">
+<link rel="alternate" hreflang="x-default" href="https://kahn1.com/models/">
+<meta name="author" content="Axel Montzamir">
+<meta name="theme-color" content="#faf8f5">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kahn1">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:locale:alternate" content="en_US">
+<meta property="og:url" content="https://kahn1.com/fr/modeles/">
+<meta property="og:title" content="Modèles Kahn1">
+<meta property="og:description" content="Les deux tailles de Kahn1, Kahn1 4B (Qwen3.5-4B) et Kahn1 3B (Qwen2.5-3B) : modèles fusionnés et adaptateurs LoRA sur Hugging Face, tailles, formats de prompt, licences, résultats principaux et chargement.">
+<meta property="og:image" content="https://kahn1.com/assets/og-fr.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2317150f'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='20' font-weight='700' fill='%23faf8f5' text-anchor='middle'%3EK%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=20260925">
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "TechArticle",
+ "headline": "Modèles Kahn1",
+ "inLanguage": "fr",
+ "url": "https://kahn1.com/fr/modeles/",
+ "description": "Les deux tailles de Kahn1, Kahn1 4B (Qwen3.5-4B) et Kahn1 3B (Qwen2.5-3B) : modèles fusionnés et adaptateurs LoRA sur Hugging Face, tailles, formats de prompt, licences, résultats principaux et chargement.",
+ "author": {
+  "@id": "https://kahn1.com/#author"
+ },
+ "about": {
+  "@id": "https://kahn1.com/#software"
+ },
+ "isPartOf": {
+  "@id": "https://kahn1.com/#website"
+ },
+ "dateModified": "2026-09-25"
+}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Aller au contenu</a>
+
+<div class="consent" id="consent" role="dialog" aria-labelledby="consentText" hidden>
+  <p id="consentText">Google Analytics peut-il compter cette visite&nbsp;? Il dépose des cookies. Refuser ne change rien d'autre sur le site, et rien de ce que vous tapez dans les démos ne lui est envoyé.</p>
+  <div class="row2">
+    <button class="primary" id="consentYes">ACCEPTER</button>
+    <button id="consentNo">REFUSER</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <header class="top">
+    <div class="left">
+      <a class="brand" href="../" aria-label="Kahn1, accueil">KAHN1</a>
+      <nav class="nav" aria-label="Site">
+        <a href="../../playground/">PLAYGROUND</a>
+        <a href="../../snake/">SNAKE</a>
+        <a href="../resultats/">RÉSULTATS</a>
+        <a href="../modeles/" aria-current="page">MODÈLES</a>
+        <a href="../demarrer/">DÉMARRER</a>
+      </nav>
+    </div>
+    <nav class="links" aria-label="Langue et liens de l'auteur">
+      <span class="views" id="views" data-one="vue" data-many="vues" hidden></span>
+      <span class="lang">
+        <a href="../../models/" hreflang="en" lang="en">EN</a>
+        <a href="./" hreflang="fr" lang="fr" aria-current="page">FR</a>
+      </span>
+      <a href="https://www.linkedin.com/in/amontzamir/" target="_blank" rel="noopener" title="LinkedIn" aria-label="LinkedIn">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 1 1 0-4.125 2.062 2.062 0 0 1 0 4.125zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+      </a>
+      <a href="https://github.com/Okura66/kahn1" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+      </a>
+      <a href="https://huggingface.co/Okura66" target="_blank" rel="noopener" title="Hugging Face" aria-label="Hugging Face">
+        <span class="hf" aria-hidden="true">🤗</span>
+      </a>
+      <a href="#" class="cookies" data-cookies title="Modifier votre choix de cookies">cookies</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero guide-hero" aria-labelledby="title">
+      <h1 id="title">Modèles</h1>
+      <p class="lead">Kahn1 existe en deux tailles, Kahn1 4B et Kahn1 3B&nbsp;: le même modèle, entraîné pour les
+        trois mêmes primitives et servi par le même moteur. Chacun est sur Hugging Face en modèle fusionné et en
+        adaptateur LoRA.</p>
+    </section>
+
+    <section class="sec doc" id="modeles" aria-labelledby="h-modeles">
+      <h2 id="h-modeles">01 · Les deux tailles</h2>
+      <div class="tbl-wrap"><table class="tbl models"><thead><tr><th scope="col"></th><th scope="col">Kahn1 4B</th><th scope="col">Kahn1 3B</th></tr></thead><tbody><tr><th scope="row">Modèle de base</th><td data-label="Kahn1 4B"><code>Qwen/Qwen3.5-4B</code></td><td data-label="Kahn1 3B"><code>Qwen/Qwen2.5-3B-Instruct</code></td></tr><tr><th scope="row">Modèle fusionné</th><td data-label="Kahn1 4B"><a href="https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B" rel="noopener"><code>Okura66/Kahn1-Qwen3.5-4B</code></a> · 8,4&nbsp;Go</td><td data-label="Kahn1 3B"><a href="https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B" rel="noopener"><code>Okura66/Kahn1-Qwen2.5-3B</code></a> · 6,17&nbsp;Go</td></tr><tr><th scope="row">Adaptateur LoRA</th><td data-label="Kahn1 4B"><a href="https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B-LoRA" rel="noopener"><code>Okura66/Kahn1-Qwen3.5-4B-LoRA</code></a> · 57&nbsp;Mo</td><td data-label="Kahn1 3B"><a href="https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B-LoRA" rel="noopener"><code>Okura66/Kahn1-Qwen2.5-3B-LoRA</code></a> · 239&nbsp;Mo</td></tr><tr><th scope="row">Format de prompt</th><td data-label="Kahn1 4B">template de chat Qwen3 natif, choisi automatiquement</td><td data-label="Kahn1 3B">mise en forme à balises, choisie automatiquement</td></tr><tr><th scope="row">Licence</th><td data-label="Kahn1 4B">Apache 2.0</td><td data-label="Kahn1 3B"><a href="https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/blob/main/LICENSE" rel="noopener">licence de recherche Qwen</a>&nbsp;: voir ses conditions</td></tr><tr><th scope="row">Holdout, 14 663 exemples</th><td data-label="Kahn1 4B">70,3&nbsp;%</td><td data-label="Kahn1 3B">70,3&nbsp;%</td></tr><tr><th scope="row">JevBench, 231 exemples publics</th><td data-label="Kahn1 4B">83,1&nbsp;% (difficile 70,3&nbsp;%)</td><td data-label="Kahn1 3B">67,5&nbsp;% (difficile 42,3&nbsp;%)</td></tr><tr><th scope="row">Latence médiane, k = 3</th><td data-label="Kahn1 4B">87,5&nbsp;ms</td><td data-label="Kahn1 3B">36,4&nbsp;ms</td></tr><tr><th scope="row">Calibration</th><td data-label="Kahn1 4B"><code>calibration.json</code> dans le dépôt</td><td data-label="Kahn1 3B"><code>calibration.json</code> dans le dépôt</td></tr></tbody></table></div>
+      <p class="small faint" style="margin-top:12px">Holdout et JevBench&nbsp;: k&nbsp;=&nbsp;3, calibration par
+        température. Latence&nbsp;: vLLM sur une RTX 5070 Ti. Le détail est sur la <a href="../resultats/">page des
+        résultats</a>. Le code est sous licence MIT.</p>
+      <p>Quantifications GGUF&nbsp;: <a href="https://huggingface.co/mradermacher/Kahn1-Qwen2.5-3B-GGUF" rel="noopener"><code>mradermacher/Kahn1-Qwen2.5-3B-GGUF</code></a>,
+        faites par mradermacher à partir du checkpoint v1 du 3B. Ce sont elles que chargent les démos navigateur
+        (<a href="../../playground/">playground</a>, <a href="../../snake/">Snake</a>).</p>
+    </section>
+
+    <section class="sec doc" id="lequel" aria-labelledby="h-lequel">
+      <h2 id="h-lequel">02 · Lequel</h2>
+      <p>Les deux tailles tournent sur GPU (vLLM) comme sur CPU (transformers), avec la même API et le même format de
+        réponse. Les faits&nbsp;: sur le holdout, les deux obtiennent 70,3&nbsp;%&nbsp;; sur JevBench, le 4B obtient
+        83,1&nbsp;% et le 3B 67,5&nbsp;%, et 70,3&nbsp;% contre 42,3&nbsp;% sur le niveau difficile. Le 3B est plus
+        petit (6,17&nbsp;Go contre 8,4&nbsp;Go) et plus rapide (médiane de 36,4&nbsp;ms contre 87,5&nbsp;ms). Les poids
+        du 4B sont sous Apache 2.0, ceux du 3B sous licence de recherche Qwen.</p>
+    </section>
+
+    <section class="sec doc" id="charger" aria-labelledby="h-charger">
+      <h2 id="h-charger">03 · En charger un</h2>
+      <p>Avec sysone, indiquez l'identifiant du modèle&nbsp;; le moteur choisit seul son format de prompt.</p>
+      <pre class="term"><span class="d">$ </span>SYSONE_MODEL=Okura66/Kahn1-Qwen3.5-4B uv run sysone serve --port 8000                      # GPU, vLLM
+<span class="d">$ </span>SYSONE_BACKEND=cpu SYSONE_MODEL=Okura66/Kahn1-Qwen3.5-4B uv run sysone serve --port 8000   # CPU
+# Kahn1 3B : SYSONE_MODEL=Okura66/Kahn1-Qwen2.5-3B, sur l'un ou l'autre backend</pre>
+      <p>Un adaptateur LoRA se pose sur son modèle de base avec peft&nbsp;:</p>
+      <pre class="term">from peft import PeftModel
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import torch
+
+base = AutoModelForCausalLM.from_pretrained("Qwen/Qwen3.5-4B", dtype=torch.bfloat16)
+tokenizer = AutoTokenizer.from_pretrained("Okura66/Kahn1-Qwen3.5-4B-LoRA")
+model = PeftModel.from_pretrained(base, "Okura66/Kahn1-Qwen3.5-4B-LoRA")
+# Kahn1 3B: base "Qwen/Qwen2.5-3B-Instruct", adapter "Okura66/Kahn1-Qwen2.5-3B-LoRA"</pre>
+      <p>Pour servir un adaptateur avec vLLM, fusionnez-le d'abord&nbsp;:</p>
+      <pre class="term"><span class="d">$ </span>python scripts/merge_qwen_lora.py --base Qwen/Qwen3.5-4B --adapter Okura66/Kahn1-Qwen3.5-4B-LoRA --output checkpoints/kahn1_4b</pre>
+      <p>Le <a href="../demarrer/">guide</a> couvre l'API, le format de réponse et la calibration.</p>
+      <p class="small" style="margin-top:28px">Fiches Hugging Face&nbsp;:
+        <a href="https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B" rel="noopener">Kahn1 4B</a> ·
+        <a href="https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B-LoRA" rel="noopener">Kahn1 4B LoRA</a> ·
+        <a href="https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B" rel="noopener">Kahn1 3B</a> ·
+        <a href="https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B-LoRA" rel="noopener">Kahn1 3B LoRA</a> ·
+        <a href="../resultats/">tous les résultats</a></p>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>KAHN1 · Licence MIT · par <a href="https://www.linkedin.com/in/amontzamir/" rel="noopener">Axel Montzamir</a></span>
+    <nav aria-label="Footer">
+      <a href="../../playground/">Playground</a>
+      <a href="../../snake/">Snake</a>
+      <a href="https://github.com/Okura66/kahn1" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/Okura66" rel="noopener">Hugging Face</a>
+      <a href="../../models/">English</a>
+      <a href="#" data-cookies>Cookies</a>
+    </nav>
+    <span class="disc">Kahn1 est un projet indépendant. Il accepte le format de schéma JEV et n'est pas affilié à TypeSafe.</span>
+  </footer>
+</div>
+<script src="../../assets/site.js?v=20260925"></script>
+</body>
+</html>

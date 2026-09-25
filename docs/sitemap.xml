@@ -6,42 +6,56 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://kahn1.com/"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://kahn1.com/"/>
-    <lastmod>2026-09-24</lastmod>
+    <lastmod>2026-09-25</lastmod>
   </url>
   <url>
     <loc>https://kahn1.com/fr/</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://kahn1.com/"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://kahn1.com/"/>
-    <lastmod>2026-09-24</lastmod>
+    <lastmod>2026-09-25</lastmod>
   </url>
   <url>
     <loc>https://kahn1.com/benchmarks/</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://kahn1.com/benchmarks/"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/resultats/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://kahn1.com/benchmarks/"/>
-    <lastmod>2026-09-24</lastmod>
+    <lastmod>2026-09-25</lastmod>
   </url>
   <url>
     <loc>https://kahn1.com/fr/resultats/</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://kahn1.com/benchmarks/"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/resultats/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://kahn1.com/benchmarks/"/>
-    <lastmod>2026-09-24</lastmod>
+    <lastmod>2026-09-25</lastmod>
+  </url>
+  <url>
+    <loc>https://kahn1.com/models/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kahn1.com/models/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/modeles/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kahn1.com/models/"/>
+    <lastmod>2026-09-25</lastmod>
+  </url>
+  <url>
+    <loc>https://kahn1.com/fr/modeles/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kahn1.com/models/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/modeles/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kahn1.com/models/"/>
+    <lastmod>2026-09-25</lastmod>
   </url>
   <url>
     <loc>https://kahn1.com/get-started/</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://kahn1.com/get-started/"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/demarrer/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://kahn1.com/get-started/"/>
-    <lastmod>2026-09-24</lastmod>
+    <lastmod>2026-09-25</lastmod>
   </url>
   <url>
     <loc>https://kahn1.com/fr/demarrer/</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://kahn1.com/get-started/"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/demarrer/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://kahn1.com/get-started/"/>
-    <lastmod>2026-09-24</lastmod>
+    <lastmod>2026-09-25</lastmod>
   </url>
   <url>
     <loc>https://kahn1.com/playground/</loc>

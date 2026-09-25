@@ -7,8 +7,10 @@ in `CNAME`) on https://kahn1.com/. No build step: every page is plain HTML.
 |---|---|---|
 | `/` | `index.html` | home page, English: the project, use cases, caveats, benchmark results |
 | `/fr/` | `fr/index.html` | the same home page in French |
-| `/benchmarks/` | `benchmarks/index.html` | every benchmark: Kahn1 vs JEV, held-out details, Snake, latency |
+| `/benchmarks/` | `benchmarks/index.html` | every benchmark: Kahn1 4B and 3B vs JEV (and JevK5 on JevBench), held-out details, hard decisions, Snake, latency |
 | `/fr/resultats/` | `fr/resultats/index.html` | the same in French |
+| `/models/` | `models/index.html` | the two sizes, Kahn1 4B and Kahn1 3B: merged models, LoRA adapters, licences, loading |
+| `/fr/modeles/` | `fr/modeles/index.html` | the same in French |
 | `/get-started/` | `get-started/index.html` | the guide: AI-agent setup prompt, install, serve, API, calibration |
 | `/fr/demarrer/` | `fr/demarrer/index.html` | the same guide in French |
 | `/playground/` | `playground/index.html` + `samples.json` | the playground |
@@ -27,11 +29,17 @@ and links to (Claude Code `claude-cli://open?q=`, Claude Desktop `claude://code/
 Claude Code on the web `claude.ai/code?prompt=`); the links embed the prompt, so edit the file
 and rebuild the page together. The Claude Code link caps `q` at 5,000 characters.
 
-The animation on the home pages (the logit reader) replays recorded runs of the v3
+The animation on the home pages (the logit reader) replays recorded runs of the 3B v3
 checkpoint (CPU, temperature calibration, k = 1), not live calls; its data sits in the
-page's `reader-data` block. The Kahn1 vs JEV numbers come from
-`reports/jev_vs_kahn1.json` (`scripts/jev_holdout.py`) and `reports/jevbench_vs_jev.json`
-(`scripts/jevbench_vs_jev.py`).
+page's `reader-data` block. The benchmark charts show Kahn1 4B
+(`Okura66/Kahn1-Qwen3.5-4B`), Kahn1 3B and JEV side by side; the tables add JevK5. The numbers come
+from `reports/kahn1_4b_report.json` (`scripts/kahn1_4b_report.py`): held-out like for like
+(Choice over the same 8 options on every side, see `reports/CHOICE_FAIRNESS.md`), JevBench,
+the hard decision dev split. `reports/jev_vs_kahn1.json` (`scripts/jev_holdout.py`) is the
+first JEV run, which gave JEV every intent on Choice: do not quote its totals as a
+comparison. The browser demos still run the 3B (a v1 GGUF). Licences, as the pages state
+them: code MIT, Kahn1 4B weights Apache 2.0, Kahn1 3B weights under the Qwen Research License
+(inherited from Qwen2.5-3B-Instruct; the pages say "research licence, see its terms" and link it).
 
 ## Playground and Snake backends
 

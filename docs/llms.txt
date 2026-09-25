@@ -1,12 +1,12 @@
 # Kahn1
 
-> Kahn1 is an open-source "System 1" decision engine built on a fine-tuned Qwen2.5-3B. It takes a text (the state) and typed questions (Choice, Score, Noul) and returns, for each question, a typed value and a calibrated probability distribution read from the logits of the option tokens. It generates no text, so schema errors cannot happen. MIT license, by Axel Montzamir.
+> Kahn1 is an open-source "System 1" decision engine in two sizes: Kahn1 4B (Qwen3.5-4B + LoRA) and Kahn1 3B (Qwen2.5-3B + LoRA), both running on a GPU (vLLM) or a CPU (transformers). The 3B is smaller and faster; the 4B is much stronger on hard judgment calls. It takes a text (the state) and typed questions (Choice, Score, Noul) and returns, for each question, a typed value and a calibrated probability distribution read from the logits of the option tokens. It generates no text, so schema errors cannot happen. Code MIT; Kahn1 4B weights Apache 2.0; Kahn1 3B weights under the Qwen Research License of Qwen2.5-3B-Instruct, a research licence (see its terms: https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/blob/main/LICENSE). By Axel Montzamir.
 
-Key results (v3 checkpoint, 14,663 held-out items, k = 3 permutations, temperature calibration, one RTX 5070 Ti with vLLM): 70.3% overall accuracy; Choice 90.9% (banking77 91.1%, MASSIVE 90.8%); Score 51.5% exact on 5-level scales (SST-5 95.2% within one level, Spearman 0.834); Noul 67.0% (RTE 82.7%, SciTail 65.0%); median latency 36.4 ms, p95 82.6 ms. External JevBench: 67.5% (easy 100%, original 84.7%, hard 42.3%).
+Key results (14,663 held-out items, k = 3 permutations, temperature calibration, one RTX 5070 Ti with vLLM; Choice asked over 8 options, the right one and 7 seeded distractors). Kahn1 4B: 70.3% overall, ECE 0.064; Choice 91.9% (banking77 91.5%, MASSIVE 92.4%); Score 48.6% exact on 5-level scales; Noul 72.2% (RTE 86.6%, SciTail 70.4%); median latency 87.5 ms, p95 204.8 ms, 9.3 queries/s. Kahn1 3B: 70.3% overall, ECE 0.082; Choice 90.9%, Score 51.4% (SST-5 95.2% within one level), Noul 67.0%; median latency 36.4 ms. External JevBench, 231 public items: Kahn1 4B 83.1% (easy 100%, original 91.7%, hard 70.3%), Kahn1 3B 67.5% (hard 42.3%). Hard decision dev split (317 questions on long documents, English and French): base Qwen3.5-4B 48.9%, Kahn1 4B 62.1%.
 
-Kahn1 vs JEV 1.13.0 (TypeSafe API). On the 14,663 Kahn1 held-out items, same prompts, JEV run through its API: Kahn1 70.3%, JEV 67.3%; Choice 90.9% vs 80.1%, Score 51.4% vs 52.0%, Noul 67.0% vs 74.4% (JEV asked whether the text supports the statement). On the 231 public JevBench items, Jev's outcomes as published by JevBench: Jev 86.6%, Kahn1 67.5%; hard tier 73.0% vs 42.3%. JEV median round trip 248 ms over the network; Kahn1 36.4 ms on a local GPU.
+Kahn1 vs JEV 1.13.0 (TypeSafe API), like for like. On the 14,663 Kahn1 held-out items, same prompts and the same 8 options on Choice, JEV run through its API: JEV 73.2%, Kahn1 4B 70.3%, Kahn1 3B 70.3%; JEV is ahead on every primitive (Choice 94.5% vs 91.9% for the 4B, Score 52.0% vs 48.6%, Noul 74.4% vs 72.2%, JEV asked whether the text supports the statement); ECE JEV 0.113, Kahn1 4B 0.064. Choice over every intent (77 / 60 options), 1,184 items: JEV 79.1%, Kahn1 4B 70.4%, Kahn1 3B 68.4%. An earlier comparison gave JEV every intent and Kahn1 only 8 options; it was unequal and has been corrected. On the 231 public JevBench items: Jev 86.6% (its published outcomes), JevK5 v0.2 86.1% (another open Qwen3.5-4B model, its own public run), Kahn1 4B 83.1%; hard tier 73.0%, 73.9% and 70.3%. Kahn1 4B vs JevK5 item by item: 11 vs 18 items only one gets right, exact McNemar p = 0.26, not significant. JEV median round trip 248 ms over the network; Kahn1 4B 87.5 ms and Kahn1 3B 36.4 ms on a local GPU.
 
-Caveats: a 3B model, not a frontier model; Noul is the weakest primitive; calibration was fitted on the training distribution and should be redone on your domain; confidence is the distance from a uniform guess, not the probability of being right.
+Caveats: 4B and 3B models, not frontier models; JEV is more accurate on every held-out primitive; Score is the weakest primitive; computing dates, durations or amounts in a single forward pass is weak; on JevBench the 4B lost a little against the 3B on short intent classification; calibration was fitted on the training distribution and should be redone on your domain; confidence is the distance from a uniform guess, not the probability of being right. The browser demos run a 4-bit GGUF of the 3B v1 checkpoint.
 
 ## Pages
 
@@ -14,6 +14,8 @@ Caveats: a 3B model, not a frontier model; Noul is the weakest primitive; calibr
 - [Accueil (français)](https://kahn1.com/fr/): la même page en français
 - [Benchmarks](https://kahn1.com/benchmarks/): every result, Kahn1 vs JEV on the same items, latency, how to reproduce
 - [Résultats (français)](https://kahn1.com/fr/resultats/): les mêmes résultats en français
+- [Models](https://kahn1.com/models/): Kahn1 4B and Kahn1 3B, merged models and LoRA adapters, sizes, licences, how to load them
+- [Modèles (français)](https://kahn1.com/fr/modeles/): la même page en français
 - [Setup prompt for AI agents](https://kahn1.com/get-started/setup-prompt.md): paste into Claude Code or any coding agent to install and test Kahn1
 - [Get started](https://kahn1.com/get-started/): install, serve, API, response format, calibration
 - [Démarrer (français)](https://kahn1.com/fr/demarrer/): le même guide en français
@@ -23,10 +25,14 @@ Caveats: a 3B model, not a frontier model; Noul is the weakest primitive; calibr
 ## Code and weights
 
 - [GitHub repository](https://github.com/Okura66/kahn1)
-- [Merged model on Hugging Face](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B)
-- [LoRA adapter](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B-LoRA)
-- [GGUF quantizations by mradermacher](https://huggingface.co/mradermacher/Kahn1-Qwen2.5-3B-GGUF)
-- [Held-out evaluation report (v3)](https://github.com/Okura66/kahn1/blob/main/reports/QWEN_FULL_EVAL_v3_temponly.md)
-- [Kahn1 vs JEV on the held-out set](https://github.com/Okura66/kahn1/blob/main/reports/JEV_VS_KAHN1.md)
+- [Kahn1 4B merged model on Hugging Face](https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B)
+- [Kahn1 4B LoRA adapter](https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B-LoRA)
+- [Kahn1 3B merged model](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B)
+- [Kahn1 3B LoRA adapter](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B-LoRA)
+- [GGUF quantizations of the 3B v1 by mradermacher](https://huggingface.co/mradermacher/Kahn1-Qwen2.5-3B-GGUF)
+- [Kahn1 4B report: held-out, JevBench, hard decisions, vs 3B, JEV and JevK5](https://github.com/Okura66/kahn1/blob/main/reports/KAHN1_4B_REPORT.md)
+- [Choice over the same options: why the first JEV comparison was unequal](https://github.com/Okura66/kahn1/blob/main/reports/CHOICE_FAIRNESS.md)
+- [Kahn1 vs JevK5](https://github.com/Okura66/kahn1/blob/main/reports/JEVK5_VS_KAHN1.md)
 - [Kahn1 vs Jev on JevBench](https://github.com/Okura66/kahn1/blob/main/reports/JEVBENCH_VS_JEV.md)
-- [JevBench report (v3)](https://github.com/Okura66/kahn1/blob/main/reports/JEVBENCH_v3.md)
+- [Kahn1 3B held-out evaluation report (v3)](https://github.com/Okura66/kahn1/blob/main/reports/QWEN_FULL_EVAL_v3_temponly.md)
+- [JevBench report, 3B (v3)](https://github.com/Okura66/kahn1/blob/main/reports/JEVBENCH_v3.md)

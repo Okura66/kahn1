@@ -22,7 +22,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kahn1 benchmarks — held-out results and head-to-head with JEV</title>
-<meta name="description" content="Kahn1 benchmark results: accuracy and calibration on 14,663 held-out items, head-to-head with JEV 1.13.0 on the same items and on JevBench, latency, Snake.">
+<meta name="description" content="Kahn1 benchmark results: accuracy and calibration of Kahn1 4B and Kahn1 3B on 14,663 held-out items, head-to-head with JEV 1.13.0 on the same items and on JevBench, hard decisions on long documents, latency, Snake.">
 <link rel="canonical" href="https://kahn1.com/benchmarks/">
 <link rel="alternate" hreflang="en" href="https://kahn1.com/benchmarks/">
 <link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/resultats/">
@@ -35,14 +35,14 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
 <meta property="og:locale:alternate" content="fr_FR">
 <meta property="og:url" content="https://kahn1.com/benchmarks/">
 <meta property="og:title" content="Kahn1 benchmarks">
-<meta property="og:description" content="Kahn1 benchmark results: accuracy and calibration on 14,663 held-out items, head-to-head with JEV 1.13.0 on the same items and on JevBench, latency, Snake.">
+<meta property="og:description" content="Kahn1 benchmark results: accuracy and calibration of Kahn1 4B and Kahn1 3B on 14,663 held-out items, head-to-head with JEV 1.13.0 on the same items and on JevBench, hard decisions on long documents, latency, Snake.">
 <meta property="og:image" content="https://kahn1.com/assets/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2317150f'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='20' font-weight='700' fill='%23faf8f5' text-anchor='middle'%3EK%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/site.css?v=20260925">
 <script type="application/ld+json">
 {
  "@context": "https://schema.org",
@@ -50,7 +50,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
  "headline": "Kahn1 benchmarks",
  "inLanguage": "en",
  "url": "https://kahn1.com/benchmarks/",
- "description": "Kahn1 benchmark results: accuracy and calibration on 14,663 held-out items, head-to-head with JEV 1.13.0 on the same items and on JevBench, latency, Snake.",
+ "description": "Kahn1 benchmark results: accuracy and calibration of Kahn1 4B and Kahn1 3B on 14,663 held-out items, head-to-head with JEV 1.13.0 on the same items and on JevBench, hard decisions on long documents, latency, Snake.",
  "author": {
   "@id": "https://kahn1.com/#author"
  },
@@ -60,7 +60,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
  "isPartOf": {
   "@id": "https://kahn1.com/#website"
  },
- "dateModified": "2026-09-24"
+ "dateModified": "2026-09-25"
 }
 </script>
 </head>
@@ -83,6 +83,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
         <a href="../playground/">PLAYGROUND</a>
         <a href="../snake/">SNAKE</a>
         <a href="../benchmarks/" aria-current="page">BENCHMARKS</a>
+        <a href="../models/">MODELS</a>
         <a href="../get-started/">GET STARTED</a>
       </nav>
     </div>
@@ -108,12 +109,13 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
   <main id="main">
     <section class="hero guide-hero" aria-labelledby="title">
       <h1 id="title">Benchmarks</h1>
-      <p class="lead">Every number behind the home page: Kahn1 against JEV on the same items, Kahn1's own held-out results, latency, and how to reproduce them.</p>
+      <p class="lead">Every number behind the home page: Kahn1 4B and Kahn1 3B against JEV on the same items, Kahn1's own held-out results, latency, and how to reproduce them.</p>
       <nav class="toc" aria-label="On this page">
         <ol>
           <li><a href="#overview">At a glance</a></li>
           <li><a href="#holdout">Kahn1 vs JEV on the Kahn1 held-out set</a></li>
           <li><a href="#jevbench">Kahn1 vs Jev on JevBench</a></li>
+          <li><a href="#hard">Hard decisions on long documents</a></li>
           <li><a href="#kahn1">Kahn1 in detail</a></li>
           <li><a href="#latency">Latency and price</a></li>
           <li><a href="#reproduce">Reproduce</a></li>
@@ -125,25 +127,29 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
       <h2 id="h-overview">01 · At a glance</h2>
       <p>Two benchmarks, both paired item by item. On the Kahn1 held-out set JEV was run by us through its API, with
         the same states, prompts and options as Kahn1. On JevBench, Jev's results are the ones JevBench itself
-        publishes. Each benchmark favours one side: read both.</p>
-      <figure class="vchart" role="group" aria-label="Accuracy of Kahn1 and JEV, grouped by primitive on the Kahn1 held-out set and by tier on JevBench.">
-        <div class="vc-legend"><span><i></i>Kahn1 v3 · open 3B model</span><span><i class="jev"></i>JEV 1.13.0 · TypeSafe API</span></div>
+        publishes. The chart shows Kahn1 4B and Kahn1 3B; the tables below add the per-source figures, and JevK5 on JevBench.</p>
+      <p class="callout"><b>Correction.</b> An earlier version of this page asked Choice over 8 options for Kahn1 but
+        over every intent for JEV, which made Kahn1 look ahead on Choice and overall. That comparison was unequal and
+        has been corrected: over the same options, JEV is ahead on every primitive.
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/CHOICE_FAIRNESS.md" rel="noopener">Both conditions, side by side</a>.</p>
+      <figure class="vchart" role="group" aria-label="Accuracy of Kahn1 4B, Kahn1 3B and JEV, grouped by primitive on the Kahn1 held-out set and by tier on JevBench.">
+        <div class="vc-legend"><span><i></i>Kahn1 4B</span><span><i class="k3"></i>Kahn1 3B</span><span><i class="jev"></i>JEV 1.13.0 · TypeSafe API</span></div>
         <div class="vc-sets">
           <div class="vc-set">
-            <div class="vc-title">KAHN1 HELD-OUT</div><div class="vc-sub">14,663 items · JEV run by us through its API</div>
-            <div class="vc-plot"><div class="vc-grid"><span style="bottom:0%"><em>0</em></span><span style="bottom:25%"><em>25</em></span><span style="bottom:50%"><em>50</em></span><span style="bottom:75%"><em>75</em></span><span style="bottom:100%"><em>100</em></span></div><div class="vc-cols"><div class="vc-g"><span class="vc-b hi" style="height:90.94%" tabindex="0" data-tip="Kahn1 · Choice&#10;90.9% of 6,050 items" aria-label="Kahn1, Choice: 90.9%"><span class="val">91</span></span><span class="vc-b jev" style="height:80.15%" tabindex="0" data-tip="JEV · Choice&#10;80.1% of 6,050 items" aria-label="JEV, Choice: 80.1%"><span class="val">80</span></span></div><div class="vc-g"><span class="vc-b" style="height:51.45%" tabindex="0" data-tip="Kahn1 · Score&#10;51.4% of 6,210 items" aria-label="Kahn1, Score: 51.4%"><span class="val">51</span></span><span class="vc-b jev hi" style="height:52.01%" tabindex="0" data-tip="JEV · Score&#10;52.0% of 6,210 items" aria-label="JEV, Score: 52.0%"><span class="val">52</span></span></div><div class="vc-g"><span class="vc-b" style="height:67.04%" tabindex="0" data-tip="Kahn1 · Noul&#10;67.0% of 2,403 items" aria-label="Kahn1, Noul: 67.0%"><span class="val">67</span></span><span class="vc-b jev hi" style="height:74.45%" tabindex="0" data-tip="JEV · Noul&#10;74.4% of 2,403 items" aria-label="JEV, Noul: 74.4%"><span class="val">74</span></span></div><div class="vc-g total"><span class="vc-b hi" style="height:70.30%" tabindex="0" data-tip="Kahn1 · All&#10;70.3% of 14,663 items" aria-label="Kahn1, All: 70.3%"><span class="val">70</span></span><span class="vc-b jev" style="height:67.30%" tabindex="0" data-tip="JEV · All&#10;67.3% of 14,663 items" aria-label="JEV, All: 67.3%"><span class="val">67</span></span></div></div></div>
+            <div class="vc-title">KAHN1 HELD-OUT</div><div class="vc-sub">14,663 items · same options · JEV run by us through its API</div>
+            <div class="vc-plot"><div class="vc-grid"><span style="bottom:0%"><em>0</em></span><span style="bottom:25%"><em>25</em></span><span style="bottom:50%"><em>50</em></span><span style="bottom:75%"><em>75</em></span><span style="bottom:100%"><em>100</em></span></div><div class="vc-cols"><div class="vc-g"><span class="vc-b" style="height:91.93%" tabindex="0" data-tip="Kahn1 4B · Choice&#10;91.9% of 6,050 items" aria-label="Kahn1 4B, Choice: 91.9%"><span class="val">92</span></span><span class="vc-b k3" style="height:90.94%" tabindex="0" data-tip="Kahn1 3B · Choice&#10;90.9% of 6,050 items" aria-label="Kahn1 3B, Choice: 90.9%"><span class="val">91</span></span><span class="vc-b jev hi" style="height:94.46%" tabindex="0" data-tip="JEV · Choice&#10;94.5% of 6,050 items" aria-label="JEV, Choice: 94.5%"><span class="val">94</span></span></div><div class="vc-g"><span class="vc-b" style="height:48.55%" tabindex="0" data-tip="Kahn1 4B · Score&#10;48.6% of 6,210 items" aria-label="Kahn1 4B, Score: 48.6%"><span class="val">49</span></span><span class="vc-b k3" style="height:51.45%" tabindex="0" data-tip="Kahn1 3B · Score&#10;51.4% of 6,210 items" aria-label="Kahn1 3B, Score: 51.4%"><span class="val">51</span></span><span class="vc-b jev hi" style="height:52.01%" tabindex="0" data-tip="JEV · Score&#10;52.0% of 6,210 items" aria-label="JEV, Score: 52.0%"><span class="val">52</span></span></div><div class="vc-g"><span class="vc-b" style="height:72.24%" tabindex="0" data-tip="Kahn1 4B · Noul&#10;72.2% of 2,403 items" aria-label="Kahn1 4B, Noul: 72.2%"><span class="val">72</span></span><span class="vc-b k3" style="height:67.04%" tabindex="0" data-tip="Kahn1 3B · Noul&#10;67.0% of 2,403 items" aria-label="Kahn1 3B, Noul: 67.0%"><span class="val">67</span></span><span class="vc-b jev hi" style="height:74.45%" tabindex="0" data-tip="JEV · Noul&#10;74.4% of 2,403 items" aria-label="JEV, Noul: 74.4%"><span class="val">74</span></span></div><div class="vc-g total"><span class="vc-b" style="height:70.33%" tabindex="0" data-tip="Kahn1 4B · All&#10;70.3% of 14,663 items" aria-label="Kahn1 4B, All: 70.3%"><span class="val">70</span></span><span class="vc-b k3" style="height:70.30%" tabindex="0" data-tip="Kahn1 3B · All&#10;70.3% of 14,663 items" aria-label="Kahn1 3B, All: 70.3%"><span class="val">70</span></span><span class="vc-b jev hi" style="height:73.20%" tabindex="0" data-tip="JEV · All&#10;73.2% of 14,663 items" aria-label="JEV, All: 73.2%"><span class="val">73</span></span></div></div></div>
             <div class="vc-x"><span class="">Choice</span><span class="">Score</span><span class="">Noul</span><span class="total">All</span></div>
           </div>
           <div class="vc-set">
             <div class="vc-title">JEVBENCH PUBLIC</div><div class="vc-sub">231 items · Jev scored by JevBench</div>
-            <div class="vc-plot"><div class="vc-grid"><span style="bottom:0%"><em>0</em></span><span style="bottom:25%"><em>25</em></span><span style="bottom:50%"><em>50</em></span><span style="bottom:75%"><em>75</em></span><span style="bottom:100%"><em>100</em></span></div><div class="vc-cols"><div class="vc-g"><span class="vc-b hi" style="height:100.00%" tabindex="0" data-tip="Kahn1 · Easy&#10;100.0% of 48 items" aria-label="Kahn1, Easy: 100.0%"><span class="val">100</span></span><span class="vc-b jev hi" style="height:100.00%" tabindex="0" data-tip="JEV · Easy&#10;100.0% of 48 items" aria-label="JEV, Easy: 100.0%"><span class="val">100</span></span></div><div class="vc-g"><span class="vc-b" style="height:84.72%" tabindex="0" data-tip="Kahn1 · Standard&#10;84.7% of 72 items" aria-label="Kahn1, Standard: 84.7%"><span class="val">85</span></span><span class="vc-b jev hi" style="height:98.61%" tabindex="0" data-tip="JEV · Standard&#10;98.6% of 72 items" aria-label="JEV, Standard: 98.6%"><span class="val">99</span></span></div><div class="vc-g"><span class="vc-b" style="height:42.34%" tabindex="0" data-tip="Kahn1 · Hard&#10;42.3% of 111 items" aria-label="Kahn1, Hard: 42.3%"><span class="val">42</span></span><span class="vc-b jev hi" style="height:72.97%" tabindex="0" data-tip="JEV · Hard&#10;73.0% of 111 items" aria-label="JEV, Hard: 73.0%"><span class="val">73</span></span></div><div class="vc-g total"><span class="vc-b" style="height:67.53%" tabindex="0" data-tip="Kahn1 · All&#10;67.5% of 231 items" aria-label="Kahn1, All: 67.5%"><span class="val">68</span></span><span class="vc-b jev hi" style="height:86.58%" tabindex="0" data-tip="JEV · All&#10;86.6% of 231 items" aria-label="JEV, All: 86.6%"><span class="val">87</span></span></div></div></div>
+            <div class="vc-plot"><div class="vc-grid"><span style="bottom:0%"><em>0</em></span><span style="bottom:25%"><em>25</em></span><span style="bottom:50%"><em>50</em></span><span style="bottom:75%"><em>75</em></span><span style="bottom:100%"><em>100</em></span></div><div class="vc-cols"><div class="vc-g"><span class="vc-b hi" style="height:100.00%" tabindex="0" data-tip="Kahn1 4B · Easy&#10;100.0% of 48 items" aria-label="Kahn1 4B, Easy: 100.0%"><span class="val">100</span></span><span class="vc-b k3 hi" style="height:100.00%" tabindex="0" data-tip="Kahn1 3B · Easy&#10;100.0% of 48 items" aria-label="Kahn1 3B, Easy: 100.0%"><span class="val">100</span></span><span class="vc-b jev hi" style="height:100.00%" tabindex="0" data-tip="JEV · Easy&#10;100.0% of 48 items" aria-label="JEV, Easy: 100.0%"><span class="val">100</span></span></div><div class="vc-g"><span class="vc-b" style="height:91.67%" tabindex="0" data-tip="Kahn1 4B · Standard&#10;91.7% of 72 items" aria-label="Kahn1 4B, Standard: 91.7%"><span class="val">92</span></span><span class="vc-b k3" style="height:84.72%" tabindex="0" data-tip="Kahn1 3B · Standard&#10;84.7% of 72 items" aria-label="Kahn1 3B, Standard: 84.7%"><span class="val">85</span></span><span class="vc-b jev hi" style="height:98.61%" tabindex="0" data-tip="JEV · Standard&#10;98.6% of 72 items" aria-label="JEV, Standard: 98.6%"><span class="val">99</span></span></div><div class="vc-g"><span class="vc-b" style="height:70.27%" tabindex="0" data-tip="Kahn1 4B · Hard&#10;70.3% of 111 items" aria-label="Kahn1 4B, Hard: 70.3%"><span class="val">70</span></span><span class="vc-b k3" style="height:42.34%" tabindex="0" data-tip="Kahn1 3B · Hard&#10;42.3% of 111 items" aria-label="Kahn1 3B, Hard: 42.3%"><span class="val">42</span></span><span class="vc-b jev hi" style="height:72.97%" tabindex="0" data-tip="JEV · Hard&#10;73.0% of 111 items" aria-label="JEV, Hard: 73.0%"><span class="val">73</span></span></div><div class="vc-g total"><span class="vc-b" style="height:83.12%" tabindex="0" data-tip="Kahn1 4B · All&#10;83.1% of 231 items" aria-label="Kahn1 4B, All: 83.1%"><span class="val">83</span></span><span class="vc-b k3" style="height:67.53%" tabindex="0" data-tip="Kahn1 3B · All&#10;67.5% of 231 items" aria-label="Kahn1 3B, All: 67.5%"><span class="val">68</span></span><span class="vc-b jev hi" style="height:86.58%" tabindex="0" data-tip="JEV · All&#10;86.6% of 231 items" aria-label="JEV, All: 86.6%"><span class="val">87</span></span></div></div></div>
             <div class="vc-x"><span class="">Easy</span><span class="">Standard</span><span class="">Hard</span><span class="total">All</span></div>
           </div>
         </div>
         <div class="vc-foot">
           <details><summary>TABLE VIEW</summary><div class="tbl-wrap"><table class="tbl">
-            <thead><tr><th scope="col">Benchmark</th><th scope="col">Group</th><th scope="col" class="r">Items</th><th scope="col" class="r">Kahn1</th><th scope="col" class="r">JEV</th></tr></thead>
-            <tbody><tr><td>KAHN1 HELD-OUT</td><td>Choice</td><td class="r">6,050</td><td class="r">90.9%</td><td class="r">80.1%</td></tr><tr><td>KAHN1 HELD-OUT</td><td>Score</td><td class="r">6,210</td><td class="r">51.4%</td><td class="r">52.0%</td></tr><tr><td>KAHN1 HELD-OUT</td><td>Noul</td><td class="r">2,403</td><td class="r">67.0%</td><td class="r">74.4%</td></tr><tr><td>KAHN1 HELD-OUT</td><td>All</td><td class="r">14,663</td><td class="r">70.3%</td><td class="r">67.3%</td></tr><tr><td>JEVBENCH PUBLIC</td><td>Easy</td><td class="r">48</td><td class="r">100.0%</td><td class="r">100.0%</td></tr><tr><td>JEVBENCH PUBLIC</td><td>Standard</td><td class="r">72</td><td class="r">84.7%</td><td class="r">98.6%</td></tr><tr><td>JEVBENCH PUBLIC</td><td>Hard</td><td class="r">111</td><td class="r">42.3%</td><td class="r">73.0%</td></tr><tr><td>JEVBENCH PUBLIC</td><td>All</td><td class="r">231</td><td class="r">67.5%</td><td class="r">86.6%</td></tr></tbody></table></div></details>
+            <thead><tr><th scope="col">Benchmark</th><th scope="col">Group</th><th scope="col" class="r">Items</th><th scope="col" class="r">Kahn1 4B</th><th scope="col" class="r">Kahn1 3B</th><th scope="col" class="r">JEV</th></tr></thead>
+            <tbody><tr><td>KAHN1 HELD-OUT</td><td>Choice</td><td class="r">6,050</td><td class="r">91.9%</td><td class="r">90.9%</td><td class="r">94.5%</td></tr><tr><td>KAHN1 HELD-OUT</td><td>Score</td><td class="r">6,210</td><td class="r">48.6%</td><td class="r">51.4%</td><td class="r">52.0%</td></tr><tr><td>KAHN1 HELD-OUT</td><td>Noul</td><td class="r">2,403</td><td class="r">72.2%</td><td class="r">67.0%</td><td class="r">74.4%</td></tr><tr><td>KAHN1 HELD-OUT</td><td>All</td><td class="r">14,663</td><td class="r">70.3%</td><td class="r">70.3%</td><td class="r">73.2%</td></tr><tr><td>JEVBENCH PUBLIC</td><td>Easy</td><td class="r">48</td><td class="r">100.0%</td><td class="r">100.0%</td><td class="r">100.0%</td></tr><tr><td>JEVBENCH PUBLIC</td><td>Standard</td><td class="r">72</td><td class="r">91.7%</td><td class="r">84.7%</td><td class="r">98.6%</td></tr><tr><td>JEVBENCH PUBLIC</td><td>Hard</td><td class="r">111</td><td class="r">70.3%</td><td class="r">42.3%</td><td class="r">73.0%</td></tr><tr><td>JEVBENCH PUBLIC</td><td>All</td><td class="r">231</td><td class="r">83.1%</td><td class="r">67.5%</td><td class="r">86.6%</td></tr></tbody></table></div></details>
           
         </div>
       </figure>
@@ -153,50 +159,75 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
       <h2 id="h-holdout">02 · Kahn1 vs JEV on the Kahn1 held-out set</h2>
       <p>14,663 items from six public datasets, none seen in training, in the task families Kahn1 was trained on:
         intents (banking77, MASSIVE), 5-level scales (SST-5, app reviews) and entailment (RTE, SciTail). One
-        question per request on both sides. Kahn1: v3 checkpoint, k&nbsp;=&nbsp;3, temperature calibration.
-        JEV: jev-1.13.0, answered all 14,663 without error. ECE: 15 bins on p<sub>max</sub>, 0 is perfect.</p>
-      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col">Dataset</th><th scope="col" class="r">Items</th><th scope="col" class="r">Kahn1</th><th scope="col" class="r">JEV</th><th scope="col" class="r">Kahn1 ECE</th><th scope="col" class="r">JEV ECE</th><th scope="col" class="r">Only Kahn1 right</th><th scope="col" class="r">Only JEV right</th></tr></thead><tbody><tr><td>banking77</td><td class="r">3,076</td><td class="r"><b>91.09%</b></td><td class="r">80.17%</td><td class="r">0.026</td><td class="r">0.088</td><td class="r">414</td><td class="r">78</td></tr><tr><td>MASSIVE</td><td class="r">2,974</td><td class="r"><b>90.79%</b></td><td class="r">80.13%</td><td class="r">0.011</td><td class="r">0.084</td><td class="r">377</td><td class="r">60</td></tr><tr><td>RTE</td><td class="r">277</td><td class="r">82.67%</td><td class="r"><b>89.89%</b></td><td class="r">0.105</td><td class="r">0.034</td><td class="r">4</td><td class="r">24</td></tr><tr><td>SciTail</td><td class="r">2,126</td><td class="r">65.00%</td><td class="r"><b>72.44%</b></td><td class="r">0.248</td><td class="r">0.077</td><td class="r">118</td><td class="r">276</td></tr><tr><td>SST-5</td><td class="r">2,210</td><td class="r">52.35%</td><td class="r"><b>57.74%</b></td><td class="r">0.098</td><td class="r">0.178</td><td class="r">216</td><td class="r">335</td></tr><tr><td>App reviews</td><td class="r">4,000</td><td class="r"><b>50.95%</b></td><td class="r">48.85%</td><td class="r">0.096</td><td class="r">0.252</td><td class="r">463</td><td class="r">379</td></tr><tr style="border-top:1px solid var(--ink)"><td>Choice</td><td class="r">6,050</td><td class="r"><b>90.94%</b></td><td class="r">80.15%</td><td class="r">0.017</td><td class="r">0.085</td><td class="r">791</td><td class="r">138</td></tr><tr><td>Score</td><td class="r">6,210</td><td class="r">51.45%</td><td class="r"><b>52.01%</b></td><td class="r">0.097</td><td class="r">0.226</td><td class="r">679</td><td class="r">714</td></tr><tr><td>Noul</td><td class="r">2,403</td><td class="r">67.04%</td><td class="r"><b>74.45%</b></td><td class="r">0.232</td><td class="r">0.071</td><td class="r">122</td><td class="r">300</td></tr><tr><td>All</td><td class="r">14,663</td><td class="r"><b>70.30%</b></td><td class="r">67.30%</td><td class="r">0.082</td><td class="r">0.141</td><td class="r">1,592</td><td class="r">1,152</td></tr></tbody></table></div>
+        question per request, and the same options for every system: each Choice question lists the right intent
+        and 7 distractors seeded from the state, 8 options in all. Kahn1 4B and Kahn1 3B (v3): k&nbsp;=&nbsp;3,
+        temperature calibration. JEV: jev-1.13.0, answered all 14,663 without error. ECE: 15 bins on
+        p<sub>max</sub>, 0 is perfect.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col">Dataset</th><th scope="col" class="r">Items</th><th scope="col" class="r">Kahn1 4B</th><th scope="col" class="r">Kahn1 3B</th><th scope="col" class="r">JEV</th><th scope="col" class="r">4B ECE</th><th scope="col" class="r">3B ECE</th><th scope="col" class="r">JEV ECE</th></tr></thead><tbody><tr><td>banking77</td><td class="r">3,076</td><td class="r">91.5%</td><td class="r">91.1%</td><td class="r"><b>94.8%</b></td><td class="r">0.017</td><td class="r">0.026</td><td class="r">0.024</td></tr><tr><td>MASSIVE</td><td class="r">2,974</td><td class="r">92.4%</td><td class="r">90.8%</td><td class="r"><b>94.1%</b></td><td class="r">0.034</td><td class="r">0.011</td><td class="r">0.017</td></tr><tr><td>RTE</td><td class="r">277</td><td class="r">86.6%</td><td class="r">82.7%</td><td class="r"><b>89.9%</b></td><td class="r">0.026</td><td class="r">0.105</td><td class="r">0.034</td></tr><tr><td>SciTail</td><td class="r">2,126</td><td class="r">70.4%</td><td class="r">65.0%</td><td class="r"><b>72.4%</b></td><td class="r">0.148</td><td class="r">0.248</td><td class="r">0.077</td></tr><tr><td>SST-5</td><td class="r">2,210</td><td class="r">49.2%</td><td class="r">52.4%</td><td class="r"><b>57.7%</b></td><td class="r">0.125</td><td class="r">0.098</td><td class="r">0.178</td></tr><tr><td>App reviews</td><td class="r">4,000</td><td class="r">48.2%</td><td class="r"><b>50.9%</b></td><td class="r">48.9%</td><td class="r">0.128</td><td class="r">0.096</td><td class="r">0.252</td></tr><tr style="border-top:1px solid var(--ink)"><td>Choice</td><td class="r">6,050</td><td class="r">91.9%</td><td class="r">90.9%</td><td class="r"><b>94.5%</b></td><td class="r">0.022</td><td class="r">0.017</td><td class="r">0.019</td></tr><tr><td>Score</td><td class="r">6,210</td><td class="r">48.6%</td><td class="r">51.4%</td><td class="r"><b>52.0%</b></td><td class="r">0.126</td><td class="r">0.097</td><td class="r">0.226</td></tr><tr><td>Noul</td><td class="r">2,403</td><td class="r">72.2%</td><td class="r">67.0%</td><td class="r"><b>74.4%</b></td><td class="r">0.132</td><td class="r">0.232</td><td class="r">0.071</td></tr><tr><td>All</td><td class="r">14,663</td><td class="r">70.3%</td><td class="r">70.3%</td><td class="r"><b>73.2%</b></td><td class="r">0.064</td><td class="r">0.082</td><td class="r">0.113</td></tr></tbody></table></div>
+      <p class="small faint" style="margin-top:12px">JEV is ahead on every primitive. The 4B gains on Choice and Noul
+        over the 3B and loses on Score; overall the two Kahn1 models are level, and the 4B is the better calibrated.</p>
+      <h3 class="sub">Choice over every intent</h3>
+      <p>The table above asks Choice over 8 options. Asked over every intent instead (77 for banking77, 60 for
+        MASSIVE), on the same 1,184 items, every system drops, Kahn1 more than JEV. Kahn1 goes through its two-stage
+        router there: one Noul per option keeps the 10 best, then a Choice picks among them (k&nbsp;=&nbsp;1).</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col">Options per question</th><th scope="col" class="r">Items</th><th scope="col" class="r">Kahn1 4B</th><th scope="col" class="r">Kahn1 3B</th><th scope="col" class="r">JEV</th></tr></thead><tbody><tr><td>8 (the right one + 7 seeded distractors)</td><td class="r">6,050</td><td class="r">91.9%</td><td class="r">90.9%</td><td class="r"><b>94.5%</b></td></tr><tr><td>every intent (77 / 60)</td><td class="r">1,184</td><td class="r">70.4%</td><td class="r">68.4%</td><td class="r"><b>79.1%</b></td></tr></tbody></table></div>
       <h3 class="sub">How the Noul question is worded</h3>
       <p>JEV's native Noul form is the bare statement as <code>instructions</code>, which is also what JevBench sends.
         JEV then judges whether the statement is true in general, not whether the text supports it: on SciTail, whose
         negatives are statements the text does not support, it answers yes to 93% of items. Kahn1's prompt asks whether
         the statement is "true for this state", so the Noul items were re-run with
         <code>The text supports this statement: {statement}</code>. The tables above use that wording, the fairer one for JEV.</p>
-      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col">Dataset</th><th scope="col" class="r">Items</th><th scope="col" class="r">Kahn1</th><th scope="col" class="r">JEV, bare statement</th><th scope="col" class="r">JEV, “supported” wording</th></tr></thead><tbody><tr><td>RTE</td><td class="r">277</td><td class="r">82.67%</td><td class="r">82.31%</td><td class="r"><b>89.89%</b></td></tr><tr><td>SciTail</td><td class="r">2,126</td><td class="r">65.00%</td><td class="r">44.36%</td><td class="r"><b>72.44%</b></td></tr><tr><td>Noul</td><td class="r">2,403</td><td class="r">67.04%</td><td class="r">48.73%</td><td class="r"><b>74.45%</b></td></tr><tr><td>All</td><td class="r">14,663</td><td class="r">70.30%</td><td class="r">63.08%</td><td class="r"><b>67.30%</b></td></tr></tbody></table></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col">Dataset</th><th scope="col" class="r">Items</th><th scope="col" class="r">Kahn1 4B</th><th scope="col" class="r">Kahn1 3B</th><th scope="col" class="r">JEV, bare statement</th><th scope="col" class="r">JEV, “supported” wording</th></tr></thead><tbody><tr><td>RTE</td><td class="r">277</td><td class="r">86.6%</td><td class="r">82.7%</td><td class="r">82.3%</td><td class="r"><b>89.9%</b></td></tr><tr><td>SciTail</td><td class="r">2,126</td><td class="r">70.4%</td><td class="r">65.0%</td><td class="r">44.4%</td><td class="r"><b>72.4%</b></td></tr><tr><td>Noul</td><td class="r">2,403</td><td class="r">72.2%</td><td class="r">67.0%</td><td class="r">48.7%</td><td class="r"><b>74.4%</b></td></tr></tbody></table></div>
     </section>
 
     <section class="sec doc" id="jevbench" aria-labelledby="h-jevbench">
       <h2 id="h-jevbench">03 · Kahn1 vs Jev on JevBench</h2>
       <p><a href="https://github.com/fstandhartinger/jevbench" rel="noopener">JevBench</a> is an independent public
         benchmark for Jev-class decision models, with long rubrics and hard judgment calls. Jev's per-item outcomes on the
-        231 public items come from JevBench's own results (v1.3.0); Kahn1 answered the same
-        items. The held-out half of JevBench is not public, so Kahn1 was not run on it.</p>
-      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col">Tier</th><th scope="col" class="r">Public items</th><th scope="col" class="r">Kahn1</th><th scope="col" class="r">Jev 1.13.0</th><th scope="col" class="r">Jev, public + held-out</th></tr></thead><tbody><tr><td>Easy</td><td class="r">48</td><td class="r">100.0%</td><td class="r"><b>100.0%</b></td><td class="r">100.0%</td></tr><tr><td>Standard</td><td class="r">72</td><td class="r">84.7%</td><td class="r"><b>98.6%</b></td><td class="r">99.0%</td></tr><tr><td>Hard</td><td class="r">111</td><td class="r">42.3%</td><td class="r"><b>73.0%</b></td><td class="r">74.1%</td></tr><tr><td>All</td><td class="r">231</td><td class="r">67.5%</td><td class="r"><b>86.6%</b></td><td class="r">—</td></tr></tbody></table></div>
-      <p class="small faint" style="margin-top:12px">This is where the 3B model falls behind: open-ended judgment on
-        rubrics it was not trained on.</p>
+        231 public items come from JevBench's own results (v1.3.0). <a href="https://github.com/allebee/jevk5" rel="noopener">JevK5</a>
+        v0.2, another open model (Qwen3.5-4B with a LoRA distilled from Qwen3.6-27B), is its own public run through
+        JevBench's runner. Kahn1 answered the same items, k&nbsp;=&nbsp;3, calibrated. The held-out half of JevBench is
+        not public, so Kahn1 was not run on it.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col">Tier</th><th scope="col" class="r">Public items</th><th scope="col" class="r">Kahn1 4B</th><th scope="col" class="r">Kahn1 3B</th><th scope="col" class="r">JevK5 v0.2</th><th scope="col" class="r">Jev 1.13.0</th><th scope="col" class="r">Jev, public + held-out</th></tr></thead><tbody><tr><td>Easy</td><td class="r">48</td><td class="r"><b>100.0%</b></td><td class="r"><b>100.0%</b></td><td class="r"><b>100.0%</b></td><td class="r"><b>100.0%</b></td><td class="r">100.0%</td></tr><tr><td>Standard</td><td class="r">72</td><td class="r">91.7%</td><td class="r">84.7%</td><td class="r">95.8%</td><td class="r"><b>98.6%</b></td><td class="r">99.0%</td></tr><tr><td>Hard</td><td class="r">111</td><td class="r">70.3%</td><td class="r">42.3%</td><td class="r"><b>73.9%</b></td><td class="r">73.0%</td><td class="r">74.1%</td></tr><tr><td>All</td><td class="r">231</td><td class="r">83.1%</td><td class="r">67.5%</td><td class="r">86.1%</td><td class="r"><b>86.6%</b></td><td class="r">—</td></tr></tbody></table></div>
+      <p class="small faint" style="margin-top:12px">Kahn1 4B against JevK5, item by item: 11 items only Kahn1 4B gets
+        right, 18 only JevK5; exact McNemar test, p&nbsp;=&nbsp;0.26, not a significant difference. The 4B closes most of
+        the 3B's gap on the hard tier (70.3% against 42.3%), but on short intent classification it lost a little
+        against the 3B.</p>
+    </section>
+
+    <section class="sec doc" id="hard" aria-labelledby="h-hard">
+      <h2 id="h-hard">04 · Hard decisions on long documents</h2>
+      <p>317 decision questions written by Claude Opus on long, realistic documents, in English and French, each
+        checked by two blind Opus solvers. Kahn1 never trained on them, but they served to choose the 4B checkpoint:
+        read them as a development split, not a benchmark. No other system was run on them. k&nbsp;=&nbsp;1.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col">Questions</th><th scope="col" class="r">Items</th><th scope="col" class="r">Qwen3.5-4B, base</th><th scope="col" class="r">Kahn1 4B</th></tr></thead><tbody><tr><td>English</td><td class="r">233</td><td class="r">48.9%</td><td class="r"><b>60.5%</b></td></tr><tr><td>French</td><td class="r">84</td><td class="r">48.8%</td><td class="r"><b>66.7%</b></td></tr><tr style="border-top:1px solid var(--ink)"><td>All</td><td class="r">317</td><td class="r">48.9%</td><td class="r"><b>62.1%</b></td></tr></tbody></table></div>
+      <p class="small faint" style="margin-top:12px">The fine-tuning adds 13 points over the base model it starts from.
+        Questions that need a date, a duration or an amount computed stay the weakest: one forward pass does not do
+        arithmetic.</p>
     </section>
 
     <section class="sec doc" id="kahn1" aria-labelledby="h-kahn1">
-      <h2 id="h-kahn1">04 · Kahn1 in detail</h2>
-      <p class="intro">v3 checkpoint, on held-out data never seen in training, with k&nbsp;=&nbsp;3 option
-        permutations and temperature calibration, on a single RTX 5070 Ti (16 GB) with vLLM.</p>
+      <h2 id="h-kahn1">05 · Kahn1 in detail</h2>
+      <p class="intro">Kahn1 4B on held-out data never seen in training, with k&nbsp;=&nbsp;3 option permutations and
+        temperature calibration, on a single RTX 5070 Ti (16 GB) with vLLM. The Kahn1 3B figures stay in the held-out
+        table above; the primitive and ordinal-score tables below are the 3B (v3).</p>
 
 
-      <h3 class="sub">Accuracy by dataset</h3>
+      <h3 class="sub">Accuracy by dataset, Kahn1 4B</h3>
       <div class="bars" role="list">
-        <div class="row" role="listitem"><span class="opt">banking77 <small>CHOICE · 77 OPTIONS · 3,076 ITEMS</small></span><span class="bar"><b style="width:91.09%"></b><i style="left:1.3%"></i></span><span class="pct">91.1%</span></div>
-        <div class="row" role="listitem"><span class="opt">MASSIVE <small>CHOICE · 60 OPTIONS · 2,974 ITEMS</small></span><span class="bar"><b style="width:90.79%"></b><i style="left:1.67%"></i></span><span class="pct">90.8%</span></div>
-        <div class="row" role="listitem"><span class="opt">RTE <small>NOUL · 277 ITEMS</small></span><span class="bar"><b style="width:82.67%"></b><i style="left:50%"></i></span><span class="pct">82.7%</span></div>
-        <div class="row" role="listitem"><span class="opt">SciTail <small>NOUL · 2,126 ITEMS</small></span><span class="bar"><b style="width:65%"></b><i style="left:50%"></i></span><span class="pct">65.0%</span></div>
-        <div class="row" role="listitem"><span class="opt">SST-5 <small>SCORE · 5 LEVELS · 2,210 ITEMS</small></span><span class="bar"><b style="width:52.35%"></b><i style="left:20%"></i></span><span class="pct">52.4%</span></div>
-        <div class="row" role="listitem"><span class="opt">App reviews <small>SCORE · 5 LEVELS · 4,000 ITEMS</small></span><span class="bar"><b style="width:50.95%"></b><i style="left:20%"></i></span><span class="pct">51.0%</span></div>
+        <div class="row" role="listitem"><span class="opt">banking77 <small>CHOICE · 8 OF 77 INTENTS · 3,076 ITEMS</small></span><span class="bar"><b style="width:91.48%"></b><i style="left:12.5%"></i></span><span class="pct">91.5%</span></div>
+        <div class="row" role="listitem"><span class="opt">MASSIVE <small>CHOICE · 8 OF 60 INTENTS · 2,974 ITEMS</small></span><span class="bar"><b style="width:92.4%"></b><i style="left:12.5%"></i></span><span class="pct">92.4%</span></div>
+        <div class="row" role="listitem"><span class="opt">RTE <small>NOUL · 277 ITEMS</small></span><span class="bar"><b style="width:86.64%"></b><i style="left:50%"></i></span><span class="pct">86.6%</span></div>
+        <div class="row" role="listitem"><span class="opt">SciTail <small>NOUL · 2,126 ITEMS</small></span><span class="bar"><b style="width:70.37%"></b><i style="left:50%"></i></span><span class="pct">70.4%</span></div>
+        <div class="row" role="listitem"><span class="opt">SST-5 <small>SCORE · 5 LEVELS · 2,210 ITEMS</small></span><span class="bar"><b style="width:49.23%"></b><i style="left:20%"></i></span><span class="pct">49.2%</span></div>
+        <div class="row" role="listitem"><span class="opt">App reviews <small>SCORE · 5 LEVELS · 4,000 ITEMS</small></span><span class="bar"><b style="width:48.18%"></b><i style="left:20%"></i></span><span class="pct">48.2%</span></div>
       </div>
-      <p class="legend"><i></i>chance level (1/n options). Score is exact match: on SST-5, human
-        annotators agree only about 55 to 60% of the time.</p>
+      <p class="legend"><i></i>chance level (1/n options; each Choice question lists 8 of the intents). Score is exact
+        match: on SST-5, human annotators agree only about 55 to 60% of the time.</p>
 
       <div class="grid g2" style="margin-top:40px">
         <div>
-          <h3>By primitive</h3>
+          <h3>By primitive, Kahn1 3B</h3>
           <div class="tbl-wrap">
             <table class="tbl">
               <thead><tr><th scope="col">Primitive</th><th scope="col" class="r">Items</th><th scope="col" class="r">Accuracy</th><th scope="col" class="r">ECE</th><th scope="col" class="r">Brier</th></tr></thead>
@@ -213,7 +244,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
             the demos use temperature only.</p>
         </div>
         <div>
-          <h3>Ordinal scores</h3>
+          <h3>Ordinal scores, Kahn1 3B</h3>
           <div class="tbl-wrap">
             <table class="tbl">
               <thead><tr><th scope="col">Dataset</th><th scope="col" class="r">Exact</th><th scope="col" class="r">±1 level</th><th scope="col" class="r">MAE E[S]</th><th scope="col" class="r">Spearman ρ</th></tr></thead>
@@ -223,7 +254,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
               </tbody>
             </table>
           </div>
-          <p class="small faint" style="margin-top:12px">When Kahn1 misses the exact level it is almost always
+          <p class="small faint" style="margin-top:12px">When the 3B misses the exact level it is almost always
             one step away: it rarely confuses opposite ends of a scale.</p>
         </div>
       </div>
@@ -252,38 +283,49 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
       </div>
 
       <p class="small" style="margin-top:28px">Full reports:
-        <a href="https://github.com/Okura66/kahn1/blob/main/reports/QWEN_FULL_EVAL_v3_temponly.md" rel="noopener">held-out v3</a> ·
-        <a href="https://github.com/Okura66/kahn1/blob/main/reports/JEVBENCH_v3.md" rel="noopener">JevBench v3</a> ·
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/KAHN1_4B_REPORT.md" rel="noopener">Kahn1 4B</a> ·
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/CHOICE_FAIRNESS.md" rel="noopener">Choice over the same options</a> ·
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/JEVK5_VS_KAHN1.md" rel="noopener">Kahn1 vs JevK5</a> ·
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/QWEN_FULL_EVAL_v3_temponly.md" rel="noopener">held-out 3B (v3)</a> ·
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/JEVBENCH_v3.md" rel="noopener">JevBench 3B (v3)</a> ·
         <a href="https://github.com/Okura66/kahn1/blob/main/reports/LATENCY_BATCH.md" rel="noopener">batch latency</a> ·
         <a href="https://github.com/Okura66/kahn1/blob/main/scripts/snake.py" rel="noopener">Snake benchmark</a></p>
-    
+
     </section>
 
     <section class="sec doc" id="latency" aria-labelledby="h-latency">
-      <h2 id="h-latency">05 · Latency and price</h2>
-      <p>The two latencies are not the same measurement: one is a local GPU, the other a request over the internet.</p>
+      <h2 id="h-latency">06 · Latency and price</h2>
+      <p>The latencies are not the same measurement: Kahn1 runs on a local GPU, JEV is a request over the internet.</p>
       <div class="tbl-wrap"><table class="tbl">
-        <thead><tr><th scope="col"></th><th scope="col">Kahn1</th><th scope="col">JEV 1.13.0</th></tr></thead>
+        <thead><tr><th scope="col"></th><th scope="col">Kahn1 4B</th><th scope="col">Kahn1 3B</th><th scope="col">JEV 1.13.0</th></tr></thead>
         <tbody>
-          <tr><th scope="row">Where</th><td>your hardware: vLLM on one RTX 5070 Ti (16 GB)</td><td>TypeSafe's hosted API</td></tr>
-          <tr><th scope="row">Median latency</th><td><b>36.4 ms</b>, p95 82.6 ms (k = 3)</td><td><b>248 ms</b>, p95 308 ms, round trip from our client, network included, 6 requests in flight</td></tr>
-          <tr><th scope="row">Throughput</th><td>21.7 queries/s, one at a time</td><td>23.3 items/s with 6 in flight</td></tr>
-          <tr><th scope="row">Price</th><td>your GPU or CPU; weights MIT</td><td>$0.042 per million input tokens, output free (public tariff)</td></tr>
+          <tr><th scope="row">Where</th><td>your hardware: vLLM on one RTX 5070 Ti (16 GB); also runs on a CPU, at seconds per question</td><td>the same, on the same GPU</td><td>TypeSafe's hosted API</td></tr>
+          <tr><th scope="row">Median latency</th><td><b>87.5 ms</b>, p95 204.8 ms (k = 3)</td><td><b>36.4 ms</b>, p95 82.6 ms (k = 3)</td><td><b>248 ms</b>, p95 308 ms, round trip from our client, network included, 6 requests in flight</td></tr>
+          <tr><th scope="row">Throughput</th><td>9.3 queries/s (k = 3)</td><td>21.7 queries/s, one at a time</td><td>23.3 items/s with 6 in flight</td></tr>
+          <tr><th scope="row">Price</th><td>your GPU or CPU; weights Apache 2.0</td><td>your GPU or CPU; weights under the <a href="https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/blob/main/LICENSE" rel="noopener">Qwen Research License</a> (a research licence, see its terms)</td><td>$0.042 per million input tokens, output free (public tariff)</td></tr>
         </tbody></table></div>
     </section>
 
     <section class="sec doc" id="reproduce" aria-labelledby="h-reproduce">
-      <h2 id="h-reproduce">06 · Reproduce</h2>
-      <pre class="term"><span class="d">$ </span>python scripts/jev_holdout.py run                              # JEV on data/eval.jsonl, resumable
+      <h2 id="h-reproduce">07 · Reproduce</h2>
+      <pre class="term"><span class="d">$ </span>python scripts/fit_calibration.py --model Okura66/Kahn1-Qwen3.5-4B --format qwen3 --out calibration_4b.json
+<span class="d">$ </span>python -m eval.eval_full --model Okura66/Kahn1-Qwen3.5-4B --prompt-format qwen3 --eval data/eval.jsonl \
+    --calibration calibration_4b.json --n-permutations 3 --max-model-len 4096     # Kahn1 4B, held-out
+<span class="d">$ </span>python scripts/jev_holdout.py run                              # JEV on data/eval.jsonl, resumable
 <span class="d">$ </span>python scripts/jev_holdout.py run --noul-template supported   # Noul items, reworded
-<span class="d">$ </span>python scripts/jev_holdout.py report                          # reports/JEV_VS_KAHN1.md
-<span class="d">$ </span>python scripts/jevbench_vs_jev.py                             # reports/JEVBENCH_VS_JEV.md</pre>
+<span class="d">$ </span>python scripts/choice_fairness.py jev8                        # JEV, Choice over the same 8 options
+<span class="d">$ </span>python scripts/jevbench_vs_jev.py                             # reports/JEVBENCH_VS_JEV.md
+<span class="d">$ </span>python scripts/kahn1_4b_report.py                             # reports/KAHN1_4B_REPORT.md</pre>
       <p>JEV needs <code>JEV_API_KEY</code>. Build the held-out split first with
         <code>python training/build_dataset.py --eval-only --eval-out data/eval.jsonl</code>. Reports:
-        <a href="https://github.com/Okura66/kahn1/blob/main/reports/JEV_VS_KAHN1.md" rel="noopener">Kahn1 vs JEV</a> ·
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/KAHN1_4B_REPORT.md" rel="noopener">Kahn1 4B vs 3B, JEV and JevK5</a> ·
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/CHOICE_FAIRNESS.md" rel="noopener">Choice over the same options</a> ·
         <a href="https://github.com/Okura66/kahn1/blob/main/reports/JEVBENCH_VS_JEV.md" rel="noopener">JevBench</a> ·
-        <a href="https://github.com/Okura66/kahn1/blob/main/reports/QWEN_FULL_EVAL_v3_temponly.md" rel="noopener">Kahn1 held-out v3</a> ·
-        <a href="https://github.com/Okura66/kahn1/blob/main/reports/LATENCY_BATCH.md" rel="noopener">batch latency</a>.</p>
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/JEVK5_VS_KAHN1.md" rel="noopener">Kahn1 vs JevK5</a> ·
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/QWEN_FULL_EVAL_v3_temponly.md" rel="noopener">Kahn1 3B held-out (v3)</a> ·
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/LATENCY_BATCH.md" rel="noopener">batch latency</a>.
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/JEV_VS_KAHN1.md" rel="noopener">JEV_VS_KAHN1.md</a> is the first run, which gave JEV every intent on
+        Choice.</p>
     </section>
   </main>
 
@@ -300,6 +342,6 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     <span class="disc">Kahn1 is an independent project. It accepts the JEV schema format and is not affiliated with TypeSafe.</span>
   </footer>
 </div>
-<script src="../assets/site.js"></script>
+<script src="../assets/site.js?v=20260925"></script>
 </body>
 </html>

@@ -32,6 +32,7 @@ data/
 # Heavy weights & Checkpoints
 checkpoints/
 models/
+!docs/models/
 weights/
 *.bin
 *.safetensors

@@ -22,7 +22,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Get started with Kahn1 — install, serve, query, calibrate</title>
-<meta name="description" content="How to install and serve Kahn1, send typed Choice, Score and Noul questions over HTTP or from Python, read the answers, tune debiasing and calibrate on your own data.">
+<meta name="description" content="Install and serve Kahn1, send typed Choice, Score and Noul questions over HTTP or from Python, read the answers and calibrate them on your own data.">
 <link rel="canonical" href="https://kahn1.com/get-started/">
 <link rel="alternate" hreflang="en" href="https://kahn1.com/get-started/">
 <link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/demarrer/">
@@ -35,22 +35,28 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
 <meta property="og:locale:alternate" content="fr_FR">
 <meta property="og:url" content="https://kahn1.com/get-started/">
 <meta property="og:title" content="Get started with Kahn1">
-<meta property="og:description" content="How to install and serve Kahn1, send typed Choice, Score and Noul questions over HTTP or from Python, read the answers, tune debiasing and calibrate on your own data.">
+<meta property="og:description" content="Install and serve Kahn1, send typed Choice, Score and Noul questions over HTTP or from Python, read the answers and calibrate them on your own data.">
 <meta property="og:image" content="https://kahn1.com/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Kahn1: any text in, typed answers out.">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2317150f'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='20' font-weight='700' fill='%23faf8f5' text-anchor='middle'%3EK%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231c1b19'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='20' font-weight='700' fill='%23d9542b' text-anchor='middle'%3E1%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/site.css?v=20260925">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;1,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<!-- Instrument Serif draws its 1 like an l ("Kahnl"): that one glyph comes from Libre Caslon Display. -->
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Display&text=1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css?v=20260928">
 <script type="application/ld+json">
 {
  "@context": "https://schema.org",
  "@type": "TechArticle",
+ "image": "https://kahn1.com/assets/og.png",
  "headline": "Get started with Kahn1",
  "inLanguage": "en",
  "url": "https://kahn1.com/get-started/",
- "description": "How to install and serve Kahn1, send typed Choice, Score and Noul questions over HTTP or from Python, read the answers, tune debiasing and calibrate on your own data.",
+ "description": "Install and serve Kahn1, send typed Choice, Score and Noul questions over HTTP or from Python, read the answers and calibrate them on your own data.",
  "author": {
   "@id": "https://kahn1.com/#author"
  },
@@ -60,7 +66,27 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
  "isPartOf": {
   "@id": "https://kahn1.com/#website"
  },
- "dateModified": "2026-09-24"
+ "dateModified": "2026-09-28"
+}
+</script>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "BreadcrumbList",
+ "itemListElement": [
+  {
+   "@type": "ListItem",
+   "position": 1,
+   "name": "Kahn1",
+   "item": "https://kahn1.com/"
+  },
+  {
+   "@type": "ListItem",
+   "position": 2,
+   "name": "Get started",
+   "item": "https://kahn1.com/get-started/"
+  }
+ ]
 }
 </script>
 </head>
@@ -75,39 +101,42 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
   </div>
 </div>
 
-<div class="wrap">
-  <header class="top">
-    <div class="left">
-      <a class="brand" href="../" aria-label="Kahn1, home">KAHN1</a>
-      <nav class="nav" aria-label="Site">
-        <a href="../playground/">PLAYGROUND</a>
-        <a href="../snake/">SNAKE</a>
-        <a href="../benchmarks/">BENCHMARKS</a>
-        <a href="../models/">MODELS</a>
-        <a href="../get-started/" aria-current="page">GET STARTED</a>
-      </nav>
+<a class="brand" href="/" aria-label="Kahn1, home">KAHN<span>1</span></a>
+<header class="topbar">
+  <button class="menu-btn" type="button" data-menu="open" aria-label="Open menu"><span>MENU</span><i></i></button>
+</header>
+<aside class="side" aria-label="Site navigation">
+  <div class="menu-head"><span class="wordmark">KAHN<span>1</span></span><button class="menu-close" type="button" data-menu="close" aria-label="Close menu">CLOSE ✕</button></div>
+  <nav class="otp" aria-label="On this page"><div class="kick">ON THIS PAGE</div><div class="otp-list"></div></nav>
+  <div class="side-links">
+    <div class="rule"></div>
+    <div class="kick">TRY</div>
+    <a href="/playground/">Playground</a>
+    <a href="/snake/">Kahn1 plays Snake</a>
+    <div class="kick">LEARN</div>
+    <a href="/get-started/" aria-current="page">Get started</a>
+    <a href="/caveats/">Caveats</a>
+    <div class="kick">COMPARE</div>
+    <a href="/benchmarks/">Benchmarks</a>
+    <a href="/models/">Models</a>
+    <div class="icons">
+      <a href="https://huggingface.co/Okura66" target="_blank" rel="noopener" title="Hugging Face" aria-label="Hugging Face">🤗</a>
+      <a href="https://github.com/Okura66/kahn1" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+      <a href="https://www.linkedin.com/in/amontzamir/" target="_blank" rel="noopener" title="LinkedIn" aria-label="LinkedIn"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M0 1.15C0 .52.52 0 1.18 0h13.64C15.48 0 16 .52 16 1.15v13.7c0 .63-.52 1.15-1.18 1.15H1.18C.52 16 0 15.48 0 14.85V1.15zm4.94 12.24V6.17H2.54v7.22h2.4zM3.74 5.18c.84 0 1.36-.55 1.36-1.25-.02-.71-.52-1.25-1.35-1.25-.82 0-1.36.54-1.36 1.25 0 .7.52 1.25 1.33 1.25h.02zm4.9 8.21V9.36c0-.22.02-.43.08-.59.18-.43.57-.88 1.23-.88.87 0 1.22.66 1.22 1.64v3.86h2.4V9.25c0-2.22-1.18-3.25-2.76-3.25-1.27 0-1.84.7-2.16 1.19v.02h-.02l.02-.02V6.17h-2.4c.03.68 0 7.22 0 7.22h2.4z"/></svg></a>
     </div>
-    <nav class="links" aria-label="Language and author links">
-      <span class="views" id="views" data-one="view" data-many="views" hidden></span>
-      <span class="lang">
-        <a href="./" hreflang="en" lang="en" aria-current="page">EN</a>
-        <a href="../fr/demarrer/" hreflang="fr" lang="fr">FR</a>
-      </span>
-      <a href="https://www.linkedin.com/in/amontzamir/" target="_blank" rel="noopener" title="LinkedIn" aria-label="LinkedIn">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 1 1 0-4.125 2.062 2.062 0 0 1 0 4.125zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-      </a>
-      <a href="https://github.com/Okura66/kahn1" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
-      </a>
-      <a href="https://huggingface.co/Okura66" target="_blank" rel="noopener" title="Hugging Face" aria-label="Hugging Face">
-        <span class="hf" aria-hidden="true">🤗</span>
-      </a>
-      <a href="#" class="cookies" data-cookies title="Change your cookie choice">cookies</a>
-    </nav>
-  </header>
+  </div>
+</aside>
+<div class="prefs" role="group" aria-label="Language and cookies">
+  <a href="/get-started/" hreflang="en" lang="en" aria-current="page">EN</a>
+  <a href="/fr/demarrer/" hreflang="fr" lang="fr" title="Lire en français">FR</a>
+  <i aria-hidden="true"></i>
+  <button type="button" data-cookies title="Change your cookie choice">COOKIES</button>
+</div>
 
-  <main id="main">
-    <section class="hero guide-hero" aria-labelledby="title">
+<div class="shell">
+
+  <main id="main" class="page">
+    <section class="page-hero" aria-labelledby="title">
       <h1 id="title">Get started</h1>
       <p class="lead">From a clone to a calibrated answer: install Kahn1, serve it, send typed questions, read what comes back and tune it to your data. Everything here runs on your own machine.</p>
       <nav class="toc" aria-label="On this page">
@@ -406,19 +435,17 @@ print(resp.answers["urgency"].expected_score, resp.answers["churn_risk"].noul)</
     </section>
   </main>
 
-  <footer class="foot">
-    <span>KAHN1 · MIT License · by <a href="https://www.linkedin.com/in/amontzamir/" rel="noopener">Axel Montzamir</a></span>
-    <nav aria-label="Footer">
-      <a href="../playground/">Playground</a>
-      <a href="../snake/">Snake</a>
-      <a href="https://github.com/Okura66/kahn1" rel="noopener">GitHub</a>
-      <a href="https://huggingface.co/Okura66" rel="noopener">Hugging Face</a>
-      <a href="../fr/demarrer/">Français</a>
-      <a href="#" data-cookies>Cookies</a>
-    </nav>
-    <span class="disc">Kahn1 is an independent project. It accepts the JEV schema format and is not affiliated with TypeSafe.</span>
-  </footer>
+<footer class="foot">
+  <div>KAHN1 · MIT License · by <a href="https://www.linkedin.com/in/amontzamir/" rel="noopener">Axel Montzamir</a></div>
+  <nav aria-label="Footer">
+    <a href="/playground/">Playground</a>
+    <a href="/snake/">Snake</a>
+    <a href="https://github.com/Okura66/kahn1" rel="noopener">GitHub</a>
+    <a href="https://huggingface.co/Okura66" rel="noopener">Hugging Face</a>
+  </nav>
+  <span class="disc">Kahn1 is an independent project. It accepts the JEV schema format and is not affiliated with TypeSafe.</span>
+</footer>
 </div>
-<script src="../assets/site.js?v=20260925"></script>
+<script src="/assets/site.js?v=20260928"></script>
 </body>
 </html>

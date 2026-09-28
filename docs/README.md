@@ -5,12 +5,14 @@ in `CNAME`) on https://kahn1.com/. No build step: every page is plain HTML.
 
 | path | file | what it is |
 |---|---|---|
-| `/` | `index.html` | home page, English: the project, use cases, caveats, benchmark results |
+| `/` | `index.html` | home page, English: why the name, the three primitives, the landscape, Kahn1 or classical ML, use cases, caveats (in short) |
 | `/fr/` | `fr/index.html` | the same home page in French |
 | `/benchmarks/` | `benchmarks/index.html` | every benchmark: Kahn1 4B and 3B vs JEV (and JevK5 on JevBench), held-out details, hard decisions, Snake, latency |
 | `/fr/resultats/` | `fr/resultats/index.html` | the same in French |
 | `/models/` | `models/index.html` | the two sizes, Kahn1 4B and Kahn1 3B: merged models, LoRA adapters, licences, loading |
 | `/fr/modeles/` | `fr/modeles/index.html` | the same in French |
+| `/caveats/` | `caveats/index.html` | the caveats, one section each, that the home page lists in short |
+| `/fr/vigilance/` | `fr/vigilance/index.html` | the same in French |
 | `/get-started/` | `get-started/index.html` | the guide: AI-agent setup prompt, install, serve, API, calibration |
 | `/fr/demarrer/` | `fr/demarrer/index.html` | the same guide in French |
 | `/playground/` | `playground/index.html` + `samples.json` | the playground |
@@ -18,9 +20,15 @@ in `CNAME`) on https://kahn1.com/. No build step: every page is plain HTML.
 | `/demo/` | `demo/index.html` | redirects old links to `/playground/` |
 | 404 | `404.html` | Pages serves it at any missing path (absolute links only) |
 
-The two home pages share `assets/site.css` and `assets/site.js` (consent banner, view
-counter, the playground and Snake edge tabs). The playground and Snake keep their CSS
-inline. `sitemap.xml`, `robots.txt`, `llms.txt` and the share images `assets/og.png` /
+Every page shares `assets/site.css` and `assets/site.js`:
+warm paper, one ink, one accent (`#d9542b`), Instrument Serif for titles, IBM Plex Sans for
+text, IBM Plex Mono for labels and code. `site.js` runs the consent banner (the EN · FR · COOKIES tag in the corner reopens it),
+the sidebar (its "on this page" list is built from the `<main>` sections that have an id and a
+title; `data-nav` overrides the label), the menu on small screens, the reveals and the home
+page's logo: five slot letters that settle out of noisy distributions, then fly to the top-left
+corner on the first scroll. The sidebar and footer markup is the same on every page, in EN and
+FR: change it everywhere at once. `assets/kahneman.webp` is the portrait on the home pages.
+The playground and Snake add their app styles inline, scoped under `.app`, and keep their app script in the page. `sitemap.xml`, `robots.txt`, `llms.txt` and the share images `assets/og.png` /
 `assets/og-fr.png` go with the home pages. EN and FR carry the same facts: when a number
 changes, change it in both pages, in their JSON-LD blocks, and in `llms.txt`.
 
@@ -29,9 +37,8 @@ and links to (Claude Code `claude-cli://open?q=`, Claude Desktop `claude://code/
 Claude Code on the web `claude.ai/code?prompt=`); the links embed the prompt, so edit the file
 and rebuild the page together. The Claude Code link caps `q` at 5,000 characters.
 
-The animation on the home pages (the logit reader) replays recorded runs of the 3B v3
-checkpoint (CPU, temperature calibration, k = 1), not live calls; its data sits in the
-page's `reader-data` block. The benchmark charts show Kahn1 4B
+The distributions in the home pages' "three primitives" section are illustrative values,
+not recorded outputs. The benchmark charts show Kahn1 4B
 (`Okura66/Kahn1-Qwen3.5-4B`), Kahn1 3B and JEV side by side; the tables add JevK5. The numbers come
 from `reports/kahn1_4b_report.json` (`scripts/kahn1_4b_report.py`): held-out like for like
 (Choice over the same 8 options on every side, see `reports/CHOICE_FAIRNESS.md`), JevBench,

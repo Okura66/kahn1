@@ -21,21 +21,21 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
         async src="https://gc.zgo.at/count.js"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Kahn1 models — Kahn1 4B and 3B, merged weights and LoRA</title>
-<meta name="description" content="The two sizes of Kahn1, 4B (Qwen3.5-4B) and 3B (Qwen2.5-3B): merged models and LoRA adapters on Hugging Face, licences, results and how to load them.">
-<link rel="canonical" href="https://kahn1.com/models/">
-<link rel="alternate" hreflang="en" href="https://kahn1.com/models/">
-<link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/modeles/">
-<link rel="alternate" hreflang="x-default" href="https://kahn1.com/models/">
+<title>Kahn1 caveats — what to know before real decisions</title>
+<meta name="description" content="The limits of Kahn1 4B and 3B before real decisions: accuracy by primitive, calibration, confidence, determinism, regulation, speed, browser demos.">
+<link rel="canonical" href="https://kahn1.com/caveats/">
+<link rel="alternate" hreflang="en" href="https://kahn1.com/caveats/">
+<link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/vigilance/">
+<link rel="alternate" hreflang="x-default" href="https://kahn1.com/caveats/">
 <meta name="author" content="Axel Montzamir">
 <meta name="theme-color" content="#faf8f5">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="Kahn1">
 <meta property="og:locale" content="en_US">
 <meta property="og:locale:alternate" content="fr_FR">
-<meta property="og:url" content="https://kahn1.com/models/">
-<meta property="og:title" content="Kahn1 models — Kahn1 4B and 3B, merged weights and LoRA">
-<meta property="og:description" content="The two sizes of Kahn1, 4B (Qwen3.5-4B) and 3B (Qwen2.5-3B): merged models and LoRA adapters on Hugging Face, licences, results and how to load them.">
+<meta property="og:url" content="https://kahn1.com/caveats/">
+<meta property="og:title" content="Kahn1 caveats">
+<meta property="og:description" content="The limits of Kahn1 4B and 3B before real decisions: accuracy by primitive, calibration, confidence, determinism, regulation, speed, browser demos.">
 <meta property="og:image" content="https://kahn1.com/assets/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -53,10 +53,10 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
  "@context": "https://schema.org",
  "@type": "TechArticle",
  "image": "https://kahn1.com/assets/og.png",
- "headline": "Kahn1 models",
+ "headline": "Kahn1 caveats",
  "inLanguage": "en",
- "url": "https://kahn1.com/models/",
- "description": "The two sizes of Kahn1, 4B (Qwen3.5-4B) and 3B (Qwen2.5-3B): merged models and LoRA adapters on Hugging Face, licences, results and how to load them.",
+ "url": "https://kahn1.com/caveats/",
+ "description": "The limits of Kahn1 4B and 3B before real decisions: accuracy by primitive, calibration, confidence, determinism, regulation, speed, browser demos.",
  "author": {
   "@id": "https://kahn1.com/#author"
  },
@@ -83,8 +83,8 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
   {
    "@type": "ListItem",
    "position": 2,
-   "name": "Models",
-   "item": "https://kahn1.com/models/"
+   "name": "Caveats",
+   "item": "https://kahn1.com/caveats/"
   }
  ]
 }
@@ -115,10 +115,10 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     <a href="/snake/">Kahn1 plays Snake</a>
     <div class="kick">LEARN</div>
     <a href="/get-started/">Get started</a>
-    <a href="/caveats/">Caveats</a>
+    <a href="/caveats/" aria-current="page">Caveats</a>
     <div class="kick">COMPARE</div>
     <a href="/benchmarks/">Benchmarks</a>
-    <a href="/models/" aria-current="page">Models</a>
+    <a href="/models/">Models</a>
     <div class="icons">
       <a href="https://huggingface.co/Okura66" target="_blank" rel="noopener" title="Hugging Face" aria-label="Hugging Face">🤗</a>
       <a href="https://github.com/Okura66/kahn1" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
@@ -127,8 +127,8 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
   </div>
 </aside>
 <div class="prefs" role="group" aria-label="Language and cookies">
-  <a href="/models/" hreflang="en" lang="en" aria-current="page">EN</a>
-  <a href="/fr/modeles/" hreflang="fr" lang="fr" title="Lire en français">FR</a>
+  <a href="/caveats/" hreflang="en" lang="en" aria-current="page">EN</a>
+  <a href="/fr/vigilance/" hreflang="fr" lang="fr" title="Lire en français">FR</a>
   <i aria-hidden="true"></i>
   <button type="button" data-cookies title="Change your cookie choice">COOKIES</button>
 </div>
@@ -137,53 +137,65 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
 
   <main id="main" class="page">
     <section class="page-hero" aria-labelledby="title">
-      <h1 id="title">Models</h1>
-      <p class="lead">Kahn1 comes in two sizes, Kahn1 4B and Kahn1 3B: the same model, trained for the same three
-        primitives and served by the same engine. Each is on Hugging Face as a merged model and as a LoRA adapter.</p>
+      <h1 id="title">Caveats</h1>
+      <p class="lead">Kahn1 comes in two sizes, 4 and 3 billion parameters. Read this before putting either in front of real decisions.</p>
     </section>
 
-    <section class="sec doc" id="models" aria-labelledby="h-models">
-      <h2 id="h-models">01 · The two sizes</h2>
-      <div class="tbl-wrap"><table class="tbl models"><thead><tr><th scope="col"></th><th scope="col">Kahn1 4B</th><th scope="col">Kahn1 3B</th></tr></thead><tbody><tr><th scope="row">Base model</th><td data-label="Kahn1 4B"><code>Qwen/Qwen3.5-4B</code></td><td data-label="Kahn1 3B"><code>Qwen/Qwen2.5-3B-Instruct</code></td></tr><tr><th scope="row">Merged model</th><td data-label="Kahn1 4B"><a href="https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B" rel="noopener"><code>Okura66/Kahn1-Qwen3.5-4B</code></a> · 8.4 GB</td><td data-label="Kahn1 3B"><a href="https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B" rel="noopener"><code>Okura66/Kahn1-Qwen2.5-3B</code></a> · 6.17 GB</td></tr><tr><th scope="row">LoRA adapter</th><td data-label="Kahn1 4B"><a href="https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B-LoRA" rel="noopener"><code>Okura66/Kahn1-Qwen3.5-4B-LoRA</code></a> · 57 MB</td><td data-label="Kahn1 3B"><a href="https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B-LoRA" rel="noopener"><code>Okura66/Kahn1-Qwen2.5-3B-LoRA</code></a> · 239 MB</td></tr><tr><th scope="row">Prompt format</th><td data-label="Kahn1 4B">native Qwen3 chat template, picked automatically</td><td data-label="Kahn1 3B">tag layout, picked automatically</td></tr><tr><th scope="row">Licence</th><td data-label="Kahn1 4B">Apache 2.0</td><td data-label="Kahn1 3B"><a href="https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/blob/main/LICENSE" rel="noopener">Qwen Research License</a>, a research licence: see its terms</td></tr><tr><th scope="row">Held-out, 14,663 items</th><td data-label="Kahn1 4B">70.3%</td><td data-label="Kahn1 3B">70.3%</td></tr><tr><th scope="row">JevBench, 231 public items</th><td data-label="Kahn1 4B">83.1% (hard 70.3%)</td><td data-label="Kahn1 3B">67.5% (hard 42.3%)</td></tr><tr><th scope="row">Median latency, k = 3</th><td data-label="Kahn1 4B">87.5 ms</td><td data-label="Kahn1 3B">36.4 ms</td></tr><tr><th scope="row">Calibration</th><td data-label="Kahn1 4B"><code>calibration.json</code> in the repository</td><td data-label="Kahn1 3B"><code>calibration.json</code> in the repository</td></tr></tbody></table></div>
-      <p class="small faint" style="margin-top:12px">Held-out and JevBench: k&nbsp;=&nbsp;3, temperature calibration.
-        Latency: vLLM on one RTX 5070 Ti. Details on the <a href="../benchmarks/">benchmarks page</a>. The code is MIT.</p>
-      <p>GGUF quantizations: <a href="https://huggingface.co/mradermacher/Kahn1-Qwen2.5-3B-GGUF" rel="noopener"><code>mradermacher/Kahn1-Qwen2.5-3B-GGUF</code></a>,
-        made from the 3B's v1 checkpoint by mradermacher. They are what the browser demos
-        (<a href="../playground/">playground</a>, <a href="../snake/">Snake</a>) load.</p>
+    <section class="sec cv" id="frontier" data-n="01" data-nav="Not a frontier model" aria-labelledby="h-frontier">
+      <h2 id="h-frontier">It is not a frontier model.</h2>
+      <p>On subjective or ambiguous judgments it is wrong more often than a large model. On the hard tier of
+        the external JevBench, Kahn1 4B gets 70.3% right against 73.0% for Jev, and the 3B only 42.3%. JEV is
+        ahead on every primitive of the held-out set. Computing a date, a duration or an amount in a single
+        forward pass is a weak spot.</p>
     </section>
 
-    <section class="sec doc" id="which" aria-labelledby="h-which">
-      <h2 id="h-which">02 · Which one</h2>
-      <p>Both sizes run on a GPU (vLLM) and on a CPU (transformers), with the same API and the same answer format.
-        The facts: on the held-out set both score 70.3%; on JevBench the 4B scores 83.1% and the 3B 67.5%, and
-        70.3% against 42.3% on the hard tier. The 3B is smaller (6.17 GB against 8.4 GB) and faster (median 36.4 ms
-        against 87.5 ms). The 4B's weights are Apache 2.0, the 3B's are under the Qwen Research License.</p>
+    <section class="sec cv" id="primitives" data-n="02" data-nav="Accuracy by primitive" aria-labelledby="h-primitives">
+      <h2 id="h-primitives">Accuracy depends on the primitive.</h2>
+      <p>Choice is strong (92% for the 4B, 91% for the 3B on held-out intent sets, 8 options per question).
+        Score is the weakest primitive: 49% (4B) and 51% (3B) exact match on 5-level scales, though the 3B is
+        within one level 95% of the time on SST-5. Noul: 87% on RTE and 70% on SciTail (out-of-domain science
+        entailment) for the 4B, 83% and 65% for the 3B. On short intent classification the 4B lost a little
+        against the 3B on JevBench.</p>
     </section>
 
-    <section class="sec doc" id="load" aria-labelledby="h-load">
-      <h2 id="h-load">03 · Load one</h2>
-      <p>With sysone, set the model id; the engine picks its prompt format by itself.</p>
-      <pre class="term"><span class="d">$ </span>SYSONE_MODEL=Okura66/Kahn1-Qwen3.5-4B uv run sysone serve --port 8000                      # GPU, vLLM
-<span class="d">$ </span>SYSONE_BACKEND=cpu SYSONE_MODEL=Okura66/Kahn1-Qwen3.5-4B uv run sysone serve --port 8000   # CPU
-# Kahn1 3B: SYSONE_MODEL=Okura66/Kahn1-Qwen2.5-3B, on either backend</pre>
-      <p>A LoRA adapter goes on top of its base model with peft:</p>
-      <pre class="term">from peft import PeftModel
-from transformers import AutoModelForCausalLM, AutoTokenizer
-import torch
+    <section class="sec cv" id="calibration" data-n="03" data-nav="Calibration" aria-labelledby="h-calibration">
+      <h2 id="h-calibration">Calibration holds on its own distribution.</h2>
+      <p>Temperatures were fitted on the training distribution (a split disjoint from training), not on your
+        data, and Noul's calibration error is still 0.13 for the 4B, 0.23 for the 3B. Recalibrate on your
+        domain before trusting a threshold: <code>sysone calibrate</code>, described in the
+        <a href="../get-started/">guide</a>.</p>
+    </section>
 
-base = AutoModelForCausalLM.from_pretrained("Qwen/Qwen3.5-4B", dtype=torch.bfloat16)
-tokenizer = AutoTokenizer.from_pretrained("Okura66/Kahn1-Qwen3.5-4B-LoRA")
-model = PeftModel.from_pretrained(base, "Okura66/Kahn1-Qwen3.5-4B-LoRA")
-# Kahn1 3B: base "Qwen/Qwen2.5-3B-Instruct", adapter "Okura66/Kahn1-Qwen2.5-3B-LoRA"</pre>
-      <p>To serve an adapter with vLLM, merge it first:</p>
-      <pre class="term"><span class="d">$ </span>python scripts/merge_qwen_lora.py --base Qwen/Qwen3.5-4B --adapter Okura66/Kahn1-Qwen3.5-4B-LoRA --output checkpoints/kahn1_4b</pre>
-      <p>The <a href="../get-started/">guide</a> covers the API, the answer format and calibration.</p>
-      <p class="small" style="margin-top:28px">Hugging Face cards:
-        <a href="https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B" rel="noopener">Kahn1 4B</a> ·
-        <a href="https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B-LoRA" rel="noopener">Kahn1 4B LoRA</a> ·
-        <a href="https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B" rel="noopener">Kahn1 3B</a> ·
-        <a href="https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B-LoRA" rel="noopener">Kahn1 3B LoRA</a> ·
-        <a href="../benchmarks/">all benchmark results</a></p>
+    <section class="sec cv" id="confidence" data-n="04" data-nav="Confidence" aria-labelledby="h-confidence">
+      <h2 id="h-confidence">Confidence is not the probability of being right.</h2>
+      <p>Confidence is <code>(p_max − 1/n) / (1 − 1/n)</code>: it measures the distance from a uniform guess.
+        Set thresholds on held-out data from your domain and check the risk-coverage curve.</p>
+    </section>
+
+    <section class="sec cv" id="determinism" data-n="05" data-nav="Determinism" aria-labelledby="h-determinism">
+      <h2 id="h-determinism">Deterministic computation is not deterministic truth.</h2>
+      <p>Same weights, same prompt and same kernels give the same logits. That does not make the answer
+        correct: adversarial or out-of-distribution text can still fool it, and it offers no formal guarantee.</p>
+    </section>
+
+    <section class="sec cv" id="regulation" data-n="06" data-nav="Regulation" aria-labelledby="h-regulation">
+      <h2 id="h-regulation">Regulation still applies.</h2>
+      <p>Reading logits instead of parsing JSON removes format errors, not the obligations that come with
+        using a neural model for decisions (EU AI Act, sector rules). Keep a person or a larger model on the
+        low-confidence path, and log what was decided.</p>
+    </section>
+
+    <section class="sec cv" id="speed" data-n="07" data-nav="Speed" aria-labelledby="h-speed">
+      <h2 id="h-speed">The speed comes from engineering.</h2>
+      <p>Prefix caching and a single output position explain the latency, not a new architecture. On a CPU
+        expect seconds per question; in a browser without WebGPU, minutes.</p>
+    </section>
+
+    <section class="sec cv" id="demos" data-n="08" data-nav="Browser demos" aria-labelledby="h-demos">
+      <h2 id="h-demos">The browser demos run an older checkpoint.</h2>
+      <p>The <a href="../playground/">playground</a> and <a href="../snake/">Snake</a> load a v1 GGUF of the 3B
+        quantized to 4 bits (thanks to mradermacher); the page flips its Noul answers, which v1 learned inverted.
+        The <a href="../benchmarks/">benchmarks</a> are the unquantized Kahn1 4B and Kahn1 3B (v3) on vLLM.</p>
     </section>
   </main>
 

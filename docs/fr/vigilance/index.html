@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<!-- Google Tag Manager, loaded only once the visitor accepts analytics cookies
+     (ePrivacy / CNIL: no non-essential cookie before consent). See the consent banner. -->
+<script>
+function loadGTM() {
+  if (window.__gtmLoaded) return;
+  window.__gtmLoaded = true;
+  (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-TTC5WPRN');
+}
+try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); } catch (e) {}
+</script>
+<!-- End Google Tag Manager -->
+<!-- GoatCounter: cookieless visit count, exempt from consent. Runs for every visitor. -->
+<script data-goatcounter="https://kahn1.goatcounter.com/count"
+        async src="https://gc.zgo.at/count.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kahn1, points de vigilance avant de vraies décisions</title>
+<meta name="description" content="Les limites de Kahn1 4B et 3B avant de vraies décisions : précision par primitive, calibration, confiance, déterminisme, réglementation, vitesse.">
+<link rel="canonical" href="https://kahn1.com/fr/vigilance/">
+<link rel="alternate" hreflang="en" href="https://kahn1.com/caveats/">
+<link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/vigilance/">
+<link rel="alternate" hreflang="x-default" href="https://kahn1.com/caveats/">
+<meta name="author" content="Axel Montzamir">
+<meta name="theme-color" content="#faf8f5">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kahn1">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:locale:alternate" content="en_US">
+<meta property="og:url" content="https://kahn1.com/fr/vigilance/">
+<meta property="og:title" content="Kahn1, points de vigilance avant de vraies décisions">
+<meta property="og:description" content="Les limites de Kahn1 4B et 3B avant de vraies décisions : précision par primitive, calibration, confiance, déterminisme, réglementation, vitesse.">
+<meta property="og:image" content="https://kahn1.com/assets/og-fr.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Kahn1 : n&#39;importe quel texte en entrée, des réponses typées en sortie.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231c1b19'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='20' font-weight='700' fill='%23d9542b' text-anchor='middle'%3E1%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;1,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<!-- Instrument Serif draws its 1 like an l ("Kahnl"): that one glyph comes from Libre Caslon Display. -->
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Display&text=1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=20260928">
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "TechArticle",
+ "image": "https://kahn1.com/assets/og-fr.png",
+ "headline": "Kahn1, points de vigilance",
+ "inLanguage": "fr",
+ "url": "https://kahn1.com/fr/vigilance/",
+ "description": "Les limites de Kahn1 4B et 3B avant de vraies décisions : précision par primitive, calibration, confiance, déterminisme, réglementation, vitesse.",
+ "author": {
+  "@id": "https://kahn1.com/#author"
+ },
+ "about": {
+  "@id": "https://kahn1.com/#software"
+ },
+ "isPartOf": {
+  "@id": "https://kahn1.com/#website"
+ },
+ "dateModified": "2026-09-28"
+}
+</script>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "BreadcrumbList",
+ "itemListElement": [
+  {
+   "@type": "ListItem",
+   "position": 1,
+   "name": "Kahn1",
+   "item": "https://kahn1.com/fr/"
+  },
+  {
+   "@type": "ListItem",
+   "position": 2,
+   "name": "Points de vigilance",
+   "item": "https://kahn1.com/fr/vigilance/"
+  }
+ ]
+}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Aller au contenu</a>
+
+<div class="consent" id="consent" role="dialog" aria-labelledby="consentText" hidden>
+  <p id="consentText">Google Analytics peut-il compter cette visite&nbsp;? Il dépose des cookies. Refuser ne change rien d'autre sur le site, et rien de ce que vous tapez dans les démos ne lui est envoyé.</p>
+  <div class="row2">
+    <button class="primary" id="consentYes">ACCEPTER</button>
+    <button id="consentNo">REFUSER</button>
+  </div>
+</div>
+
+<a class="brand" href="/fr/" aria-label="Kahn1, accueil">KAHN<span>1</span></a>
+<header class="topbar">
+  <button class="menu-btn" type="button" data-menu="open" aria-label="Ouvrir le menu"><span>MENU</span><i></i></button>
+</header>
+<aside class="side" aria-label="Navigation du site">
+  <div class="menu-head"><span class="wordmark">KAHN<span>1</span></span><button class="menu-close" type="button" data-menu="close" aria-label="Fermer le menu">FERMER ✕</button></div>
+  <nav class="otp" aria-label="Sur cette page"><div class="kick">SUR CETTE PAGE</div><div class="otp-list"></div></nav>
+  <div class="side-links">
+    <div class="rule"></div>
+    <div class="kick">ESSAYER</div>
+    <a href="/playground/">Playground</a>
+    <a href="/snake/">Kahn1 joue à Snake</a>
+    <div class="kick">APPRENDRE</div>
+    <a href="/fr/demarrer/">Démarrer</a>
+    <a href="/fr/vigilance/" aria-current="page">Points de vigilance</a>
+    <div class="kick">COMPARER</div>
+    <a href="/fr/resultats/">Résultats</a>
+    <a href="/fr/modeles/">Modèles</a>
+    <div class="icons">
+      <a href="https://huggingface.co/Okura66" target="_blank" rel="noopener" title="Hugging Face" aria-label="Hugging Face">🤗</a>
+      <a href="https://github.com/Okura66/kahn1" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+      <a href="https://www.linkedin.com/in/amontzamir/" target="_blank" rel="noopener" title="LinkedIn" aria-label="LinkedIn"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M0 1.15C0 .52.52 0 1.18 0h13.64C15.48 0 16 .52 16 1.15v13.7c0 .63-.52 1.15-1.18 1.15H1.18C.52 16 0 15.48 0 14.85V1.15zm4.94 12.24V6.17H2.54v7.22h2.4zM3.74 5.18c.84 0 1.36-.55 1.36-1.25-.02-.71-.52-1.25-1.35-1.25-.82 0-1.36.54-1.36 1.25 0 .7.52 1.25 1.33 1.25h.02zm4.9 8.21V9.36c0-.22.02-.43.08-.59.18-.43.57-.88 1.23-.88.87 0 1.22.66 1.22 1.64v3.86h2.4V9.25c0-2.22-1.18-3.25-2.76-3.25-1.27 0-1.84.7-2.16 1.19v.02h-.02l.02-.02V6.17h-2.4c.03.68 0 7.22 0 7.22h2.4z"/></svg></a>
+    </div>
+  </div>
+</aside>
+<div class="prefs" role="group" aria-label="Langue et cookies">
+  <a href="/caveats/" hreflang="en" lang="en" title="Read in English">EN</a>
+  <a href="/fr/vigilance/" hreflang="fr" lang="fr" aria-current="page">FR</a>
+  <i aria-hidden="true"></i>
+  <button type="button" data-cookies title="Modifier votre choix de cookies">COOKIES</button>
+</div>
+
+<div class="shell">
+
+  <main id="main" class="page">
+    <section class="page-hero" aria-labelledby="title">
+      <h1 id="title">Points de vigilance</h1>
+      <p class="lead">Kahn1 existe en deux tailles, 4 et 3 milliards de paramètres. À lire avant de confier de vraies décisions à l'un ou à l'autre.</p>
+    </section>
+
+    <section class="sec cv" id="pointe" data-n="01" data-nav="Pas un modèle de pointe" aria-labelledby="h-pointe">
+      <h2 id="h-pointe">Ce n'est pas un modèle de pointe.</h2>
+      <p>Sur des jugements subjectifs ou ambigus, il se trompe plus souvent qu'un grand modèle. Sur le
+        niveau difficile du benchmark externe JevBench, Kahn1 4B obtient 70,3&nbsp;% de bonnes réponses, contre
+        73,0&nbsp;% pour Jev, et le 3B seulement 42,3&nbsp;%. JEV est devant sur chaque primitive du holdout.
+        Calculer une date, une durée ou un montant en une seule passe est un point faible.</p>
+    </section>
+
+    <section class="sec cv" id="primitive" data-n="02" data-nav="Précision par primitive" aria-labelledby="h-primitive">
+      <h2 id="h-primitive">La précision dépend de la primitive.</h2>
+      <p>Choice est solide (92&nbsp;% pour le 4B, 91&nbsp;% pour le 3B sur les datasets d'intentions du holdout,
+        8 options par question). Score est la primitive la plus faible&nbsp;: 49&nbsp;% (4B) et 51&nbsp;% (3B) de
+        correspondance exacte sur des échelles à 5 niveaux, même si le 3B est à un niveau près dans 95&nbsp;%
+        des cas sur SST-5. Noul&nbsp;: 87&nbsp;% sur RTE et 70&nbsp;% sur SciTail (implication scientifique, hors
+        domaine) pour le 4B, 83&nbsp;% et 65&nbsp;% pour le 3B. Sur la classification courte d'intentions, le 4B
+        a un peu perdu face au 3B sur JevBench.</p>
+    </section>
+
+    <section class="sec cv" id="calibration" data-n="03" data-nav="Calibration" aria-labelledby="h-calibration">
+      <h2 id="h-calibration">La calibration vaut pour sa propre distribution.</h2>
+      <p>Les températures ont été ajustées sur la distribution d'entraînement (un split disjoint de
+        l'entraînement), pas sur vos données, et l'erreur de calibration de Noul reste de 0,13 pour le 4B,
+        0,23 pour le 3B. Recalibrez sur votre domaine avant de vous fier à un seuil&nbsp;: <code>sysone calibrate</code>,
+        décrit dans le <a href="../demarrer/">guide</a>.</p>
+    </section>
+
+    <section class="sec cv" id="confiance" data-n="04" data-nav="Confiance" aria-labelledby="h-confiance">
+      <h2 id="h-confiance">La confiance n'est pas la probabilité d'avoir raison.</h2>
+      <p>La confiance vaut <code>(p_max − 1/n) / (1 − 1/n)</code>&nbsp;: elle mesure l'écart à un tirage uniforme.
+        Fixez vos seuils sur des données réservées de votre domaine et regardez la courbe risque-couverture.</p>
+    </section>
+
+    <section class="sec cv" id="determinisme" data-n="05" data-nav="Déterminisme" aria-labelledby="h-determinisme">
+      <h2 id="h-determinisme">Calcul déterministe ne veut pas dire vérité déterministe.</h2>
+      <p>Mêmes poids, même prompt, mêmes noyaux&nbsp;: mêmes logits. Cela ne rend pas la réponse juste&nbsp;:
+        un texte adverse ou hors distribution peut encore le tromper, et il n'offre aucune garantie formelle.</p>
+    </section>
+
+    <section class="sec cv" id="reglementation" data-n="06" data-nav="Réglementation" aria-labelledby="h-reglementation">
+      <h2 id="h-reglementation">La réglementation s'applique toujours.</h2>
+      <p>Lire les logits plutôt qu'analyser du JSON supprime les erreurs de format, pas les obligations
+        liées à l'usage d'un modèle neuronal pour décider (AI Act, règles sectorielles). Gardez une
+        personne ou un modèle plus gros sur la voie à faible confiance, et journalisez les décisions.</p>
+    </section>
+
+    <section class="sec cv" id="vitesse" data-n="07" data-nav="Vitesse" aria-labelledby="h-vitesse">
+      <h2 id="h-vitesse">La vitesse vient de l'ingénierie.</h2>
+      <p>Le prefix caching et une seule position de sortie expliquent la latence, pas une architecture
+        nouvelle. Sur CPU, comptez des secondes par question&nbsp;; dans un navigateur sans WebGPU, des minutes.</p>
+    </section>
+
+    <section class="sec cv" id="demos" data-n="08" data-nav="Démos navigateur" aria-labelledby="h-demos">
+      <h2 id="h-demos">Les démos navigateur utilisent un checkpoint plus ancien.</h2>
+      <p>Le <a href="../../playground/">playground</a> et <a href="../../snake/">Snake</a> chargent un GGUF v1 du 3B
+        quantifié en 4&nbsp;bits (merci à mradermacher)&nbsp;; la page inverse ses réponses Noul, que la v1 a apprises
+        à l'envers. Les <a href="../resultats/">résultats</a> sont ceux de Kahn1 4B et de Kahn1 3B (v3) non
+        quantifiés, sur vLLM.</p>
+    </section>
+  </main>
+
+<footer class="foot">
+  <div>KAHN1 · Licence MIT · par <a href="https://www.linkedin.com/in/amontzamir/" rel="noopener">Axel Montzamir</a></div>
+  <nav aria-label="Footer">
+    <a href="/playground/">Playground</a>
+    <a href="/snake/">Snake</a>
+    <a href="https://github.com/Okura66/kahn1" rel="noopener">GitHub</a>
+    <a href="https://huggingface.co/Okura66" rel="noopener">Hugging Face</a>
+  </nav>
+  <span class="disc">Kahn1 est un projet indépendant. Il accepte le format de schéma JEV et n'est pas affilié à TypeSafe.</span>
+</footer>
+</div>
+<script src="/assets/site.js?v=20260928"></script>
+</body>
+</html>

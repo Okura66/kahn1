@@ -3,322 +3,344 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Kahn1 Plays Snake</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2317150f'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='20' font-weight='700' fill='%23faf8f5' text-anchor='middle'%3EK%3C/text%3E%3C/svg%3E">
-<meta name="description" content="Kahn1 plays Snake: one Choice question per tick, the move read from option-token logits.">
+<title>Kahn1 plays Snake — one Choice question per tick</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231c1b19'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='20' font-weight='700' fill='%23d9542b' text-anchor='middle'%3E1%3C/text%3E%3C/svg%3E">
+<meta name="description" content="Watch Kahn1 play Snake in your browser: one Choice question per tick, the move read from option-token logits, zero tokens generated.">
 <link rel="canonical" href="https://kahn1.com/snake/">
+<link rel="alternate" hreflang="en" href="https://kahn1.com/snake/">
+<link rel="alternate" hreflang="x-default" href="https://kahn1.com/snake/">
+<meta name="author" content="Axel Montzamir">
+<meta name="theme-color" content="#faf8f5">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Kahn1">
+<meta property="og:locale" content="en_US">
+<meta property="og:url" content="https://kahn1.com/snake/">
+<meta property="og:title" content="Kahn1 plays Snake — one Choice question per tick">
+<meta property="og:description" content="Watch Kahn1 play Snake in your browser: one Choice question per tick, the move read from option-token logits, zero tokens generated.">
+<meta property="og:image" content="https://kahn1.com/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Kahn1: any text in, typed answers out.">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "WebApplication",
+   "@id": "https://kahn1.com/snake/#app",
+   "name": "Kahn1 plays Snake",
+   "url": "https://kahn1.com/snake/",
+   "description": "Watch Kahn1 play Snake in your browser: one Choice question per tick, the move read from option-token logits, zero tokens generated.",
+   "inLanguage": "en",
+   "applicationCategory": "DeveloperApplication",
+   "operatingSystem": "Any (web browser)",
+   "browserRequirements": "WebGPU for in-browser inference (Chrome or Edge); otherwise a Kahn1 server",
+   "isAccessibleForFree": true,
+   "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "EUR"
+   },
+   "image": "https://kahn1.com/assets/og.png",
+   "author": {
+    "@id": "https://kahn1.com/#author"
+   },
+   "about": {
+    "@id": "https://kahn1.com/#software"
+   },
+   "isPartOf": {
+    "@id": "https://kahn1.com/#website"
+   }
+  },
+  {
+   "@type": "BreadcrumbList",
+   "itemListElement": [
+    {
+     "@type": "ListItem",
+     "position": 1,
+     "name": "Kahn1",
+     "item": "https://kahn1.com/"
+    },
+    {
+     "@type": "ListItem",
+     "position": 2,
+     "name": "Kahn1 plays Snake",
+     "item": "https://kahn1.com/snake/"
+    }
+   ]
+  }
+ ]
+}
+</script>
 <script data-goatcounter="https://kahn1.goatcounter.com/count"
         async src="https://gc.zgo.at/count.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;1,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<!-- Instrument Serif draws its 1 like an l ("Kahnl"): that one glyph comes from Libre Caslon Display. -->
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Display&text=1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css?v=20260928">
 <style>
-  :root {
-    --bg: #faf8f5;
-    --ink: #17150f;
-    --muted: #4a463e;
-    --faint: #8c877c;
-    --rule: #cdc7ba;
-    --dot: #b5afa2;
-    --track: #ebe6dd;
+  /* The app: two lanes side by side, the controls under them. Scoped to .app:
+     the site's own .row, .foot and buttons stay untouched. */
+  .app { padding: 28px 0 64px; gap: 20px; }
+  .app .lanes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+  .app .lane { display: flex; flex-direction: column; min-width: 0; }
+  .app .lane-bar {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-bottom: 10px;
+    font-family: var(--mono); font-size: 12px; letter-spacing: 2px; color: var(--faint);
   }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; background: var(--bg); color: var(--ink);
-    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-    overflow: hidden;
+  .app .lane-bar b { color: var(--accent); font-weight: 400; letter-spacing: 3px; }
+  .app .lane-bar span:last-child { letter-spacing: 1px; text-align: right; min-width: 0; overflow-wrap: anywhere; }
+  .app .panel {
+    border: 1px solid var(--rule); background: var(--bg); padding: 20px 22px;
+    height: var(--panel-h, 640px); display: flex; flex-direction: column; overflow: hidden;
   }
-  @keyframes blink { 0%,49% { opacity: 1 } 50%,100% { opacity: 0 } }
-
-  .viewport {
-    width: 100vw; height: 100vh; display: flex;
-    align-items: center; justify-content: center; overflow: hidden;
-  }
-  .stage {
-    width: 1920px; height: 1080px; flex: none; transform-origin: center center;
-    background: var(--bg); padding: 46px 40px 34px;
-    display: flex; flex-direction: column; gap: 26px; position: relative;
-  }
-
-  .head { display: flex; flex-direction: column; align-items: center; gap: 9px; flex: none; }
-  .head h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.2px; }
-  .facts {
-    display: flex; align-items: center; gap: 18px;
-    font-size: 16px; letter-spacing: 2px; color: var(--muted);
-  }
-  .facts i { color: var(--dot); font-style: normal; }
-  /* Site nav, top left: home and the two demos. */
-  .site { position: absolute; top: 40px; left: 40px; display: flex; gap: 22px; font-size: 13px; letter-spacing: 2px; }
-  .site a { color: var(--muted); text-decoration: none; padding: 10px 2px; }
-  .site a:hover, .site a:focus-visible { color: var(--ink); outline: none; text-decoration: underline; }
-  .site a[aria-current="page"] { color: var(--ink); font-weight: 700; }
-
-  .links { position: absolute; top: 40px; right: 40px; display: flex; gap: 6px; }
-  .links a {
-    width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
-    color: var(--muted); border: 1px solid transparent; text-decoration: none;
-  }
-  .links a:hover, .links a:focus-visible { color: var(--ink); border-color: var(--rule); outline: none; }
-  .links svg { width: 18px; height: 18px; fill: currentColor; }
-  .links .hf { font-size: 19px; line-height: 1; filter: grayscale(1) contrast(1.1); opacity: 0.8; }
-  .links a:hover .hf { opacity: 1; }
-  .links .views { align-self: center; margin-right: 6px; font-size: 12px; letter-spacing: 1px; color: var(--faint); }
-
-  .lanes { display: flex; justify-content: center; gap: 40px; flex: none; }
-  .lane { position: relative; width: 900px; height: 840px; flex: none; }
-  .chip {
-    position: absolute; left: 50%; transform: translateX(-50%);
-    background: var(--bg); padding: 0 14px; white-space: nowrap; z-index: 2;
-  }
-  .chip.top { top: -10px; font-size: 15px; font-weight: 700; letter-spacing: 2.4px; }
-  .chip.bot { bottom: -11px; font-size: 15px; color: var(--muted); }
-
-  .panel {
-    border: 1px solid var(--ink); width: 100%; height: 100%;
-    padding: 22px 24px; overflow: hidden; display: flex; flex-direction: column;
-  }
-  .cmd { font-size: 15px; font-weight: 700; line-height: 1.6; margin-bottom: 14px; flex: none; }
-  .status { font-size: 15px; line-height: 1.6; color: var(--muted); margin-bottom: 14px; flex: none;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .body { flex: 1; min-height: 0; display: flex; }
-
-  /* -- board -- */
-  .boardwrap { flex: 1; display: flex; align-items: center; justify-content: center; }
-  .board {
-    --n: 10; width: 560px; height: 560px; display: grid; gap: 4px;
-    grid-template-columns: repeat(var(--n), 1fr); grid-template-rows: repeat(var(--n), 1fr);
-    padding: 10px; border: 1px solid var(--rule); outline: 6px solid var(--track); outline-offset: -1px;
-  }
-  .cell { position: relative; background: var(--track); display: flex; align-items: center; justify-content: center; }
-  .cell.body { background: var(--dot); }
-  .cell.tail { background: var(--rule); }
-  .cell.head { background: var(--ink); }
-  .cell.food::after {
-    content: ""; width: 46%; height: 46%; border-radius: 50%;
-    border: 3px solid var(--ink); background: var(--bg);
-  }
-  .cell.dead { background: repeating-linear-gradient(45deg, var(--ink) 0 4px, var(--bg) 4px 8px); }
-  /* The four cells around the head carry the move distribution. */
-  .cell .pp {
-    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums;
-    border: 2px solid var(--ink); background: rgba(23, 21, 15, var(--a, 0));
-  }
-  .cell .pp.hi { color: var(--bg); }
-  .cell .pp.off { border: 2px dashed var(--dot); }
-  .eyes { position: absolute; inset: 0; }
-  .eyes::before, .eyes::after {
-    content: ""; position: absolute; width: 7px; height: 7px; background: var(--bg);
-  }
-  .eyes.right::before { right: 18%; top: 22%; } .eyes.right::after { right: 18%; bottom: 22%; }
-  .eyes.left::before { left: 18%; top: 22%; }   .eyes.left::after { left: 18%; bottom: 22%; }
-  .eyes.up::before { top: 18%; left: 22%; }     .eyes.up::after { top: 18%; right: 22%; }
-  .eyes.down::before { bottom: 18%; left: 22%; } .eyes.down::after { bottom: 18%; right: 22%; }
-
-  /* -- answer lane (same line grammar as the playground) -- */
-  .answer { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-  .label {
-    display: flex; justify-content: space-between; align-items: baseline;
-    font-size: 13px; letter-spacing: 2px; color: var(--muted);
+  .app .lane.out .panel { border-color: var(--ink); }
+  .app .cmd { font-family: var(--mono); font-size: 13px; font-weight: 600; line-height: 1.6; margin-bottom: 10px; flex: none; }
+  .app .status { font-size: 14px; line-height: 1.55; color: var(--muted); margin-bottom: 14px; flex: none; }
+  .app .panel > .body { flex: 1; min-height: 0; }
+  .app .label {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 2px; color: var(--faint);
     border-bottom: 1px solid var(--rule); padding-bottom: 6px; margin-bottom: 8px; flex: none;
   }
-  .label .hint { color: var(--faint); letter-spacing: 1px; }
-  pre.state {
-    margin: 0 0 18px; flex: 1; min-height: 0; overflow: hidden;
-    font-family: inherit; font-size: 13px; line-height: 16px; color: var(--muted); white-space: pre;
+  .app .label .hint { letter-spacing: 1px; }
+  .app .ln { font-family: var(--mono); font-size: 13px; line-height: 20px; white-space: pre; overflow: hidden; text-overflow: ellipsis; }
+  .app .k { color: var(--ink); font-weight: 600; }
+  .app .v { color: var(--faint); }
+  .app .p { color: var(--ink); }
+  .app .dist { margin: 4px 0 12px 24px; }
+  .app .row {
+    display: grid; grid-template-columns: minmax(0, 1fr) 38% 48px; gap: 10px; align-items: center;
+    font-family: var(--mono); font-size: 12px; line-height: 20px; color: var(--faint);
   }
-  pre.state b { color: var(--ink); font-weight: 700; }
-  .ln { font-size: 15px; line-height: 21px; white-space: pre; margin-bottom: 4px; flex: none; }
-  .k { color: var(--ink); font-weight: 700; }
-  .v { color: var(--faint); }
-  .p { color: var(--ink); }
-  .dist { margin: 2px 0 0 32px; flex: none; }
-  .row {
-    display: grid; grid-template-columns: 110px 520px 64px; gap: 14px; align-items: center;
-    font-size: 13px; line-height: 22px; color: var(--faint);
-  }
-  .row .bar { height: 8px; background: var(--track); position: relative; }
-  .row .bar b { position: absolute; left: 0; top: 0; bottom: 0; background: var(--dot); width: 0; transition: width 120ms ease-out; }
-  .row .pct { text-align: right; font-variant-numeric: tabular-nums; }
-  .row.win { color: var(--ink); font-weight: 500; }
-  .row.win .bar b { background: var(--ink); }
-  .row .fatal { color: var(--faint); font-weight: 400; }
+  .app .row .opt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .app .row .bar { height: 8px; background: var(--track); position: relative; }
+  .app .row .bar b { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--dot); transition: width 380ms ease-out; }
+  .app .row .pct { text-align: right; color: inherit; font-weight: 400; font-variant-numeric: tabular-nums; }
+  .app .row.win { color: var(--ink); }
+  .app .row.win .bar b { background: var(--accent); }
+  .app .cursor { display: inline-block; width: 8px; height: 15px; background: var(--ink); animation: blink 1s steps(1) infinite; vertical-align: text-bottom; }
+  @keyframes blink { 0%,49% { opacity: 1 } 50%,100% { opacity: 0 } }
+  .app .pfoot { flex: none; padding-top: 12px; }
+  .app .pfoot .m { font-family: var(--mono); font-size: 13px; line-height: 20px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .app .total { margin-top: 8px; display: flex; align-items: baseline; gap: 10px; border-top: 1px solid var(--rule); padding-top: 10px; }
+  .app .total .lbl { font-family: var(--mono); font-size: 12px; letter-spacing: 2px; color: var(--faint); }
+  .app .total .val { font-family: var(--serif); font-size: 34px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .app .total .max { font-family: var(--mono); font-size: 12px; color: var(--faint); }
+  .app .hidden { visibility: hidden; }
 
-  .cursor {
-    display: inline-block; width: 9px; height: 17px; background: var(--ink);
-    animation: blink 1s steps(1) infinite; vertical-align: text-bottom;
+  .app .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .app button {
+    font-family: var(--mono); font-size: 12px; letter-spacing: 2px; padding: 10px 16px;
+    background: transparent; color: var(--ink); border: 1px solid var(--rule); cursor: pointer;
   }
-
-  .foot { flex: none; height: 96px; padding-top: 14px; }
-  .foot .m { font-size: 15px; line-height: 21px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .total {
-    margin-top: 8px; display: flex; align-items: baseline; gap: 10px;
-    border-top: 1px solid var(--rule); padding-top: 8px;
+  .app button:hover:not(:disabled) { border-color: var(--ink); }
+  .app button.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); padding: 10px 24px; min-width: 104px; }
+  .app button.primary:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); }
+  .app button:disabled { opacity: 0.35; cursor: default; }
+  .app .url {
+    font-family: var(--mono); font-size: 13px; letter-spacing: 1px; color: var(--muted);
+    background: transparent; border: none; border-bottom: 1px solid var(--rule); padding: 9px 2px; width: 230px; outline: none;
   }
-  .total .lbl { font-size: 14px; letter-spacing: 2px; color: var(--muted); }
-  .total .val { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
-  .total .max { font-size: 14px; color: var(--faint); }
-
-  .controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex: none; }
-  button {
-    font-family: inherit; font-size: 14px; letter-spacing: 2px;
-    padding: 11px 20px; background: transparent; color: var(--ink);
-    border: 1px solid var(--rule); cursor: pointer;
-  }
-  button.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); padding: 11px 24px; min-width: 110px; }
-  button:hover:not(:disabled) { border-color: var(--ink); }
-  button.primary:hover:not(:disabled) { background: var(--bg); color: var(--ink); }
-  button:disabled { opacity: 0.35; cursor: default; }
-  button:focus-visible, input:focus-visible { outline: 1px dashed var(--ink); outline-offset: 3px; }
-  .url {
-    font-family: inherit; font-size: 14px; letter-spacing: 1px; color: var(--muted);
-    background: transparent; border: none; border-bottom: 1px solid var(--rule);
-    padding: 10px 2px; width: 240px; outline: none;
-  }
-  select.url { width: 250px; cursor: pointer; }
-  .credit {
+  .app .url:disabled { opacity: 0.35; }
+  .app select.url { width: 240px; cursor: pointer; }
+  .app .credit {
     position: relative; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;
     font-size: 15px; color: var(--faint); text-decoration: none; border: 1px solid transparent;
   }
-  .credit:hover, .credit:focus-visible { color: var(--ink); border-color: var(--rule); outline: none; }
-  .credit .tip {
+  .app .credit:hover, .app .credit:focus-visible { color: var(--accent); border-color: var(--rule); outline: none; }
+  .app .credit .tip {
     position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
-    background: var(--ink); color: var(--bg); padding: 6px 10px; font-size: 12px; letter-spacing: 1px;
-    white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 120ms; z-index: 5;
+    background: var(--ink); color: var(--bg); padding: 6px 10px; font-family: var(--mono); font-size: 11px; letter-spacing: 1px;
+    white-space: nowrap; pointer-events: none; z-index: 5;
   }
-  .credit:hover .tip, .credit:focus-visible .tip { opacity: 1; }
-  .clock { font-size: 14px; letter-spacing: 2px; color: var(--faint); margin-left: 10px; width: 90px; }
-  .warn { font-size: 14px; letter-spacing: 1px; color: var(--muted); margin-left: 8px; max-width: 420px;
-          white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .warn.alert { color: var(--ink); white-space: normal; }
-  .hidden { visibility: hidden; }
-  [hidden] { display: none !important; }
+  .app .credit:not(:hover):not(:focus-visible) .tip { display: none; }
+  .app .clock { font-family: var(--mono); font-size: 12px; letter-spacing: 2px; color: var(--faint); min-width: 64px; }
+  .app .warn { flex: 1 1 100%; font-size: 14px; line-height: 1.5; color: var(--muted); min-height: 21px; }
+  .app .warn.alert { color: var(--accent); }
+  .page-hero .facts { justify-content: flex-start; }
 
-  @media (max-width: 1099px) {
-    body { overflow: auto; }
-    .viewport { width: auto; height: auto; display: block; overflow: visible; }
-    .stage { width: auto; height: auto; padding: 16px 16px 28px; gap: 22px; }
-    .site { position: static; flex-wrap: wrap; gap: 4px 18px; }
-    .head h1 { font-size: 18px; text-align: center; }
-    .facts { flex-wrap: wrap; justify-content: center; gap: 4px 10px; font-size: 11px; letter-spacing: 1px; }
-    .lanes { display: contents; }
-    .links { position: static; justify-content: flex-end; margin-bottom: -10px; }
-    .site { order: 0; } .links { order: 1; } .head { order: 2; }
-    .lane:first-child { order: 3; } .controls { order: 4; } .lane:last-child { order: 5; margin-top: 8px; }
-    .lane { width: auto; height: auto; }
-    .panel { height: auto; padding: 20px 14px 18px; }
-    .cmd, .status { font-size: 13px; }
-    .board { width: min(100%, 440px); height: auto; aspect-ratio: 1; }
-    pre.state { font-size: 11px; line-height: 14px; overflow-x: auto; max-height: 360px; }
-    .dist { margin-left: 0; }
-    .row { grid-template-columns: 70px minmax(0, 1fr) 52px; gap: 8px; font-size: 12px; }
-    .foot { height: auto; }
-    .controls { flex-wrap: wrap; gap: 8px; }
-    .controls .url { flex: 1 1 100%; width: auto; order: 5; }
-    .credit .tip { left: auto; right: 0; transform: none; }
-    .warn { flex: 1 1 100%; max-width: none; white-space: normal; margin: 0; text-align: center; order: 6; }
-    .chip.top, .chip.bot { font-size: 13px; }
+  @media (max-width: 899px) {
+    /* Input, then the controls, then the answer: the button sits right under what it runs. */
+    .app .lanes { display: contents; }
+    .app .lane:first-child { order: 1; } .app .controls { order: 2; } .app .lane.out { order: 3; margin-top: 8px; }
+    .app .panel { height: auto; padding: 18px 14px 16px; }
+    .app .panel > .body { min-height: 60px; }
+    .app .ln { white-space: pre-wrap; overflow-wrap: anywhere; }
+    .app .dist { margin-left: 8px; }
+    .app .url { flex: 1 1 100%; width: auto; }
+    .app .credit .tip { left: auto; right: 0; transform: none; }
+  }
+
+  .app { --panel-h: 720px; }
+  .app .status { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .app .panel > .body { display: flex; }
+  .app .boardwrap { flex: 1; display: flex; align-items: center; justify-content: center; }
+  .app .board {
+    --n: 10; width: min(100%, 470px); aspect-ratio: 1; display: grid; gap: 4px;
+    grid-template-columns: repeat(var(--n), 1fr); grid-template-rows: repeat(var(--n), 1fr);
+    padding: 10px; border: 1px solid var(--rule);
+  }
+  .app .cell { position: relative; background: var(--track); display: flex; align-items: center; justify-content: center; }
+  .app .cell.body { background: var(--dot); }
+  .app .cell.tail { background: var(--rule); }
+  .app .cell.head { background: var(--ink); }
+  .app .cell.food::after { content: ""; width: 46%; height: 46%; border-radius: 50%; border: 3px solid var(--accent); background: var(--bg); }
+  .app .cell.dead { background: repeating-linear-gradient(45deg, var(--accent) 0 4px, var(--bg) 4px 8px); }
+  /* The four cells around the head carry the move distribution. */
+  .app .cell .pp {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums;
+    border: 2px solid var(--ink); background: rgba(217, 84, 43, var(--a, 0));
+  }
+  .app .cell .pp.hi { color: var(--bg); }
+  .app .cell .pp.off { border: 2px dashed var(--dot); }
+  .app .eyes { position: absolute; inset: 0; }
+  .app .eyes::before, .app .eyes::after { content: ""; position: absolute; width: 6px; height: 6px; background: var(--bg); }
+  .app .eyes.right::before { right: 18%; top: 22%; } .app .eyes.right::after { right: 18%; bottom: 22%; }
+  .app .eyes.left::before { left: 18%; top: 22%; }   .app .eyes.left::after { left: 18%; bottom: 22%; }
+  .app .eyes.up::before { top: 18%; left: 22%; }     .app .eyes.up::after { top: 18%; right: 22%; }
+  .app .eyes.down::before { bottom: 18%; left: 22%; } .app .eyes.down::after { bottom: 18%; right: 22%; }
+  .app .answer { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .app pre.state {
+    margin: 0 0 16px; flex: 1; min-height: 0; overflow: auto; scrollbar-width: thin;
+    font-family: var(--mono); font-size: 12px; line-height: 15px; color: var(--muted); white-space: pre;
+  }
+  .app pre.state b { color: var(--ink); font-weight: 600; }
+  .app .ln { margin-bottom: 4px; flex: none; }
+  .app .dist { margin: 2px 0 0 24px; flex: none; }
+  .app .row { grid-template-columns: 90px minmax(0, 1fr) 48px; line-height: 22px; transition: none; }
+  .app .row .bar b { transition: width 120ms ease-out; }
+  .app .row .fatal { color: var(--faint); font-weight: 400; }
+  @media (max-width: 899px) {
+    .app .panel > .body { display: block; }
+    .app .board { width: min(100%, 440px); margin: 0 auto; }
+    .app pre.state { font-size: 11px; line-height: 14px; overflow-x: auto; max-height: 360px; }
+    .app .dist { margin-left: 0; }
+    .app .row { grid-template-columns: 70px minmax(0, 1fr) 48px; }
   }
 </style>
 </head>
 <body>
-<div class="viewport">
-  <div class="stage" id="stage">
+<a class="skip" href="#main">Skip to content</a>
 
-    <nav class="site" aria-label="Site">
-      <a href="../">&larr; KAHN1</a>
-      <a href="../playground/">PLAYGROUND</a>
-      <a href="../snake/" aria-current="page">SNAKE</a>
-    </nav>
 
-    <nav class="links" aria-label="Author links">
-      <span class="views" id="views" hidden></span>
-      <a href="https://www.linkedin.com/in/amontzamir/" target="_blank" rel="noopener" title="LinkedIn" aria-label="LinkedIn">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 1 1 0-4.125 2.062 2.062 0 0 1 0 4.125zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-      </a>
-      <a href="https://github.com/Okura66" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
-      </a>
-      <a href="https://huggingface.co/Okura66" target="_blank" rel="noopener" title="Hugging Face" aria-label="Hugging Face">
-        <span class="hf" aria-hidden="true">🤗</span>
-      </a>
-    </nav>
-
-    <div class="head">
-      <h1>Kahn1 plays Snake.</h1>
-      <div class="facts">
-        <span>ONE CHOICE PER TICK</span><i>&bull;</i>
-        <span>READ FROM OPTION LOGITS</span><i>&bull;</i>
-        <span>ZERO TOKENS GENERATED</span>
-      </div>
+<a class="brand" href="/" aria-label="Kahn1, home">KAHN<span>1</span></a>
+<header class="topbar">
+  <button class="menu-btn" type="button" data-menu="open" aria-label="Open menu"><span>MENU</span><i></i></button>
+</header>
+<aside class="side" aria-label="Site navigation">
+  <div class="menu-head"><span class="wordmark">KAHN<span>1</span></span><button class="menu-close" type="button" data-menu="close" aria-label="Close menu">CLOSE ✕</button></div>
+  <nav class="otp" aria-label="On this page"><div class="kick">ON THIS PAGE</div><div class="otp-list"></div></nav>
+  <div class="side-links">
+    <div class="rule"></div>
+    <div class="kick">TRY</div>
+    <a href="/playground/">Playground</a>
+    <a href="/snake/" aria-current="page">Kahn1 plays Snake</a>
+    <div class="kick">LEARN</div>
+    <a href="/get-started/">Get started</a>
+    <a href="/caveats/">Caveats</a>
+    <div class="kick">COMPARE</div>
+    <a href="/benchmarks/">Benchmarks</a>
+    <a href="/models/">Models</a>
+    <div class="icons">
+      <a href="https://huggingface.co/Okura66" target="_blank" rel="noopener" title="Hugging Face" aria-label="Hugging Face">🤗</a>
+      <a href="https://github.com/Okura66/kahn1" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+      <a href="https://www.linkedin.com/in/amontzamir/" target="_blank" rel="noopener" title="LinkedIn" aria-label="LinkedIn"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M0 1.15C0 .52.52 0 1.18 0h13.64C15.48 0 16 .52 16 1.15v13.7c0 .63-.52 1.15-1.18 1.15H1.18C.52 16 0 15.48 0 14.85V1.15zm4.94 12.24V6.17H2.54v7.22h2.4zM3.74 5.18c.84 0 1.36-.55 1.36-1.25-.02-.71-.52-1.25-1.35-1.25-.82 0-1.36.54-1.36 1.25 0 .7.52 1.25 1.33 1.25h.02zm4.9 8.21V9.36c0-.22.02-.43.08-.59.18-.43.57-.88 1.23-.88.87 0 1.22.66 1.22 1.64v3.86h2.4V9.25c0-2.22-1.18-3.25-2.76-3.25-1.27 0-1.84.7-2.16 1.19v.02h-.02l.02-.02V6.17h-2.4c.03.68 0 7.22 0 7.22h2.4z"/></svg></a>
     </div>
-
-    <div class="lanes">
-      <div class="lane">
-        <span class="chip top">&mdash; BOARD &mdash;</span>
-        <span class="chip bot" id="chipGame">game 1 · seed 0</span>
-        <div class="panel">
-          <div class="cmd" id="cmdGame">$ snake --size 10 --seed 0</div>
-          <div class="status" id="gstatus">Idle. Press PLAY to start.</div>
-          <div class="body"><div class="boardwrap"><div class="board" id="board"></div></div></div>
-          <div class="foot">
-            <div class="m" id="gmeta">length 3 · 0 steps · 0 since food</div>
-            <div class="m" id="gsession">no finished game yet</div>
-            <div class="total">
-              <span class="lbl">SCORE</span>
-              <span class="val" id="score">0</span>
-              <span class="max" id="best">best 0</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="lane">
-        <span class="chip top">&mdash; KAHN1 &mdash;</span>
-        <span class="chip bot" id="chipBackend">kahn1 · server</span>
-        <div class="panel">
-          <div class="cmd">$ kahn1 answer --choice up,down,left,right</div>
-          <div class="status" id="status">Connecting…</div>
-          <div class="body">
-            <div class="answer">
-              <div class="label"><span>STATE</span><span class="hint">grid + one step in each direction</span></div>
-              <pre class="state" id="state"></pre>
-              <div class="label"><span>ANSWER</span><span class="hint">p(move), option logits</span></div>
-              <div id="out"><div class="ln"><span class="cursor"></span></div></div>
-            </div>
-          </div>
-          <div class="foot">
-            <div class="m" id="meta">&nbsp;</div>
-            <div class="m" id="time">&nbsp;</div>
-            <div class="total">
-              <span class="lbl">LATENCY</span>
-              <span class="val" id="latency">&mdash;</span>
-              <span class="max">ms</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="controls">
-      <button class="primary" id="play">PLAY</button>
-      <button id="step" title="One tick">STEP</button>
-      <button id="reset" title="New game with the next seed">RESET</button>
-      <button id="perm" title="Option-order permutations averaged per decision (position debiasing)">k = 1</button>
-      <button id="speed" title="Pause between ticks">speed = fast</button>
-      <button id="backend" title="Where the model runs">backend = webgpu</button>
-      <input class="url" id="url" spellcheck="false" aria-label="Server URL" hidden>
-      <select class="url" id="quant" aria-label="GGUF quantization"></select>
-      <button id="purge" title="Unload the model and delete downloaded weights from this browser">CLEAR CACHE</button>
-      <a class="credit" id="credit" href="https://huggingface.co/mradermacher" target="_blank" rel="noopener"
-         aria-label="GGUF quantized by mradermacher, thanks!"><span aria-hidden="true">&#9829;</span><span class="tip" role="tooltip">GGUF quantized by mradermacher, thanks!</span></a>
-      <span class="clock" id="clock">0.00s</span>
-      <span class="warn" id="warn"></span>
-    </div>
-
   </div>
-</div>
+</aside>
 
+<div class="shell">
+<main id="main" class="page">
+    <section class="page-hero" aria-labelledby="title">
+      <div class="kicker">DEMO</div>
+      <h1 id="title">Kahn1 plays Snake.</h1>
+      <p class="lead">One Choice question per tick, the move read from the logits. Runs in your browser, like the
+        <a href="/playground/">playground</a>.</p>
+      <div class="facts"><span>ONE CHOICE PER TICK</span><i>&bull;</i><span>READ FROM OPTION LOGITS</span><i>&bull;</i><span>ZERO TOKENS GENERATED</span></div>
+    </section>
+
+    <section class="sec app" id="demo" data-nav="Snake" aria-label="Snake">
+      <div class="lanes">
+        <div class="lane">
+          <div class="lane-bar"><b>BOARD</b><span id="chipGame">game 1 · seed 0</span></div>
+          <div class="panel">
+            <div class="cmd" id="cmdGame">$ snake --size 10 --seed 0</div>
+            <div class="status" id="gstatus">Idle. Press PLAY to start.</div>
+            <div class="body"><div class="boardwrap"><div class="board" id="board"></div></div></div>
+            <div class="pfoot">
+              <div class="m" id="gmeta">length 3 · 0 steps · 0 since food</div>
+              <div class="m" id="gsession">no finished game yet</div>
+              <div class="total">
+                <span class="lbl">SCORE</span>
+                <span class="val" id="score">0</span>
+                <span class="max" id="best">best 0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <div class="lane out">
+          <div class="lane-bar"><b>KAHN1</b><span id="chipBackend">kahn1 · server</span></div>
+          <div class="panel">
+            <div class="cmd">$ kahn1 answer --choice up,down,left,right</div>
+            <div class="status" id="status">Connecting…</div>
+            <div class="body">
+              <div class="answer">
+                <div class="label"><span>STATE</span><span class="hint">grid + one step in each direction</span></div>
+                <pre class="state" id="state"></pre>
+                <div class="label"><span>ANSWER</span><span class="hint">p(move), option logits</span></div>
+                <div id="out"><div class="ln"><span class="cursor"></span></div></div>
+              </div>
+            </div>
+            <div class="pfoot">
+              <div class="m" id="meta">&nbsp;</div>
+              <div class="m" id="time">&nbsp;</div>
+              <div class="total">
+                <span class="lbl">LATENCY</span>
+                <span class="val" id="latency">&mdash;</span>
+                <span class="max">ms</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <div class="controls">
+        <button class="primary" id="play">PLAY</button>
+        <button id="step" title="One tick">STEP</button>
+        <button id="reset" title="New game with the next seed">RESET</button>
+        <button id="perm" title="Option-order permutations averaged per decision (position debiasing)">k = 1</button>
+        <button id="speed" title="Pause between ticks">speed = fast</button>
+        <button id="backend" title="Where the model runs">backend = webgpu</button>
+        <input class="url" id="url" spellcheck="false" aria-label="Server URL" hidden>
+        <select class="url" id="quant" aria-label="GGUF quantization"></select>
+        <button id="purge" title="Unload the model and delete downloaded weights from this browser">CLEAR CACHE</button>
+        <a class="credit" id="credit" href="https://huggingface.co/mradermacher" target="_blank" rel="noopener"
+           aria-label="GGUF quantized by mradermacher, thanks!"><span aria-hidden="true">&#9829;</span><span class="tip" role="tooltip">GGUF quantized by mradermacher, thanks!</span></a>
+        <span class="clock" id="clock">0.00s</span>
+        <span class="warn" id="warn"></span>
+      </div>
+  
+    </section>
+</main>
+
+<footer class="foot">
+  <div>KAHN1 · MIT License · by <a href="https://www.linkedin.com/in/amontzamir/" rel="noopener">Axel Montzamir</a></div>
+  <nav aria-label="Footer">
+    <a href="/playground/">Playground</a>
+    <a href="/snake/">Snake</a>
+    <a href="https://github.com/Okura66/kahn1" rel="noopener">GitHub</a>
+    <a href="https://huggingface.co/Okura66" rel="noopener">Hugging Face</a>
+  </nav>
+  <span class="disc">Kahn1 is an independent project. It accepts the JEV schema format and is not affiliated with TypeSafe.</span>
+</footer>
+</div>
+<script src="/assets/site.js?v=20260928"></script>
 <script>
 /* ------------------------------------------------------------------------ *
  * Game. Same rules and the same state text as scripts/snake.py, so what the
@@ -866,27 +888,6 @@ document.addEventListener("keydown", (e) => {
   else if (e.key === "ArrowRight" || e.key === "n") el("step").click();
 });
 
-const FLUID = window.matchMedia("(max-width: 1099px)");
-function fit() {
-  const st = el("stage");
-  if (FLUID.matches) { st.removeAttribute("style"); return; }
-  const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
-  st.style.transform = "scale(" + s + ")";
-  st.style.marginLeft = st.style.marginRight = ((1920 * s) - 1920) / 2 + "px";
-  st.style.marginTop = st.style.marginBottom = ((1080 * s) - 1080) / 2 + "px";
-}
-window.addEventListener("resize", fit);
-FLUID.addEventListener("change", fit);
-fit();
-
-/* Site-wide view count, as on the playground; hidden when GoatCounter declines. */
-fetch("https://kahn1.goatcounter.com/counter/TOTAL.json")
-  .then((r) => (r.ok || r.status === 404 ? r.json() : Promise.reject()))
-  .then((d) => {
-    el("views").textContent = d.count + (d.count === "1" ? " view" : " views");
-    el("views").hidden = false;
-  })
-  .catch(() => {});
 
 newGame(false);
 syncButtons();

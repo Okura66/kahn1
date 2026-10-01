@@ -22,8 +22,8 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script>document.documentElement.className += " js"; document.documentElement.style.cssText = "--p:0;--pe:0";</script>
-<title>Kahn1 — décisions typées lues dans les logits d'un LLM</title>
-<meta name="description" content="Moteur de décision « Système 1 » open source : classer, noter et vérifier un texte avec un modèle 4B ou 3B qui lit des réponses calibrées dans les logits.">
+<title>Kahn1 — modèle Système 1 open source de classification</title>
+<meta name="description" content="Modèle Système 1 open source, alternative à JEV : classification de texte zero-shot, notation et vérification, réponses calibrées lues dans les logits.">
 <link rel="canonical" href="https://kahn1.com/fr/">
 <link rel="alternate" hreflang="en" href="https://kahn1.com/">
 <link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/">
@@ -35,8 +35,8 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
 <meta property="og:locale" content="fr_FR">
 <meta property="og:locale:alternate" content="en_US">
 <meta property="og:url" content="https://kahn1.com/fr/">
-<meta property="og:title" content="Kahn1 — décisions typées lues dans les logits d'un LLM">
-<meta property="og:description" content="Classer, noter et vérifier n'importe quel texte avec un modèle ouvert 4B ou 3B qui lit des réponses calibrées dans les logits des options. Zéro token généré, zéro erreur de schéma.">
+<meta property="og:title" content="Kahn1 — modèle Système 1 open source de classification">
+<meta property="og:description" content="Kahn1 classe, note et vérifie n'importe quel texte en zero-shot avec un modèle ouvert 4B ou 3B qui lit des réponses calibrées dans les logits. Une alternative open source à JEV.">
 <meta property="og:image" content="https://kahn1.com/assets/og-fr.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -57,12 +57,79 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
       "@type": "WebPage",
       "@id": "https://kahn1.com/fr/#webpage",
       "url": "https://kahn1.com/fr/",
-      "name": "Kahn1 — décisions typées lues dans les logits d'un LLM",
+      "name": "Kahn1 — modèle Système 1 open source de classification",
       "inLanguage": "fr",
-      "isPartOf": { "@id": "https://kahn1.com/#website" },
-      "about": { "@id": "https://kahn1.com/#software" },
-      "primaryImageOfPage": { "@type": "ImageObject", "url": "https://kahn1.com/assets/og-fr.png", "width": 1200, "height": 630 },
-      "dateModified": "2026-09-28"
+      "isPartOf": {
+        "@id": "https://kahn1.com/#website"
+      },
+      "about": {
+        "@id": "https://kahn1.com/#software"
+      },
+      "primaryImageOfPage": {
+        "@type": "ImageObject",
+        "url": "https://kahn1.com/assets/og-fr.png",
+        "width": 1200,
+        "height": 630
+      },
+      "dateModified": "2026-10-01",
+      "description": "Modèle Système 1 open source, alternative à JEV : classification de texte zero-shot, notation et vérification, réponses calibrées lues dans les logits."
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://kahn1.com/#software",
+      "name": "Kahn1",
+      "alternateName": "sysone",
+      "url": "https://kahn1.com/",
+      "description": "Moteur de décision « Système 1 » open source, alternative ouverte à JEV : il répond à des questions typées (Choice, Score, Noul) sur n'importe quel texte en lisant des distributions de probabilité calibrées dans les logits des tokens d'option, sans générer de texte.",
+      "applicationCategory": "DeveloperApplication",
+      "applicationSubCategory": "Zero-shot text classification",
+      "operatingSystem": "Linux, Windows, macOS, navigateur web (WebGPU)",
+      "license": "https://opensource.org/licenses/MIT",
+      "isAccessibleForFree": true,
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR"
+      },
+      "keywords": "System 1 model, System 1 decision engine, open-source JEV alternative, JEV alternative, TypeSafe JEV, zero-shot text classification, text classification model, LLM classification, calibrated LLM classifier, logit-based classification, structured outputs alternative, JSON mode alternative, LLM as a judge, intent classification, sentiment scoring, natural language inference, open-weight model, Qwen3.5-4B fine-tune, vLLM",
+      "author": {
+        "@type": "Person",
+        "@id": "https://kahn1.com/#author",
+        "name": "Axel Montzamir",
+        "url": "https://www.linkedin.com/in/amontzamir/"
+      },
+      "image": "https://kahn1.com/assets/og-fr.png",
+      "softwareHelp": {
+        "@type": "CreativeWork",
+        "url": "https://kahn1.com/fr/demarrer/"
+      },
+      "sameAs": [
+        "https://github.com/Okura66/kahn1",
+        "https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B",
+        "https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B"
+      ],
+      "featureList": [
+        "Choice: pick one option among up to 26, with a fallback",
+        "Score: ordinal levels with a continuous expected value",
+        "Noul: does the text support a statement (true / false)",
+        "Calibrated probability distribution for every answer",
+        "Zero generated tokens, no schema or parsing errors",
+        "Accepts the JEV schema format (POST /v1/evaluate/jev)",
+        "GPU (vLLM) and CPU (transformers) backends"
+      ],
+      "softwareRequirements": "Python 3.11+; vLLM on an NVIDIA GPU, or transformers on a CPU",
+      "isBasedOn": [
+        "https://huggingface.co/Qwen/Qwen3.5-4B",
+        "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct"
+      ],
+      "hasPart": [
+        {
+          "@id": "https://kahn1.com/models/#kahn1-4b"
+        },
+        {
+          "@id": "https://kahn1.com/models/#kahn1-3b"
+        }
+      ]
     }
   ]
 }

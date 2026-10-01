@@ -1,5 +1,23 @@
+# kahn1.com: every page may be crawled and indexed, by search engines and by AI
+# search and answer engines alike. /demo/ only redirects to /playground/ (noindex,
+# canonical to the playground): crawlers may fetch it to follow the redirect.
 User-agent: *
 Allow: /
-Disallow: /demo/
+
+# AI crawlers, named so the intent is explicit: all allowed.
+User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+User-agent: Meta-ExternalAgent
+User-agent: MistralAI-User
+User-agent: CCBot
+Allow: /
 
 Sitemap: https://kahn1.com/sitemap.xml

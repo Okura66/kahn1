@@ -21,8 +21,8 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
         async src="https://gc.zgo.at/count.js"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Kahn1 benchmarks — held-out results and head-to-head with JEV</title>
-<meta name="description" content="Kahn1 4B and 3B against JEV on the same 14,663 held-out items and the 231 public JevBench items: accuracy, calibration, latency and how to reproduce.">
+<title>Kahn1 vs JEV — benchmarks of an open-source System 1 model</title>
+<meta name="description" content="Kahn1 4B and 3B, open-source alternatives to JEV, against JEV on the same 14,663 held-out items and 231 JevBench items: accuracy, calibration, latency.">
 <link rel="canonical" href="https://kahn1.com/benchmarks/">
 <link rel="alternate" hreflang="en" href="https://kahn1.com/benchmarks/">
 <link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/resultats/">
@@ -34,8 +34,8 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
 <meta property="og:locale" content="en_US">
 <meta property="og:locale:alternate" content="fr_FR">
 <meta property="og:url" content="https://kahn1.com/benchmarks/">
-<meta property="og:title" content="Kahn1 benchmarks">
-<meta property="og:description" content="Kahn1 4B and 3B against JEV on the same 14,663 held-out items and the 231 public JevBench items: accuracy, calibration, latency and how to reproduce.">
+<meta property="og:title" content="Kahn1 vs JEV — benchmarks of an open-source System 1 model">
+<meta property="og:description" content="Kahn1 4B and 3B, open-source alternatives to JEV, against JEV on the same 14,663 held-out items and 231 JevBench items: accuracy, calibration, latency.">
 <meta property="og:image" content="https://kahn1.com/assets/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -53,20 +53,74 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
  "@context": "https://schema.org",
  "@type": "TechArticle",
  "image": "https://kahn1.com/assets/og.png",
- "headline": "Kahn1 benchmarks",
+ "headline": "Kahn1 vs JEV — benchmarks of an open-source System 1 model",
  "inLanguage": "en",
  "url": "https://kahn1.com/benchmarks/",
- "description": "Kahn1 4B and 3B against JEV on the same 14,663 held-out items and the 231 public JevBench items: accuracy, calibration, latency and how to reproduce.",
+ "description": "Kahn1 4B and 3B, open-source alternatives to JEV, against JEV on the same 14,663 held-out items and 231 JevBench items: accuracy, calibration, latency.",
  "author": {
-  "@id": "https://kahn1.com/#author"
+  "@type": "Person",
+  "@id": "https://kahn1.com/#author",
+  "name": "Axel Montzamir",
+  "url": "https://www.linkedin.com/in/amontzamir/"
  },
  "about": {
-  "@id": "https://kahn1.com/#software"
+  "@type": "SoftwareApplication",
+  "@id": "https://kahn1.com/#software",
+  "name": "Kahn1",
+  "url": "https://kahn1.com/"
  },
  "isPartOf": {
-  "@id": "https://kahn1.com/#website"
+  "@type": "WebSite",
+  "@id": "https://kahn1.com/#website",
+  "name": "Kahn1",
+  "url": "https://kahn1.com/"
  },
- "dateModified": "2026-09-28"
+ "dateModified": "2026-10-01",
+ "keywords": "System 1 model, System 1 decision engine, open-source JEV alternative, JEV alternative, TypeSafe JEV, zero-shot text classification, text classification model, LLM classification, calibrated LLM classifier, logit-based classification, structured outputs alternative, JSON mode alternative, LLM as a judge, intent classification, sentiment scoring, natural language inference, open-weight model, Qwen3.5-4B fine-tune, vLLM",
+ "publisher": {
+  "@id": "https://kahn1.com/#author"
+ },
+ "mentions": [
+  {
+   "@type": "SoftwareApplication",
+   "name": "JEV",
+   "alternateName": "jev-1.13.0",
+   "provider": {
+    "@type": "Organization",
+    "name": "TypeSafe"
+   }
+  },
+  {
+   "@type": "SoftwareApplication",
+   "name": "JevK5",
+   "url": "https://github.com/allebee/jevk5"
+  },
+  {
+   "@type": "Dataset",
+   "name": "JevBench",
+   "url": "https://github.com/fstandhartinger/jevbench"
+  },
+  {
+   "@type": "Dataset",
+   "name": "BANKING77"
+  },
+  {
+   "@type": "Dataset",
+   "name": "MASSIVE"
+  },
+  {
+   "@type": "Dataset",
+   "name": "SST-5"
+  },
+  {
+   "@type": "Dataset",
+   "name": "RTE"
+  },
+  {
+   "@type": "Dataset",
+   "name": "SciTail"
+  }
+ ]
 }
 </script>
 <script type="application/ld+json">

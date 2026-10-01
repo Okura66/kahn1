@@ -22,7 +22,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Démarrer avec Kahn1 — installer, servir, interroger, calibrer</title>
-<meta name="description" content="Installer et servir Kahn1, poser des questions typées Choice, Score et Noul en HTTP ou en Python, lire les réponses et les calibrer sur vos données.">
+<meta name="description" content="Installer et servir Kahn1, API de classification Système 1 ouverte : questions Choice, Score et Noul en HTTP ou Python, schémas JEV acceptés, calibration.">
 <link rel="canonical" href="https://kahn1.com/fr/demarrer/">
 <link rel="alternate" hreflang="en" href="https://kahn1.com/get-started/">
 <link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/demarrer/">
@@ -35,7 +35,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
 <meta property="og:locale:alternate" content="en_US">
 <meta property="og:url" content="https://kahn1.com/fr/demarrer/">
 <meta property="og:title" content="Démarrer avec Kahn1">
-<meta property="og:description" content="Installer et servir Kahn1, poser des questions typées Choice, Score et Noul en HTTP ou en Python, lire les réponses et les calibrer sur vos données.">
+<meta property="og:description" content="Installer et servir Kahn1, API de classification Système 1 ouverte : questions Choice, Score et Noul en HTTP ou Python, schémas JEV acceptés, calibration.">
 <meta property="og:image" content="https://kahn1.com/assets/og-fr.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -56,17 +56,32 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
  "headline": "Démarrer avec Kahn1",
  "inLanguage": "fr",
  "url": "https://kahn1.com/fr/demarrer/",
- "description": "Installer et servir Kahn1, poser des questions typées Choice, Score et Noul en HTTP ou en Python, lire les réponses et les calibrer sur vos données.",
+ "description": "Installer et servir Kahn1, API de classification Système 1 ouverte : questions Choice, Score et Noul en HTTP ou Python, schémas JEV acceptés, calibration.",
  "author": {
-  "@id": "https://kahn1.com/#author"
+  "@type": "Person",
+  "@id": "https://kahn1.com/#author",
+  "name": "Axel Montzamir",
+  "url": "https://www.linkedin.com/in/amontzamir/"
  },
  "about": {
-  "@id": "https://kahn1.com/#software"
+  "@type": "SoftwareApplication",
+  "@id": "https://kahn1.com/#software",
+  "name": "Kahn1",
+  "url": "https://kahn1.com/"
  },
  "isPartOf": {
-  "@id": "https://kahn1.com/#website"
+  "@type": "WebSite",
+  "@id": "https://kahn1.com/#website",
+  "name": "Kahn1",
+  "url": "https://kahn1.com/"
  },
- "dateModified": "2026-09-28"
+ "dateModified": "2026-10-01",
+ "keywords": "modèle Système 1, moteur de décision Système 1, alternative open source à JEV, alternative à JEV, TypeSafe JEV, classification de texte zero-shot, modèle de classification de texte, classification par LLM, classifieur LLM calibré, classification par logits, alternative aux structured outputs, alternative au JSON mode, LLM as a judge, classification d'intentions, analyse de sentiment, inférence en langage naturel, modèle open-weight, fine-tune de Qwen3.5-4B, vLLM",
+ "publisher": {
+  "@id": "https://kahn1.com/#author"
+ },
+ "proficiencyLevel": "Beginner",
+ "dependencies": "Python 3.11+, uv; vLLM and an NVIDIA GPU, or transformers on a CPU"
 }
 </script>
 <script type="application/ld+json">

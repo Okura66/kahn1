@@ -21,8 +21,8 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
         async src="https://gc.zgo.at/count.js"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Modèles Kahn1 — Kahn1 4B et 3B, poids fusionnés et LoRA</title>
-<meta name="description" content="Les deux tailles de Kahn1, 4B (Qwen3.5-4B) et 3B (Qwen2.5-3B) : modèles fusionnés et adaptateurs LoRA sur Hugging Face, licences, résultats, chargement.">
+<title>Kahn1 4B et 3B — modèles Système 1 ouverts de classification</title>
+<meta name="description" content="Kahn1 4B (Qwen3.5-4B) et 3B (Qwen2.5-3B), modèles Système 1 ouverts de classification de texte zero-shot : poids fusionnés et LoRA sur Hugging Face, licences.">
 <link rel="canonical" href="https://kahn1.com/fr/modeles/">
 <link rel="alternate" hreflang="en" href="https://kahn1.com/models/">
 <link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/modeles/">
@@ -34,8 +34,8 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
 <meta property="og:locale" content="fr_FR">
 <meta property="og:locale:alternate" content="en_US">
 <meta property="og:url" content="https://kahn1.com/fr/modeles/">
-<meta property="og:title" content="Modèles Kahn1 — Kahn1 4B et 3B, poids fusionnés et LoRA">
-<meta property="og:description" content="Les deux tailles de Kahn1, 4B (Qwen3.5-4B) et 3B (Qwen2.5-3B) : modèles fusionnés et adaptateurs LoRA sur Hugging Face, licences, résultats, chargement.">
+<meta property="og:title" content="Kahn1 4B et 3B — modèles Système 1 ouverts de classification">
+<meta property="og:description" content="Kahn1 4B (Qwen3.5-4B) et 3B (Qwen2.5-3B), modèles Système 1 ouverts de classification de texte zero-shot : poids fusionnés et LoRA sur Hugging Face, licences.">
 <meta property="og:image" content="https://kahn1.com/assets/og-fr.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -53,20 +53,91 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
  "@context": "https://schema.org",
  "@type": "TechArticle",
  "image": "https://kahn1.com/assets/og-fr.png",
- "headline": "Modèles Kahn1",
+ "headline": "Kahn1 4B et 3B — modèles Système 1 ouverts de classification",
  "inLanguage": "fr",
  "url": "https://kahn1.com/fr/modeles/",
- "description": "Les deux tailles de Kahn1, 4B (Qwen3.5-4B) et 3B (Qwen2.5-3B) : modèles fusionnés et adaptateurs LoRA sur Hugging Face, licences, résultats, chargement.",
+ "description": "Kahn1 4B (Qwen3.5-4B) et 3B (Qwen2.5-3B), modèles Système 1 ouverts de classification de texte zero-shot : poids fusionnés et LoRA sur Hugging Face, licences.",
  "author": {
-  "@id": "https://kahn1.com/#author"
+  "@type": "Person",
+  "@id": "https://kahn1.com/#author",
+  "name": "Axel Montzamir",
+  "url": "https://www.linkedin.com/in/amontzamir/"
  },
- "about": {
-  "@id": "https://kahn1.com/#software"
- },
+ "about": [
+  {
+   "@type": "SoftwareApplication",
+   "@id": "https://kahn1.com/#software",
+   "name": "Kahn1",
+   "url": "https://kahn1.com/"
+  },
+  {
+   "@type": "SoftwareApplication",
+   "@id": "https://kahn1.com/models/#kahn1-4b",
+   "name": "Kahn1 4B",
+   "alternateName": "Kahn1-Qwen3.5-4B",
+   "description": "Taille 4B de Kahn1, modèle Système 1 de classification de texte zero-shot : Qwen3.5-4B fine-tuné avec LoRA, réponses Choice, Score et Noul lues dans les logits des tokens d'option.",
+   "softwareVersion": "2 (2026-10)",
+   "url": "https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B",
+   "downloadUrl": "https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B",
+   "fileSize": "8.4 GB",
+   "license": "https://www.apache.org/licenses/LICENSE-2.0",
+   "isBasedOn": "https://huggingface.co/Qwen/Qwen3.5-4B",
+   "applicationCategory": "DeveloperApplication",
+   "applicationSubCategory": "Modèle de classification de texte",
+   "operatingSystem": "Linux, Windows (WSL2), macOS",
+   "isAccessibleForFree": true,
+   "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "EUR"
+   },
+   "author": {
+    "@id": "https://kahn1.com/#author"
+   },
+   "isPartOf": {
+    "@id": "https://kahn1.com/#software"
+   }
+  },
+  {
+   "@type": "SoftwareApplication",
+   "@id": "https://kahn1.com/models/#kahn1-3b",
+   "name": "Kahn1 3B",
+   "alternateName": "Kahn1-Qwen2.5-3B",
+   "description": "Taille 3B de Kahn1, le même modèle Système 1 : Qwen2.5-3B-Instruct fine-tuné avec LoRA.",
+   "softwareVersion": "v3",
+   "url": "https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B",
+   "downloadUrl": "https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B",
+   "fileSize": "6.17 GB",
+   "license": "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/blob/main/LICENSE",
+   "isBasedOn": "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct",
+   "applicationCategory": "DeveloperApplication",
+   "applicationSubCategory": "Modèle de classification de texte",
+   "operatingSystem": "Linux, Windows (WSL2), macOS",
+   "isAccessibleForFree": true,
+   "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "EUR"
+   },
+   "author": {
+    "@id": "https://kahn1.com/#author"
+   },
+   "isPartOf": {
+    "@id": "https://kahn1.com/#software"
+   }
+  }
+ ],
  "isPartOf": {
-  "@id": "https://kahn1.com/#website"
+  "@type": "WebSite",
+  "@id": "https://kahn1.com/#website",
+  "name": "Kahn1",
+  "url": "https://kahn1.com/"
  },
- "dateModified": "2026-09-28"
+ "dateModified": "2026-10-01",
+ "keywords": "modèle Système 1, moteur de décision Système 1, alternative open source à JEV, alternative à JEV, TypeSafe JEV, classification de texte zero-shot, modèle de classification de texte, classification par LLM, classifieur LLM calibré, classification par logits, alternative aux structured outputs, alternative au JSON mode, LLM as a judge, classification d'intentions, analyse de sentiment, inférence en langage naturel, modèle open-weight, fine-tune de Qwen3.5-4B, vLLM",
+ "publisher": {
+  "@id": "https://kahn1.com/#author"
+ }
 }
 </script>
 <script type="application/ld+json">

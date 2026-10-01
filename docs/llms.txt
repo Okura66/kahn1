@@ -8,6 +8,17 @@ Kahn1 vs JEV 1.13.0 (TypeSafe API), like for like. On the 14,663 Kahn1 held-out 
 
 Caveats: 4B and 3B models, not frontier models; JEV is more accurate on every held-out primitive; Score is the weakest primitive; computing dates, durations or amounts in a single forward pass is weak; calibration was fitted on the training distribution and should be redone on your domain; confidence is the distance from a uniform guess, not the probability of being right. The browser demos run a 4-bit GGUF of the 3B v1 checkpoint.
 
+## Questions
+
+- What is a System 1 model? A model that takes fast, cheap decisions in a single forward pass, after Daniel Kahneman's System 1, and hands the harder cases to a slower System 2 (a frontier model or a person). Kahn1 is an open-source System 1 model: it reads typed answers from the logits of option tokens instead of generating text.
+- Is there an open-source alternative to JEV (TypeSafe)? Kahn1 is one: open weights (Kahn1 4B under Apache 2.0, Kahn1 3B under the Qwen Research License), MIT code, it runs on your own hardware with no per-call price, and its server accepts the JEV schema format (POST /v1/evaluate/jev). It is an independent project, not affiliated with TypeSafe. Asked the same questions over the same options, JEV 1.13.0 is more accurate: 73.2% against 71.0% for Kahn1 4B on the 14,663 held-out items, 86.6% against 86.1% on the 231 public JevBench items.
+- How does Kahn1 compare with other open Jev-class models? On the 231 public JevBench items, Kahn1 4B is on par with JevK5 v0.2, another open Qwen3.5-4B model: 86.1% each (199 of 231), exact McNemar p = 1.00.
+- Can Kahn1 do zero-shot text classification? Yes. Categories, scales and statements are part of each request, so a new taxonomy needs no retraining. On held-out intent datasets it picks the right intent among 8 options 92.3% of the time (banking77 91.5%, MASSIVE 93.1%). Recalibrate on your own labelled examples (sysone calibrate) before trusting a confidence threshold.
+- How is it different from JSON mode or structured outputs? Structured decoding constrains the tokens a model generates, and the text still has to be parsed. Kahn1 generates nothing: it reads one probability distribution per question over the option tokens, so every answer comes with its full distribution and a calibrated confidence, and there is nothing to parse.
+- Can it judge or gate an LLM agent? Noul questions ask whether a text supports a statement (does this tool call leak personal data, does this answer follow the policy) and return a calibrated probability you can threshold. It is a 4B or 3B model, not a frontier model: keep a person or a larger model on the low-confidence path.
+- Does it need a GPU? For throughput, yes: median 82.4 ms for Kahn1 4B and 36.4 ms for Kahn1 3B per request at k = 3 on one RTX 5070 Ti with vLLM. Both sizes also run on a CPU (transformers) at seconds per question, and the playground runs a 4-bit GGUF of the 3B in the browser with WebGPU.
+- Which languages? English and French.
+
 ## Pages
 
 - [Home (English)](https://kahn1.com/): what Kahn1 is, the three primitives, how it compares, use cases, caveats

@@ -21,8 +21,8 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
         async src="https://gc.zgo.at/count.js"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Résultats de Kahn1 — holdout et duel avec JEV</title>
-<meta name="description" content="Kahn1 4B et 3B face à JEV sur les mêmes 14 663 exemples réservés et les 231 exemples publics de JevBench : précision, calibration, latence, reproduction.">
+<title>Kahn1 face à JEV — résultats d'un modèle Système 1 ouvert</title>
+<meta name="description" content="Kahn1 4B et 3B, alternatives open source à JEV, face à JEV sur les mêmes 14 663 exemples réservés et 231 exemples JevBench : précision, calibration, latence.">
 <link rel="canonical" href="https://kahn1.com/fr/resultats/">
 <link rel="alternate" hreflang="en" href="https://kahn1.com/benchmarks/">
 <link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/resultats/">
@@ -34,8 +34,8 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
 <meta property="og:locale" content="fr_FR">
 <meta property="og:locale:alternate" content="en_US">
 <meta property="og:url" content="https://kahn1.com/fr/resultats/">
-<meta property="og:title" content="Résultats de Kahn1">
-<meta property="og:description" content="Kahn1 4B et 3B face à JEV sur les mêmes 14 663 exemples réservés et les 231 exemples publics de JevBench : précision, calibration, latence, reproduction.">
+<meta property="og:title" content="Kahn1 face à JEV — résultats d'un modèle Système 1 ouvert">
+<meta property="og:description" content="Kahn1 4B et 3B, alternatives open source à JEV, face à JEV sur les mêmes 14 663 exemples réservés et 231 exemples JevBench : précision, calibration, latence.">
 <meta property="og:image" content="https://kahn1.com/assets/og-fr.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -53,20 +53,74 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
  "@context": "https://schema.org",
  "@type": "TechArticle",
  "image": "https://kahn1.com/assets/og-fr.png",
- "headline": "Résultats de Kahn1",
+ "headline": "Kahn1 face à JEV — résultats d'un modèle Système 1 ouvert",
  "inLanguage": "fr",
  "url": "https://kahn1.com/fr/resultats/",
- "description": "Kahn1 4B et 3B face à JEV sur les mêmes 14 663 exemples réservés et les 231 exemples publics de JevBench : précision, calibration, latence, reproduction.",
+ "description": "Kahn1 4B et 3B, alternatives open source à JEV, face à JEV sur les mêmes 14 663 exemples réservés et 231 exemples JevBench : précision, calibration, latence.",
  "author": {
-  "@id": "https://kahn1.com/#author"
+  "@type": "Person",
+  "@id": "https://kahn1.com/#author",
+  "name": "Axel Montzamir",
+  "url": "https://www.linkedin.com/in/amontzamir/"
  },
  "about": {
-  "@id": "https://kahn1.com/#software"
+  "@type": "SoftwareApplication",
+  "@id": "https://kahn1.com/#software",
+  "name": "Kahn1",
+  "url": "https://kahn1.com/"
  },
  "isPartOf": {
-  "@id": "https://kahn1.com/#website"
+  "@type": "WebSite",
+  "@id": "https://kahn1.com/#website",
+  "name": "Kahn1",
+  "url": "https://kahn1.com/"
  },
- "dateModified": "2026-09-28"
+ "dateModified": "2026-10-01",
+ "keywords": "modèle Système 1, moteur de décision Système 1, alternative open source à JEV, alternative à JEV, TypeSafe JEV, classification de texte zero-shot, modèle de classification de texte, classification par LLM, classifieur LLM calibré, classification par logits, alternative aux structured outputs, alternative au JSON mode, LLM as a judge, classification d'intentions, analyse de sentiment, inférence en langage naturel, modèle open-weight, fine-tune de Qwen3.5-4B, vLLM",
+ "publisher": {
+  "@id": "https://kahn1.com/#author"
+ },
+ "mentions": [
+  {
+   "@type": "SoftwareApplication",
+   "name": "JEV",
+   "alternateName": "jev-1.13.0",
+   "provider": {
+    "@type": "Organization",
+    "name": "TypeSafe"
+   }
+  },
+  {
+   "@type": "SoftwareApplication",
+   "name": "JevK5",
+   "url": "https://github.com/allebee/jevk5"
+  },
+  {
+   "@type": "Dataset",
+   "name": "JevBench",
+   "url": "https://github.com/fstandhartinger/jevbench"
+  },
+  {
+   "@type": "Dataset",
+   "name": "BANKING77"
+  },
+  {
+   "@type": "Dataset",
+   "name": "MASSIVE"
+  },
+  {
+   "@type": "Dataset",
+   "name": "SST-5"
+  },
+  {
+   "@type": "Dataset",
+   "name": "RTE"
+  },
+  {
+   "@type": "Dataset",
+   "name": "SciTail"
+  }
+ ]
 }
 </script>
 <script type="application/ld+json">

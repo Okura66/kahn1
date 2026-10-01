@@ -279,9 +279,13 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
         mêmes exemples, k&nbsp;=&nbsp;3, calibré. La moitié réservée de JevBench n'est pas publique, Kahn1 n'y a donc
         pas été testé.</p>
       <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col">Niveau</th><th scope="col" class="r">Exemples publics</th><th scope="col" class="r">Kahn1 4B</th><th scope="col" class="r">Kahn1 3B</th><th scope="col" class="r">JevK5 v0.2</th><th scope="col" class="r">Jev 1.13.0</th><th scope="col" class="r">Jev, public + réservé</th></tr></thead><tbody><tr><td>Facile</td><td class="r">48</td><td class="r"><b>100,0&nbsp;%</b></td><td class="r"><b>100,0&nbsp;%</b></td><td class="r"><b>100,0&nbsp;%</b></td><td class="r"><b>100,0&nbsp;%</b></td><td class="r">100,0&nbsp;%</td></tr><tr><td>Standard</td><td class="r">72</td><td class="r"><b>98,6&nbsp;%</b></td><td class="r">84,7&nbsp;%</td><td class="r">95,8&nbsp;%</td><td class="r"><b>98,6&nbsp;%</b></td><td class="r">99,0&nbsp;%</td></tr><tr><td>Difficile</td><td class="r">111</td><td class="r">72,1&nbsp;%</td><td class="r">42,3&nbsp;%</td><td class="r"><b>73,9&nbsp;%</b></td><td class="r">73,0&nbsp;%</td><td class="r">74,1&nbsp;%</td></tr><tr><td>Total</td><td class="r">231</td><td class="r">86,1&nbsp;%</td><td class="r">67,5&nbsp;%</td><td class="r">86,1&nbsp;%</td><td class="r"><b>86,6&nbsp;%</b></td><td class="r">—</td></tr></tbody></table></div>
-      <p class="small faint" style="margin-top:12px">Kahn1 4B face à JevK5, exemple par exemple&nbsp;: 12 exemples que
-        seul Kahn1 4B réussit, 12 que seul JevK5 réussit&nbsp;; test exact de McNemar, p&nbsp;=&nbsp;1,00, écart non
-        significatif. Le 4B comble l'essentiel du retard du 3B sur le niveau difficile (72,1&nbsp;% contre
+      <p class="small faint" style="margin-top:12px">Kahn1 4B face à l'exécution publiée par les auteurs de JevK5, exemple
+        par exemple&nbsp;: 12 exemples que seul Kahn1 4B réussit, 12 que seul JevK5 réussit&nbsp;; test exact de McNemar,
+        p&nbsp;=&nbsp;1,00, écart non significatif. L'exécution de JevK5 v0.2 par JevBench lui-même donne 85,3&nbsp;% sur
+        les mêmes 231 exemples
+        (<a href="https://github.com/fstandhartinger/jevbench/blob/main/results/v1.4/measurement-aggregates.json" rel="noopener">agrégats v1.4</a>).
+        Les chiffres de Kahn1, de JevK5 et de Jev viennent de trois exécutions différentes sur les mêmes exemples&nbsp;: la
+        nôtre, celle des auteurs de JevK5 et celle de JevBench. Le 4B comble l'essentiel du retard du 3B sur le niveau difficile (72,1&nbsp;% contre
         42,3&nbsp;%).</p>
     </section>
 

@@ -136,7 +136,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
         "Noul: does the text support a statement (true / false)",
         "Calibrated probability distribution for every answer",
         "Zero generated tokens, no schema or parsing errors",
-        "Accepts the JEV schema format (POST /v1/evaluate/jev)",
+        "Takes JEV's per-question fields under a schema key (POST /v1/evaluate/jev); not a drop-in for JEV's /v1/systemone clients",
         "GPU (vLLM) and CPU (transformers) backends"
       ],
       "softwareRequirements": "Python 3.11+; vLLM on an NVIDIA GPU, or transformers on a CPU",

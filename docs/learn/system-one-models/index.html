@@ -131,7 +131,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
   {
    "@type": "DefinedTerm",
    "name": "Noul",
-   "description": "JEV's name for a yes / no question: does the text support this statement? Kahn1 uses the same name.",
+   "description": "Jev's name for a yes / no question: does the text support this statement? Kahn1 uses the same name.",
    "inDefinedTermSet": "https://kahn1.com/learn/system-one-models/#terms"
   },
   {
@@ -219,7 +219,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
   <main id="main" class="page">
     <section class="page-hero" aria-labelledby="title">
       <h1 id="title">System One models</h1>
-      <p class="lead">A System One model answers typed questions about a text in one forward pass: it reads a probability for each allowed answer from the model's logits instead of writing text. TypeSafe's JEV made the term popular in September 2026; open models now do the same.</p>
+      <p class="lead">A System One model answers typed questions about a text in one forward pass: it reads a probability for each allowed answer from the model's logits instead of writing text. TypeSafe's Jev made the term popular in September 2026; open models now do the same.</p>
       <p class="small faint">Updated October 1, 2026</p>
       <nav class="toc" aria-label="On this page">
         <ol>
@@ -248,13 +248,13 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     <section class="sec doc" id="families" aria-labelledby="h-families">
       <h2 id="h-families">03 · The families</h2>
       <p>Seven families turn a text into a typed decision; only decision models combine a guaranteed format, a probability per option and a single pass. Product by product, with licences and sources, see the <a href="/compare/landscape/">landscape</a>.</p>
-      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col">Family</th><th scope="col">Examples</th><th scope="col">Licence</th><th scope="col">Where it runs</th></tr></thead><tbody><tr><td>Hosted decision models</td><td>JEV (TypeSafe), d1 (Liquid AI)</td><td>Closed</td><td>API</td></tr><tr><td>Open decision models</td><td>Clef (Cloudflare), JevK5, Kahn1, Tev1 (Together), Laya</td><td>Mostly Apache 2.0</td><td>Local, sometimes also hosted</td></tr><tr><td>LLMs with structured outputs</td><td>OpenAI, Anthropic, Google</td><td>Closed</td><td>API</td></tr><tr><td>Constrained decoding</td><td>Outlines, XGrammar, vLLM, llama.cpp, Guidance</td><td>Apache 2.0 or MIT</td><td>Local, with any model</td></tr><tr><td>Cloud classification</td><td>Google Natural Language, AWS Comprehend, Azure Language</td><td>Closed</td><td>API</td></tr><tr><td>Zero-shot encoders</td><td>bart-large-mnli, DeBERTa-v3 zeroshot, GLiClass, SetFit</td><td>MIT or Apache 2.0</td><td>CPU</td></tr><tr><td>Guard and judge models</td><td>Llama Guard 4, ShieldGemma, Granite Guardian, Qwen3Guard, Prometheus 2</td><td>Mixed</td><td>Local</td></tr></tbody></table></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col">Family</th><th scope="col">Examples</th><th scope="col">Licence</th><th scope="col">Where it runs</th></tr></thead><tbody><tr><td>Hosted decision models</td><td>Jev (TypeSafe), d1 (Liquid AI), Decisions API (OpenAI, limited preview)</td><td>Closed</td><td>API</td></tr><tr><td>Open decision models</td><td>Clef (Cloudflare), JevK5, Kahn1, Tev1 (Together), Laya</td><td>Mostly Apache 2.0</td><td>Local, sometimes also hosted</td></tr><tr><td>LLMs with structured outputs</td><td>OpenAI, Anthropic, Google</td><td>Closed</td><td>API</td></tr><tr><td>Constrained decoding</td><td>Outlines, XGrammar, vLLM, llama.cpp, Guidance</td><td>Apache 2.0 or MIT</td><td>Local, with any model</td></tr><tr><td>Cloud classification</td><td>Google Natural Language, AWS Comprehend, Azure Language</td><td>Closed</td><td>API</td></tr><tr><td>Zero-shot encoders</td><td>bart-large-mnli, DeBERTa-v3 zeroshot, GLiClass, SetFit</td><td>MIT or Apache 2.0</td><td>CPU</td></tr><tr><td>Guard and judge models</td><td>Llama Guard 4, ShieldGemma, Granite Guardian, Qwen3Guard, Prometheus 2</td><td>Mixed</td><td>Local</td></tr></tbody></table></div>
     </section>
     <section class="sec doc" id="choose" aria-labelledby="h-choose">
       <h2 id="h-choose">04 · How to choose</h2>
       <ul>
         <li><strong>Can your data leave your infrastructure?</strong> No: an open model, run locally. Yes: a hosted API becomes an option.</li>
-        <li><strong>Which language?</strong> JEV is trained first for English, per its documentation; check the language of each model.</li>
+        <li><strong>Which language?</strong> Jev is trained first for English, per its documentation; check the language of each model.</li>
         <li><strong>Which licence?</strong> Apache 2.0 and MIT allow commercial use; some licences (Qwen Research, CC BY-NC) limit it.</li>
         <li><strong>Does calibration hold on your data?</strong> Measure the ECE on a few hundred labelled examples before you set a threshold.</li>
         <li><strong>How many options, how long a text?</strong> The number of options and the context window differ from one model to the next.</li>
@@ -264,8 +264,8 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     </section>
     <section class="sec doc" id="measure" aria-labelledby="h-measure">
       <h2 id="h-measure">05 · How they are measured</h2>
-      <p><a href="https://github.com/fstandhartinger/jevbench" rel="noopener">JevBench</a> is the independent benchmark of the category: states and bounded rubrics, a typed answer, four axes (accuracy, calibration, speed, cost). Vendors also cite their own indices: Cloudflare and Liquid AI each report beating JEV on a “Decision Index”, figures not reproduced here.</p>
-      <p>A comparison only means something like for like: the same items, the same options, the same labels. That is the rule of our <a href="/benchmarks/">benchmarks</a>: on 14,663 held-out items, JEV 1.13.0 scores 73.2% and Kahn1 4B 71.0%; on the 231 public JevBench items, Jev 86.6%, JevK5 v0.2 and Kahn1 4B 86.1% each (Kahn1: k&nbsp;=&nbsp;3, calibrated).</p>
+      <p><a href="https://github.com/fstandhartinger/jevbench" rel="noopener">JevBench</a> is the independent benchmark of the category: states and bounded rubrics, a typed answer, four axes (accuracy, calibration, speed, cost). Vendors also cite their own indices: Cloudflare and Liquid AI each report beating Jev on a “Decision Index”, figures not reproduced here.</p>
+      <p>A comparison only means something like for like: the same items, the same options, the same labels. That is the rule of our <a href="/benchmarks/">benchmarks</a>: on 14,663 held-out items, Jev 1.13.0 scores 73.2% and Kahn1 4B 71.0%. On the 231 public JevBench items, Jev scores 86.6% in JevBench's run, Kahn1 4B 86.1% in ours (k&nbsp;=&nbsp;3, calibrated) and JevK5 v0.2 85.3% in JevBench's run (86.1% in its authors' own run): three separate runs on the same items.</p>
     </section>
     <section class="sec doc" id="limits" aria-labelledby="h-limits">
       <h2 id="h-limits">06 · Limits</h2>
@@ -283,7 +283,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
         <li><b>System One model.</b> A model that answers typed questions about a text in one forward pass, reading a probability for each allowed answer instead of generating text. Also called a decision model or a Jev-class model.</li>
         <li><b>Choice.</b> A question with a fixed list of options; the answer is one option and a probability for each.</li>
         <li><b>Score.</b> A question on ordered levels (low, medium, high); the answer is a level and an expected value over the levels.</li>
-        <li><b>Noul.</b> JEV's name for a yes / no question: does the text support this statement? Kahn1 uses the same name.</li>
+        <li><b>Noul.</b> Jev's name for a yes / no question: does the text support this statement? Kahn1 uses the same name.</li>
         <li><b>Logit.</b> The raw score a language model gives each token before the softmax turns scores into probabilities.</li>
         <li><b>Calibration.</b> How well probabilities match reality: of the answers given at 80% confidence, about 80% should be right.</li>
         <li><b>ECE.</b> Expected calibration error: the average gap between confidence and accuracy, over bins of confidence. 0 is perfect.</li>

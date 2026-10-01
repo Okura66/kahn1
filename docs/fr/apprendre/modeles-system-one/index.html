@@ -131,7 +131,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
   {
    "@type": "DefinedTerm",
    "name": "Noul",
-   "description": "Le nom donné par JEV à une question oui / non : le texte appuie-t-il cette affirmation ? Kahn1 reprend ce nom.",
+   "description": "Le nom donné par Jev à une question oui / non : le texte appuie-t-il cette affirmation ? Kahn1 reprend ce nom.",
    "inDefinedTermSet": "https://kahn1.com/fr/apprendre/modeles-system-one/#terms"
   },
   {
@@ -219,7 +219,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
   <main id="main" class="page">
     <section class="page-hero" aria-labelledby="title">
       <h1 id="title">Modèles System One</h1>
-      <p class="lead">Un modèle System One répond à des questions typées sur un texte en une seule passe : il lit une probabilité pour chaque réponse permise dans les logits du modèle, au lieu d'écrire du texte. JEV, de TypeSafe, a popularisé le terme en septembre 2026 ; des modèles ouverts font aujourd'hui la même chose.</p>
+      <p class="lead">Un modèle System One répond à des questions typées sur un texte en une seule passe : il lit une probabilité pour chaque réponse permise dans les logits du modèle, au lieu d'écrire du texte. Jev, de TypeSafe, a popularisé le terme en septembre 2026 ; des modèles ouverts font aujourd'hui la même chose.</p>
       <p class="small faint">Mis à jour le 1er octobre 2026</p>
       <nav class="toc" aria-label="Sur cette page">
         <ol>
@@ -248,13 +248,13 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     <section class="sec doc" id="familles" aria-labelledby="h-familles">
       <h2 id="h-familles">03 · Les familles</h2>
       <p>Sept familles donnent une décision typée à partir d'un texte ; seuls les modèles de décision combinent un format garanti, une probabilité par option et une seule passe. Le détail, produit par produit, avec licences et sources, est sur la page <a href="/fr/comparer/paysage/">Paysage</a>.</p>
-      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col">Famille</th><th scope="col">Exemples</th><th scope="col">Licence</th><th scope="col">Où ça tourne</th></tr></thead><tbody><tr><td>Modèles de décision hébergés</td><td>JEV (TypeSafe), d1 (Liquid AI)</td><td>Fermée</td><td>API</td></tr><tr><td>Modèles de décision ouverts</td><td>Clef (Cloudflare), JevK5, Kahn1, Tev1 (Together), Laya</td><td>Apache 2.0 le plus souvent</td><td>Local, parfois aussi hébergé</td></tr><tr><td>LLM avec structured outputs</td><td>OpenAI, Anthropic, Google</td><td>Fermée</td><td>API</td></tr><tr><td>Décodage contraint</td><td>Outlines, XGrammar, vLLM, llama.cpp, Guidance</td><td>Apache 2.0 ou MIT</td><td>Local, avec n'importe quel modèle</td></tr><tr><td>Classification cloud</td><td>Google Natural Language, AWS Comprehend, Azure Language</td><td>Fermée</td><td>API</td></tr><tr><td>Encodeurs zero-shot</td><td>bart-large-mnli, DeBERTa-v3 zeroshot, GLiClass, SetFit</td><td>MIT ou Apache 2.0</td><td>CPU</td></tr><tr><td>Guardrails et juges</td><td>Llama Guard 4, ShieldGemma, Granite Guardian, Qwen3Guard, Prometheus 2</td><td>Mixte</td><td>Local</td></tr></tbody></table></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col">Famille</th><th scope="col">Exemples</th><th scope="col">Licence</th><th scope="col">Où ça tourne</th></tr></thead><tbody><tr><td>Modèles de décision hébergés</td><td>Jev (TypeSafe), d1 (Liquid AI), Decisions API (OpenAI, preview limitée)</td><td>Fermée</td><td>API</td></tr><tr><td>Modèles de décision ouverts</td><td>Clef (Cloudflare), JevK5, Kahn1, Tev1 (Together), Laya</td><td>Apache 2.0 le plus souvent</td><td>Local, parfois aussi hébergé</td></tr><tr><td>LLM avec structured outputs</td><td>OpenAI, Anthropic, Google</td><td>Fermée</td><td>API</td></tr><tr><td>Décodage contraint</td><td>Outlines, XGrammar, vLLM, llama.cpp, Guidance</td><td>Apache 2.0 ou MIT</td><td>Local, avec n'importe quel modèle</td></tr><tr><td>Classification cloud</td><td>Google Natural Language, AWS Comprehend, Azure Language</td><td>Fermée</td><td>API</td></tr><tr><td>Encodeurs zero-shot</td><td>bart-large-mnli, DeBERTa-v3 zeroshot, GLiClass, SetFit</td><td>MIT ou Apache 2.0</td><td>CPU</td></tr><tr><td>Guardrails et juges</td><td>Llama Guard 4, ShieldGemma, Granite Guardian, Qwen3Guard, Prometheus 2</td><td>Mixte</td><td>Local</td></tr></tbody></table></div>
     </section>
     <section class="sec doc" id="choisir" aria-labelledby="h-choisir">
       <h2 id="h-choisir">04 · Comment choisir</h2>
       <ul>
         <li><strong>Vos données peuvent-elles sortir ?</strong> Non : un modèle ouvert en local. Oui : une API hébergée devient possible.</li>
-        <li><strong>Quelle langue ?</strong> JEV est entraîné d'abord pour l'anglais, selon sa documentation ; vérifiez la langue de chaque modèle.</li>
+        <li><strong>Quelle langue ?</strong> Jev est entraîné d'abord pour l'anglais, selon sa documentation ; vérifiez la langue de chaque modèle.</li>
         <li><strong>Quelle licence ?</strong> Apache 2.0 et MIT permettent l'usage commercial ; certaines licences (Qwen Research, CC BY-NC) le limitent.</li>
         <li><strong>La calibration tient-elle sur vos données ?</strong> Mesurez l'ECE sur quelques centaines d'exemples annotés avant de fixer un seuil.</li>
         <li><strong>Combien d'options et quelle longueur de texte ?</strong> Le nombre d'options et la fenêtre de contexte varient d'un modèle à l'autre.</li>
@@ -264,8 +264,8 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     </section>
     <section class="sec doc" id="mesurer" aria-labelledby="h-mesurer">
       <h2 id="h-mesurer">05 · Comment on les mesure</h2>
-      <p><a href="https://github.com/fstandhartinger/jevbench" rel="noopener">JevBench</a> est le benchmark indépendant de la catégorie : des états et des grilles bornées, une réponse typée, quatre axes (précision, calibration, vitesse, coût). Les éditeurs citent aussi leurs propres indices : Cloudflare et Liquid AI annoncent chacun dépasser JEV sur un « Decision Index », chiffres non reproduits ici.</p>
-      <p>Une comparaison n'a de sens qu'à périmètre égal : les mêmes exemples, les mêmes options, les mêmes labels. C'est la règle de nos <a href="/fr/resultats/">résultats</a> : sur 14&nbsp;663 exemples réservés, JEV 1.13.0 obtient 73,2&nbsp;% et Kahn1 4B 71,0&nbsp;% ; sur les 231 exemples publics de JevBench, Jev 86,6&nbsp;%, JevK5 v0.2 et Kahn1 4B 86,1&nbsp;% chacun (Kahn1 : k&nbsp;=&nbsp;3, calibré).</p>
+      <p><a href="https://github.com/fstandhartinger/jevbench" rel="noopener">JevBench</a> est le benchmark indépendant de la catégorie : des états et des grilles bornées, une réponse typée, quatre axes (précision, calibration, vitesse, coût). Les éditeurs citent aussi leurs propres indices : Cloudflare et Liquid AI annoncent chacun dépasser Jev sur un « Decision Index », chiffres non reproduits ici.</p>
+      <p>Une comparaison n'a de sens qu'à périmètre égal : les mêmes exemples, les mêmes options, les mêmes labels. C'est la règle de nos <a href="/fr/resultats/">résultats</a> : sur 14&nbsp;663 exemples réservés, Jev 1.13.0 obtient 73,2&nbsp;% et Kahn1 4B 71,0&nbsp;%. Sur les 231 exemples publics de JevBench, Jev obtient 86,6&nbsp;% dans l'exécution de JevBench, Kahn1 4B 86,1&nbsp;% dans la nôtre (k&nbsp;=&nbsp;3, calibré) et JevK5 v0.2 85,3&nbsp;% dans celle de JevBench (86,1&nbsp;% dans celle de ses auteurs) : trois exécutions distinctes sur les mêmes exemples.</p>
     </section>
     <section class="sec doc" id="limites" aria-labelledby="h-limites">
       <h2 id="h-limites">06 · Limites</h2>
@@ -283,7 +283,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
         <li><b>Modèle System One.</b> Un modèle qui répond à des questions typées sur un texte en une seule passe, en lisant une probabilité pour chaque réponse permise au lieu de générer du texte. On dit aussi modèle de décision ou modèle de classe Jev.</li>
         <li><b>Choice.</b> Une question à liste d'options fixe ; la réponse est une option et une probabilité pour chacune.</li>
         <li><b>Score.</b> Une question sur des niveaux ordonnés (faible, moyen, élevé) ; la réponse est un niveau et une espérance sur les niveaux.</li>
-        <li><b>Noul.</b> Le nom donné par JEV à une question oui / non : le texte appuie-t-il cette affirmation ? Kahn1 reprend ce nom.</li>
+        <li><b>Noul.</b> Le nom donné par Jev à une question oui / non : le texte appuie-t-il cette affirmation ? Kahn1 reprend ce nom.</li>
         <li><b>Logit.</b> Le score brut qu'un modèle de langage donne à chaque token avant que le softmax en fasse des probabilités.</li>
         <li><b>Calibration.</b> L'accord entre probabilités et réalité : sur les réponses données à 80 % de confiance, environ 80 % doivent être justes.</li>
         <li><b>ECE.</b> Expected calibration error : l'écart moyen entre confiance et précision, par tranches de confiance. 0 est parfait.</li>

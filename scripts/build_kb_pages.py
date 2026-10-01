@@ -34,38 +34,39 @@ FAMILIES = {
     "encoder": ("Zero-shot and few-shot encoders", "Encodeurs zero-shot et few-shot"),
     "guard": ("Guard and judge models", "Modèles guardrails et juges"),
 }
-# name, family, provider, licence, deployment, output, probabilities, price, url
+# name, family, provider, licence, deployment, output, probabilities, price, url[, url of the probabilities cell]
 ROWS = [
-    ("JEV 1.13.0", "hosted", "TypeSafe", "Closed", "TypeSafe API, OpenRouter", "Label + probabilities (choice, score, noul)", "Calibrated according to the vendor", "$0.042 per million input tokens, output free", "https://docs.typesafe.ai/models"),
-    ("d1", "hosted", "Liquid AI", "Closed", "Liquid API", "Label + probabilities", "Calibrated according to the vendor", "Free (d1:free) at launch, pricing to come", "https://www.marktechpost.com/2026/09/29/liquid-ai-releases-d1-a-decision-model-that-returns-calibrated-probabilities-with-zero-output-tokens/"),
-    ("Clef, Clef-flash", "open", "Cloudflare", "Apache 2.0", "Workers AI, weights on Hugging Face; 27B and 9B", "Label + probabilities, JEV-API compatible", "", "Open weights; hosted on Workers AI", "https://blog.cloudflare.com/clef-decision-models/"),
+    ("Jev 1.13.0", "hosted", "TypeSafe", "Closed", "TypeSafe API, OpenRouter", "Label + probabilities (choice, score, noul)", "Calibrated according to the vendor", "$0.042 per million input tokens, output free", "https://docs.typesafe.ai/models"),
+    ("d1", "hosted", "Liquid AI", "Closed", "Liquid API", "Label + probabilities", "Calibrated according to the vendor", "Free tier (d1:free); paid rates not published", "https://docs.liquid.ai/lfm/models/decision-models"),
+    ("Decisions API", "hosted", "OpenAI", "Closed", "API, limited preview", "", "", "", "https://openai.com/index/devday-2026-recap"),
+    ("Clef, Clef-flash", "open", "Cloudflare", "Apache 2.0", "Workers AI, weights on Hugging Face; 27B and 9B", "Label + probabilities, Jev-API compatible", "Calibrated according to the vendor", "Open weights; hosted on Workers AI", "https://blog.cloudflare.com/clef-decision-models/"),
     ("JevK5 v0.3", "open", "allebee", "Apache 2.0 (weights and code)", "Local GPU or CPU (GGUF), /v1/systemone request shape; 4B and 9B", "Label + probabilities", "ECE published by the authors", "Free", "https://github.com/allebee/jevk5"),
-    ("Kahn1 4B, Kahn1 3B", "open", "Kahn1", "4B Apache 2.0, 3B Qwen Research License, code MIT", "Local GPU or CPU, browser (3B); accepts the JEV schema format", "Label + probabilities", "Temperature-calibrated, ECE published", "Free", "https://kahn1.com/models/"),
-    ("Tev1-4B-experimental", "open", "Together AI", "Being finalized (base Qwen3.5-4B, Apache 2.0)", "Together serverless, weights on Hugging Face", "Label (one option letter)", "Calibration not comprehensively evaluated (model card)", "", "https://huggingface.co/togethercomputer/Tev1-4B-experimental"),
-    ("open-alternative-jev (so1)", "open", "ikermoel", "Apache 2.0", "Any open LLM through Hugging Face or vLLM", "Label + probabilities", "", "Free", "https://github.com/ikermoel/open-alternative-jev"),
-    ("Laya", "open", "Convai", "Apache 2.0", "ModernBERT 421M or mmBERT 322M, to fine-tune", "Label + probabilities", "", "Free", "https://huggingface.co/convaiinnovations/laya"),
-    ("Structured Outputs", "llm", "OpenAI", "Closed", "API", "Generated JSON", "Logprobs, not on most reasoning models", "Per input and output token", "https://developers.openai.com/api/docs/guides/structured-outputs"),
-    ("Structured outputs", "llm", "Anthropic", "Closed", "API", "Generated JSON", "No logprobs", "Per input and output token", "https://platform.claude.com/docs/en/build-with-claude/structured-outputs"),
-    ("Controlled generation", "llm", "Google", "Closed", "Gemini API, Vertex AI", "Generated JSON or enum", "Logprobs on Vertex AI", "Per input and output token", "https://ai.google.dev/gemini-api/docs/structured-output"),
+    ("Kahn1 4B, Kahn1 3B", "open", "Kahn1", "4B Apache 2.0, 3B Qwen Research License, code MIT", "Local GPU or CPU, browser (3B); Jev question fields at /v1/evaluate/jev", "Label + probabilities", "Temperature-calibrated, ECE published", "Free", "https://kahn1.com/models/"),
+    ("Tev1-4B-experimental", "open", "Together AI", "Being finalized (base Qwen3.5-4B, Apache 2.0)", "Together API, weights on Hugging Face", "Label (one option letter)", "Calibration not comprehensively evaluated (model card)", "", "https://huggingface.co/togethercomputer/Tev1-4B-experimental"),
+    ("open-alternative-jev (so1)", "open", "ikermoel", "Apache 2.0", "Any open LLM through Hugging Face or vLLM", "Label + probabilities", "Temperature scaling, ECE published", "Free", "https://github.com/ikermoel/open-alternative-jev"),
+    ("Laya", "open", "Convai Innovations", "Apache 2.0", "ModernBERT 421M or mmBERT 322M; laya-serve exposes /v1/systemone", "Label + probabilities", "Calibrated according to the vendor, ECE published", "Free", "https://huggingface.co/convaiinnovations/laya"),
+    ("Structured Outputs", "llm", "OpenAI", "Closed", "API", "Generated JSON", "Logprobs, not when reasoning is on", "Per input and output token", "https://developers.openai.com/api/docs/guides/structured-outputs", "https://developers.openai.com/api/docs/guides/latest-model"),
+    ("Structured outputs", "llm", "Anthropic", "Closed", "API", "Generated JSON", "No logprobs documented", "Per input and output token", "https://platform.claude.com/docs/en/build-with-claude/structured-outputs"),
+    ("Structured outputs", "llm", "Google", "Closed", "Gemini API, Vertex AI", "Generated JSON or enum", "Logprobs on Vertex AI", "Per input and output token", "https://ai.google.dev/gemini-api/docs/structured-output", "https://developers.googleblog.com/unlock-gemini-reasoning-with-logprobs-on-vertex-ai/"),
     ("Moderation", "guard", "OpenAI", "Closed", "API", "Flags + scores, 13 categories", "Scores 0 to 1, to recalibrate when the model changes", "Free", "https://developers.openai.com/api/docs/guides/moderation"),
     ("Outlines", "decoding", "dottxt", "Apache 2.0", "Local, any model", "Choice, regex, JSON", "Not documented per option", "Free", "https://github.com/dottxt-ai/outlines"),
     ("XGrammar", "decoding", "MLC", "Apache 2.0", "Inside vLLM, SGLang, TensorRT-LLM", "JSON, grammars", "Not documented per option", "Free", "https://github.com/mlc-ai/xgrammar"),
     ("vLLM structured outputs", "decoding", "vLLM", "", "Local", "Choice, regex, JSON, grammar", "Not documented per option", "Free", "https://docs.vllm.ai/en/latest/features/structured_outputs.html"),
-    ("GBNF grammars", "decoding", "llama.cpp", "", "Local, CPU", "JSON, grammars", "Not documented per option", "Free", "https://github.com/ggml-org/llama.cpp/blob/master/grammars/README.md"),
-    ("Guidance", "decoding", "Microsoft", "MIT", "Local", "select, regex, JSON", "Not documented per option", "Free", "https://github.com/guidance-ai/guidance"),
+    ("GBNF grammars", "decoding", "llama.cpp", "", "Local", "JSON, grammars", "Not documented per option", "Free", "https://github.com/ggml-org/llama.cpp/blob/master/grammars/README.md"),
+    ("Guidance", "decoding", "guidance-ai (from Microsoft)", "MIT", "Local", "select, regex, JSON", "Not documented per option", "Free", "https://github.com/guidance-ai/guidance"),
     ("Instructor", "decoding", "567 Labs", "MIT", "Over provider APIs", "Validated JSON, retries", "", "Free", "https://github.com/567-labs/instructor"),
     ("BAML", "decoding", "Boundary", "Apache 2.0", "Over provider APIs", "Typed functions", "", "Free", "https://github.com/BoundaryML/baml"),
-    ("Cloud Natural Language classifyText", "cloud", "Google", "Closed", "API", "Category + confidence, fixed taxonomy", "Confidence per category", "Per call", "https://docs.cloud.google.com/natural-language/docs/classifying-text"),
-    ("Comprehend custom classification", "cloud", "AWS", "Closed", "API, real time or batch", "Label + confidence", "Confidence", "Per call", "https://docs.aws.amazon.com/comprehend/latest/dg/how-document-classification.html"),
-    ("Custom text classification", "cloud", "Microsoft Azure", "Closed, retires 2029-03-31", "API", "Label + confidence", "Confidence", "Per call", "https://learn.microsoft.com/en-us/azure/ai-services/language-service/custom-text-classification/overview"),
+    ("Cloud Natural Language classifyText", "cloud", "Google", "Closed", "API", "Category + confidence, fixed taxonomy", "Confidence per category", "", "https://docs.cloud.google.com/natural-language/docs/classifying-text"),
+    ("Comprehend custom classification", "cloud", "AWS", "Closed", "API, real time or batch", "Label + confidence", "Confidence", "", "https://docs.aws.amazon.com/comprehend/latest/dg/how-document-classification.html"),
+    ("Custom text classification", "cloud", "Microsoft Azure", "Closed, retires 2029-03-31", "API", "Label + confidence", "Confidence", "", "https://learn.microsoft.com/en-us/azure/ai-services/language-service/custom-text-classification/overview"),
     ("AI Content Safety", "guard", "Microsoft Azure", "Closed", "API", "Severity levels", "", "F0 and S0 tiers", "https://learn.microsoft.com/en-us/azure/ai-services/content-safety/overview"),
     ("Classify", "cloud", "Cohere", "Deprecated (September 2025)", "", "Label + confidences", "", "", "https://docs.cohere.com/docs/deprecations"),
     ("bart-large-mnli", "encoder", "Meta", "MIT", "CPU, 0.4B, NLI", "Label + probabilities", "No calibration claim", "Free", "https://huggingface.co/facebook/bart-large-mnli"),
     ("deberta-v3-large-zeroshot-v2.0", "encoder", "Moritz Laurer", "MIT", "CPU, 0.4B, NLI", "Label + probabilities", "No calibration claim", "Free", "https://huggingface.co/MoritzLaurer/deberta-v3-large-zeroshot-v2.0"),
     ("ModernBERT-large-zeroshot-v2.0", "encoder", "Moritz Laurer", "Apache 2.0", "CPU, 0.4B, NLI", "Label + probabilities", "No calibration claim", "Free", "https://huggingface.co/MoritzLaurer/ModernBERT-large-zeroshot-v2.0"),
-    ("GLiClass", "encoder", "Knowledgator", "Apache 2.0", "CPU, 151M, every label in one pass", "Label + probabilities", "No calibration claim", "Free", "https://github.com/Knowledgator/GLiClass"),
+    ("GLiClass", "encoder", "Knowledgator", "Apache 2.0", "CPU, every label in one pass", "Label + probabilities", "No calibration claim", "Free", "https://github.com/Knowledgator/GLiClass"),
     ("SetFit", "encoder", "Hugging Face", "Apache 2.0", "CPU, few-shot fine-tuning", "Label + probabilities", "No calibration claim", "Free", "https://github.com/huggingface/setfit"),
-    ("Llama Guard 4", "guard", "Meta", "Llama 4 Community License", "Local, 12B", "Safe or unsafe + categories S1 to S14", "First-token probability", "Free", "https://huggingface.co/meta-llama/Llama-Guard-4-12B"),
+    ("Llama Guard 4", "guard", "Meta", "Llama 4 Community License", "Local, 12B", "Safe or unsafe + categories S1 to S14", "", "Free", "https://huggingface.co/meta-llama/Llama-Guard-4-12B"),
     ("ShieldGemma", "guard", "Google", "Gemma terms", "Local, 2B to 27B", "Policy score", "P(Yes)", "Free", "https://huggingface.co/google/shieldgemma-2b"),
     ("Granite Guardian 4.1", "guard", "IBM", "Apache 2.0", "Local, 8B", "Yes or no, your own criteria", "", "Free", "https://huggingface.co/ibm-granite/granite-guardian-4.1-8b"),
     ("Qwen3Guard", "guard", "Qwen", "Apache 2.0", "Local, 0.6B to 8B", "Safe, unsafe or controversial + categories", "", "Free", "https://github.com/QwenLM/Qwen3Guard"),
@@ -134,7 +135,19 @@ FR_FREE_TEXT = {
     "CPU, few-shot fine-tuning": "CPU, fine-tuning few-shot", "Local, 12B": "Local, 12B", "Local, 2B to 27B": "Local, 2B à 27B",
     "Local, 8B": "Local, 8B", "Local, 0.6B to 8B": "Local, 0,6B à 8B", "Local, 20B and 120B": "Local, 20B et 120B",
     "Local, 7B and 8x7B": "Local, 7B et 8x7B", "Local, 3.8B": "Local, 3,8B", "Local, 8B and 70B": "Local, 8B et 70B",
-    "Local, 0.1B": "Local, 0,1B", "F0 and S0 tiers": "Paliers F0 et S0", "Gemma terms": "Conditions Gemma",
+    "Local, 0.1B": "Local, 0,1B",
+    "Free tier (d1:free); paid rates not published": "Palier gratuit (d1:free) ; tarifs payants non publiés",
+    "API, limited preview": "API, preview limitée",
+    "Calibrated according to the vendor, ECE published": "Calibrées selon l'éditeur, ECE publiée",
+    "Temperature scaling, ECE published": "Calibration par température, ECE publiée",
+    "ModernBERT 421M or mmBERT 322M; laya-serve exposes /v1/systemone": "ModernBERT 421M ou mmBERT 322M ; laya-serve expose /v1/systemone",
+    "Logprobs, not when reasoning is on": "Logprobs, pas quand le raisonnement est activé",
+    "No logprobs documented": "Aucun logprob documenté",
+    "guidance-ai (from Microsoft)": "guidance-ai (issu de Microsoft)",
+    "Together API, weights on Hugging Face": "API Together, poids sur Hugging Face",
+    "CPU, every label in one pass": "CPU, toutes les classes en une passe",
+    "Label + probabilities, Jev-API compatible": "Label + probabilités, compatible API Jev",
+    "Local GPU or CPU, browser (3B); Jev question fields at /v1/evaluate/jev": "Local GPU ou CPU, navigateur (3B) ; champs de question de Jev sur /v1/evaluate/jev", "F0 and S0 tiers": "Paliers F0 et S0", "Gemma terms": "Conditions Gemma",
 }
 
 
@@ -160,10 +173,11 @@ def landscape_tables(fr: bool) -> str:
                    f'      <h2 id="h-{sid}">{i:02d} · {name}</h2>\n'
                    f'      <div class="tbl-wrap"><table class="tbl"><thead><tr>'
                    + "".join(f'<th scope="col">{h}</th>' for h in hdr) + "</tr></thead><tbody>")
-        for name_, _, prov, lic, dep, outp, prob, price, url in rows:
+        for name_, _, prov, lic, dep, outp, prob, price, url, *prob_url in rows:
             c = (lambda s: esc(fr_cell(s))) if fr else esc
-            out.append(f'<tr><td><a href="{url}" rel="noopener">{esc(name_)}</a></td><td>{esc(prov)}</td><td>{c(lic)}</td>'
-                       f'<td>{c(dep)}</td><td>{c(outp)}</td><td>{c(prob)}</td><td>{c(price)}</td></tr>')
+            pc = f'<a href="{prob_url[0]}" rel="noopener">{c(prob)}</a>' if prob_url and prob else c(prob)
+            out.append(f'<tr><td><a href="{url}" rel="noopener">{esc(name_)}</a></td><td>{c(prov)}</td><td>{c(lic)}</td>'
+                       f'<td>{c(dep)}</td><td>{c(outp)}</td><td>{pc}</td><td>{c(price)}</td></tr>')
         out.append("</tbody></table></div>\n    </section>\n")
     return "\n".join(out)
 
@@ -171,9 +185,10 @@ def landscape_tables(fr: bool) -> str:
 def write_csv():
     buf = io.StringIO()
     w = csv.writer(buf, lineterminator="\n")
-    w.writerow(["name", "family", "provider", "licence", "deployment", "output", "probabilities", "price", "source", "checked"])
+    w.writerow(["name", "family", "provider", "licence", "deployment", "output", "probabilities", "price", "source",
+                "probabilities_source", "checked"])
     for r in ROWS:
-        w.writerow([r[0], FAMILIES[r[1]][0], *r[2:], TODAY])
+        w.writerow([r[0], FAMILIES[r[1]][0], *r[2:9], r[9] if len(r) > 9 else "", TODAY])
     p = ROOT / "data" / "landscape.csv"
     p.parent.mkdir(exist_ok=True)
     p.write_bytes(buf.getvalue().encode("utf-8"))
@@ -218,7 +233,7 @@ TERMS_EN = [
     ("System One model", "A model that answers typed questions about a text in one forward pass, reading a probability for each allowed answer instead of generating text. Also called a decision model or a Jev-class model."),
     ("Choice", "A question with a fixed list of options; the answer is one option and a probability for each."),
     ("Score", "A question on ordered levels (low, medium, high); the answer is a level and an expected value over the levels."),
-    ("Noul", "JEV's name for a yes / no question: does the text support this statement? Kahn1 uses the same name."),
+    ("Noul", "Jev's name for a yes / no question: does the text support this statement? Kahn1 uses the same name."),
     ("Logit", "The raw score a language model gives each token before the softmax turns scores into probabilities."),
     ("Calibration", "How well probabilities match reality: of the answers given at 80% confidence, about 80% should be right."),
     ("ECE", "Expected calibration error: the average gap between confidence and accuracy, over bins of confidence. 0 is perfect."),
@@ -229,7 +244,7 @@ TERMS_FR = [
     ("Modèle System One", "Un modèle qui répond à des questions typées sur un texte en une seule passe, en lisant une probabilité pour chaque réponse permise au lieu de générer du texte. On dit aussi modèle de décision ou modèle de classe Jev."),
     ("Choice", "Une question à liste d'options fixe ; la réponse est une option et une probabilité pour chacune."),
     ("Score", "Une question sur des niveaux ordonnés (faible, moyen, élevé) ; la réponse est un niveau et une espérance sur les niveaux."),
-    ("Noul", "Le nom donné par JEV à une question oui / non : le texte appuie-t-il cette affirmation ? Kahn1 reprend ce nom."),
+    ("Noul", "Le nom donné par Jev à une question oui / non : le texte appuie-t-il cette affirmation ? Kahn1 reprend ce nom."),
     ("Logit", "Le score brut qu'un modèle de langage donne à chaque token avant que le softmax en fasse des probabilités."),
     ("Calibration", "L'accord entre probabilités et réalité : sur les réponses données à 80 % de confiance, environ 80 % doivent être justes."),
     ("ECE", "Expected calibration error : l'écart moyen entre confiance et précision, par tranches de confiance. 0 est parfait."),
@@ -245,7 +260,7 @@ def pillar(fr: bool) -> tuple[str, list]:
                  ("termes", "Termes clés")]
         h = hero("Modèles System One",
                  "Un modèle System One répond à des questions typées sur un texte en une seule passe : il lit une "
-                 "probabilité pour chaque réponse permise dans les logits du modèle, au lieu d'écrire du texte. JEV, de "
+                 "probabilité pour chaque réponse permise dans les logits du modèle, au lieu d'écrire du texte. Jev, de "
                  "TypeSafe, a popularisé le terme en septembre 2026 ; des modèles ouverts font aujourd'hui la même chose.",
                  items, True, f"Mis à jour le 1er octobre 2026")
         b = [sec(1, "definition", "Définition", p(
@@ -281,7 +296,7 @@ def pillar(fr: bool) -> tuple[str, list]:
                  "combinent un format garanti, une probabilité par option et une seule passe. Le détail, produit par "
                  "produit, avec licences et sources, est sur la page <a href=\"/fr/comparer/paysage/\">Paysage</a>.") +
                  table(["Famille", "Exemples", "Licence", "Où ça tourne"], [
-                     ["Modèles de décision hébergés", "JEV (TypeSafe), d1 (Liquid AI)", "Fermée", "API"],
+                     ["Modèles de décision hébergés", "Jev (TypeSafe), d1 (Liquid AI), Decisions API (OpenAI, preview limitée)", "Fermée", "API"],
                      ["Modèles de décision ouverts", "Clef (Cloudflare), JevK5, Kahn1, Tev1 (Together), Laya", "Apache 2.0 le plus souvent", "Local, parfois aussi hébergé"],
                      ["LLM avec structured outputs", "OpenAI, Anthropic, Google", "Fermée", "API"],
                      ["Décodage contraint", "Outlines, XGrammar, vLLM, llama.cpp, Guidance", "Apache 2.0 ou MIT", "Local, avec n'importe quel modèle"],
@@ -290,7 +305,7 @@ def pillar(fr: bool) -> tuple[str, list]:
                      ["Guardrails et juges", "Llama Guard 4, ShieldGemma, Granite Guardian, Qwen3Guard, Prometheus 2", "Mixte", "Local"]])),
              sec(4, "choisir", "Comment choisir", ul([
                  "<strong>Vos données peuvent-elles sortir ?</strong> Non : un modèle ouvert en local. Oui : une API hébergée devient possible.",
-                 "<strong>Quelle langue ?</strong> JEV est entraîné d'abord pour l'anglais, selon sa documentation ; vérifiez la langue de chaque modèle.",
+                 "<strong>Quelle langue ?</strong> Jev est entraîné d'abord pour l'anglais, selon sa documentation ; vérifiez la langue de chaque modèle.",
                  "<strong>Quelle licence ?</strong> Apache 2.0 et MIT permettent l'usage commercial ; certaines licences (Qwen Research, CC BY-NC) le limitent.",
                  "<strong>La calibration tient-elle sur vos données ?</strong> Mesurez l'ECE sur quelques centaines d'exemples annotés avant de fixer un seuil.",
                  "<strong>Combien d'options et quelle longueur de texte ?</strong> Le nombre d'options et la fenêtre de contexte varient d'un modèle à l'autre.",
@@ -300,11 +315,13 @@ def pillar(fr: bool) -> tuple[str, list]:
                  "<a href=\"https://github.com/fstandhartinger/jevbench\" rel=\"noopener\">JevBench</a> est le benchmark "
                  "indépendant de la catégorie : des états et des grilles bornées, une réponse typée, quatre axes "
                  "(précision, calibration, vitesse, coût). Les éditeurs citent aussi leurs propres indices : Cloudflare et "
-                 "Liquid AI annoncent chacun dépasser JEV sur un « Decision Index », chiffres non reproduits ici.",
+                 "Liquid AI annoncent chacun dépasser Jev sur un « Decision Index », chiffres non reproduits ici.",
                  f"Une comparaison n'a de sens qu'à périmètre égal : les mêmes exemples, les mêmes options, les mêmes "
                  f"labels. C'est la règle de nos <a href=\"/fr/resultats/\">résultats</a> : sur 14{N}663 exemples réservés, "
-                 f"JEV 1.13.0 obtient 73,2{N}% et Kahn1 4B 71,0{N}% ; sur les 231 exemples publics de JevBench, Jev 86,6{N}%, "
-                 f"JevK5 v0.2 et Kahn1 4B 86,1{N}% chacun (Kahn1 : k{N}={N}3, calibré).")),
+                 f"Jev 1.13.0 obtient 73,2{N}% et Kahn1 4B 71,0{N}%. Sur les 231 exemples publics de JevBench, Jev obtient "
+                 f"86,6{N}% dans l'exécution de JevBench, Kahn1 4B 86,1{N}% dans la nôtre (k{N}={N}3, calibré) et JevK5 v0.2 "
+                 f"85,3{N}% dans celle de JevBench (86,1{N}% dans celle de ses auteurs) : trois exécutions distinctes sur les "
+                 f"mêmes exemples.")),
              sec(6, "limites", "Limites", ul([
                  "Ce ne sont pas des modèles de raisonnement : calculer une date, une durée ou un montant en une passe reste un point faible.",
                  "La calibration vaut pour la distribution sur laquelle elle a été ajustée : recalibrez sur votre domaine.",
@@ -319,7 +336,7 @@ def pillar(fr: bool) -> tuple[str, list]:
              ("terms", "Key terms")]
     h = hero("System One models",
              "A System One model answers typed questions about a text in one forward pass: it reads a probability for "
-             "each allowed answer from the model's logits instead of writing text. TypeSafe's JEV made the term popular "
+             "each allowed answer from the model's logits instead of writing text. TypeSafe's Jev made the term popular "
              "in September 2026; open models now do the same.", items, False, "Updated October 1, 2026")
     b = [sec(1, "definition", "Definition", p(
         "The name comes from Daniel Kahneman's <em>System 1</em> (<em>Thinking, Fast and Slow</em>, 2011): fast, cheap "
@@ -353,7 +370,7 @@ def pillar(fr: bool) -> tuple[str, list]:
              "probability per option and a single pass. Product by product, with licences and sources, see the "
              "<a href=\"/compare/landscape/\">landscape</a>.") +
              table(["Family", "Examples", "Licence", "Where it runs"], [
-                 ["Hosted decision models", "JEV (TypeSafe), d1 (Liquid AI)", "Closed", "API"],
+                 ["Hosted decision models", "Jev (TypeSafe), d1 (Liquid AI), Decisions API (OpenAI, limited preview)", "Closed", "API"],
                  ["Open decision models", "Clef (Cloudflare), JevK5, Kahn1, Tev1 (Together), Laya", "Mostly Apache 2.0", "Local, sometimes also hosted"],
                  ["LLMs with structured outputs", "OpenAI, Anthropic, Google", "Closed", "API"],
                  ["Constrained decoding", "Outlines, XGrammar, vLLM, llama.cpp, Guidance", "Apache 2.0 or MIT", "Local, with any model"],
@@ -362,7 +379,7 @@ def pillar(fr: bool) -> tuple[str, list]:
                  ["Guard and judge models", "Llama Guard 4, ShieldGemma, Granite Guardian, Qwen3Guard, Prometheus 2", "Mixed", "Local"]])),
          sec(4, "choose", "How to choose", ul([
              "<strong>Can your data leave your infrastructure?</strong> No: an open model, run locally. Yes: a hosted API becomes an option.",
-             "<strong>Which language?</strong> JEV is trained first for English, per its documentation; check the language of each model.",
+             "<strong>Which language?</strong> Jev is trained first for English, per its documentation; check the language of each model.",
              "<strong>Which licence?</strong> Apache 2.0 and MIT allow commercial use; some licences (Qwen Research, CC BY-NC) limit it.",
              "<strong>Does calibration hold on your data?</strong> Measure the ECE on a few hundred labelled examples before you set a threshold.",
              "<strong>How many options, how long a text?</strong> The number of options and the context window differ from one model to the next.",
@@ -371,12 +388,13 @@ def pillar(fr: bool) -> tuple[str, list]:
          sec(5, "measure", "How they are measured", p(
              "<a href=\"https://github.com/fstandhartinger/jevbench\" rel=\"noopener\">JevBench</a> is the independent "
              "benchmark of the category: states and bounded rubrics, a typed answer, four axes (accuracy, calibration, "
-             "speed, cost). Vendors also cite their own indices: Cloudflare and Liquid AI each report beating JEV on a "
+             "speed, cost). Vendors also cite their own indices: Cloudflare and Liquid AI each report beating Jev on a "
              "“Decision Index”, figures not reproduced here.",
              "A comparison only means something like for like: the same items, the same options, the same labels. That "
-             "is the rule of our <a href=\"/benchmarks/\">benchmarks</a>: on 14,663 held-out items, JEV 1.13.0 scores "
-             "73.2% and Kahn1 4B 71.0%; on the 231 public JevBench items, Jev 86.6%, JevK5 v0.2 and Kahn1 4B 86.1% each "
-             "(Kahn1: k&nbsp;=&nbsp;3, calibrated).")),
+             "is the rule of our <a href=\"/benchmarks/\">benchmarks</a>: on 14,663 held-out items, Jev 1.13.0 scores "
+             "73.2% and Kahn1 4B 71.0%. On the 231 public JevBench items, Jev scores 86.6% in JevBench's run, Kahn1 4B "
+             "86.1% in ours (k&nbsp;=&nbsp;3, calibrated) and JevK5 v0.2 85.3% in JevBench's run (86.1% in its authors' "
+             "own run): three separate runs on the same items.")),
          sec(6, "limits", "Limits", ul([
              "They are not reasoning models: computing a date, a duration or an amount in one pass stays a weak spot.",
              "Calibration holds on the distribution it was fitted on: recalibrate on your domain.",
@@ -395,7 +413,7 @@ def landscape(fr: bool) -> str:
         h = hero("Paysage des modèles de décision",
                  "Sept familles de solutions transforment un texte en décision typée, propriétaires et ouvertes. Cette "
                  f"page les recense produit par produit, avec licence, déploiement, sortie, probabilités, prix et source : "
-                 f"{len(ROWS)} entrées relevées sur les pages des éditeurs.", items, True, "Mis à jour le 1er octobre 2026")
+                 f"{len(ROWS)} entrées, chacune liée à sa source, relevées le 1er octobre 2026.", items, True, "Mis à jour le 1er octobre 2026")
         intro = sec(1, "apercu", "En bref", p(
             "Seuls les modèles de décision, hébergés ou ouverts, combinent un format garanti, une probabilité par option "
             "et une seule passe sur un état partagé. Les LLM avec structured outputs garantissent le format mais pas les "
@@ -403,7 +421,8 @@ def landscape(fr: bool) -> str:
             "Les chiffres de performance publiés par chacun viennent de jeux différents : ils ne se comparent pas entre "
             "eux. Nos comparaisons à périmètre égal sont sur la page <a href=\"/fr/resultats/\">Résultats</a>."))
         meth = sec(len(fams) + 2, "methode", "Méthode et données", p(
-            "Chaque ligne vient de la page du produit, ouverte le 1er octobre 2026 et liée sur son nom. Les "
+            "Chaque ligne renvoie, depuis son nom, à la page dont elle vient : celle de l'éditeur ou son dépôt, "
+            "relevée le 1er octobre 2026. Les "
             "affirmations des éditeurs (calibration, vitesse) sont rapportées comme telles. Une case vide signifie "
             "que l'information n'était pas sur la page.",
             "Les données sont téléchargeables : <a href=\"/data/landscape.csv\">landscape.csv</a> (en anglais). D'autres "
@@ -415,7 +434,7 @@ def landscape(fr: bool) -> str:
         h = hero("Decision model landscape",
                  "Seven families of tools turn a text into a typed decision, proprietary and open. This page lists them "
                  f"product by product, with licence, deployment, output, probabilities, price and source: {len(ROWS)} "
-                 "entries checked on the providers' own pages.", items, False, "Updated October 1, 2026")
+                 "entries, each linked to its source, checked on October 1, 2026.", items, False, "Updated October 1, 2026")
         intro = sec(1, "overview", "At a glance", p(
             "Only decision models, hosted or open, combine a guaranteed format, a probability per option and a single "
             "pass over a shared state. LLMs with structured outputs guarantee the format but not the probabilities; "
@@ -423,7 +442,8 @@ def landscape(fr: bool) -> str:
             "The performance figures each provider publishes come from different test sets: they do not compare with "
             "each other. Our like-for-like comparisons are on the <a href=\"/benchmarks/\">benchmarks</a> page."))
         meth = sec(len(fams) + 2, "method", "Method and data", p(
-            "Each row comes from the product's own page, opened on October 1, 2026 and linked from its name. Vendor "
+            "Each row links, from its name, to the page it comes from: the provider's own page or repository, "
+            "checked on October 1, 2026. Vendor "
             "claims (calibration, speed) are reported as claims. An empty cell means the page did not say.",
             "Download the data: <a href=\"/data/landscape.csv\">landscape.csv</a>. Other projects listed by third-party "
             "directories (Kev, Von, NanoJev, SemIf, djev…) will join once we can check them on their own pages. Found an "
@@ -432,110 +452,120 @@ def landscape(fr: bool) -> str:
 
 
 FAQ_EN = [
-    ("Is JEV open source?", "No. JEV is a hosted API from TypeSafe; its weights are not published. You call it at api.typesafe.ai and pay per input token ($0.042 per million, output free, per its documentation)."),
-    ("Can I run JEV locally?", "Not JEV itself. Open decision models run on your own hardware: Clef and Clef-flash (Cloudflare), JevK5, Kahn1 and others, several of them under Apache 2.0."),
-    ("Which open alternative is closest to JEV?", "It depends on the task, and no open model has been measured as a drop-in replacement on every task. On the 231 public JevBench items, Jev scores 86.6% and JevK5 v0.2 and Kahn1 4B 86.1% each; on Kahn1's 14,663 held-out items, JEV 1.13.0 scores 73.2% and Kahn1 4B 71.0%."),
-    ("Which alternatives accept JEV's request format?", "Clef is announced as fully JEV-API compatible, JevK5 serves the /v1/systemone request shape, and Kahn1 accepts JEV's schema dictionary at POST /v1/evaluate/jev."),
-    ("Is Kahn1 affiliated with TypeSafe?", "No. Kahn1 is an independent project; it accepts the JEV schema format and compares itself with JEV on the same items."),
+    ("Is Jev open source?", "No. Jev is a hosted API from TypeSafe; its weights are not published. You call it at api.typesafe.ai and pay per input token ($0.042 per million, output free, per its documentation)."),
+    ("Can I run Jev locally?", "Not Jev itself. Open decision models run on your own hardware: Clef and Clef-flash (Cloudflare), JevK5, Laya, Kahn1 and others, several of them under Apache 2.0."),
+    ("Which open alternative is closest to Jev?", "It depends on the task, and no open model has been measured as a drop-in replacement on every task. In JevBench's own runs on the 231 public items (v1.4), several systems with public code or weights score at or above Jev's 86.6%: NInfer Qwen3.8-Flash-Next and JevOne (89.6%), OpenJev (thinking) and swanOne (88.7%), djev (thinking, 87.4%), reflex-27b (87.0%) and SimpleJev Qwen3.8-27B (86.6%); JevK5 v0.2 scores 85.3%. Kahn1 4B scores 86.1% on the same items in our own run, which JevBench has not reproduced. On Kahn1's 14,663 held-out items, Jev 1.13.0 scores 73.2% and Kahn1 4B 71.0%."),
+    ("Which alternatives accept Jev's request format?", "Clef is announced as fully Jev-API compatible, and JevK5 and Laya (through laya-serve) serve the POST /v1/systemone request shape. Kahn1 takes the same question fields (type, instructions, criteria) under a \"schema\" key at POST /v1/evaluate/jev, so a Jev client needs a small adapter."),
+    ("Is Kahn1 affiliated with TypeSafe?", "No. Kahn1 is an independent project; it takes Jev's question fields and compares itself with Jev on the same items."),
 ]
 FAQ_FR = [
-    ("JEV est-il open source ?", "Non. JEV est une API hébergée par TypeSafe ; ses poids ne sont pas publiés. On l'appelle sur api.typesafe.ai et on paie les tokens d'entrée (0,042 $ par million, sortie gratuite, selon sa documentation)."),
-    ("Peut-on faire tourner JEV en local ?", "Pas JEV lui-même. Des modèles de décision ouverts tournent sur votre matériel : Clef et Clef-flash (Cloudflare), JevK5, Kahn1 et d'autres, plusieurs sous Apache 2.0."),
-    ("Quelle alternative ouverte est la plus proche de JEV ?", "Cela dépend de la tâche, et aucun modèle ouvert n'a été mesuré comme remplaçant direct sur toutes les tâches. Sur les 231 exemples publics de JevBench, Jev obtient 86,6 %, JevK5 v0.2 et Kahn1 4B 86,1 % chacun ; sur les 14 663 exemples réservés de Kahn1, JEV 1.13.0 obtient 73,2 % et Kahn1 4B 71,0 %."),
-    ("Quelles alternatives acceptent le format de requête de JEV ?", "Clef est annoncé entièrement compatible avec l'API JEV, JevK5 sert des requêtes au format /v1/systemone, et Kahn1 accepte le dictionnaire de schéma de JEV sur POST /v1/evaluate/jev."),
-    ("Kahn1 est-il affilié à TypeSafe ?", "Non. Kahn1 est un projet indépendant ; il accepte le format de schéma JEV et se compare à JEV sur les mêmes exemples."),
+    ("Jev est-il open source ?", "Non. Jev est une API hébergée par TypeSafe ; ses poids ne sont pas publiés. On l'appelle sur api.typesafe.ai et on paie les tokens d'entrée (0,042 $ par million, sortie gratuite, selon sa documentation)."),
+    ("Peut-on faire tourner Jev en local ?", "Pas Jev lui-même. Des modèles de décision ouverts tournent sur votre matériel : Clef et Clef-flash (Cloudflare), JevK5, Laya, Kahn1 et d'autres, plusieurs sous Apache 2.0."),
+    ("Quelle alternative ouverte est la plus proche de Jev ?", "Cela dépend de la tâche, et aucun modèle ouvert n'a été mesuré comme remplaçant direct sur toutes les tâches. Dans les exécutions de JevBench lui-même sur les 231 exemples publics (v1.4), plusieurs systèmes à code ou poids publics atteignent ou dépassent les 86,6 % de Jev : NInfer Qwen3.8-Flash-Next et JevOne (89,6 %), OpenJev (thinking) et swanOne (88,7 %), djev (thinking, 87,4 %), reflex-27b (87,0 %) et SimpleJev Qwen3.8-27B (86,6 %) ; JevK5 v0.2 obtient 85,3 %. Kahn1 4B obtient 86,1 % sur les mêmes exemples dans notre propre exécution, que JevBench n'a pas reproduite. Sur les 14 663 exemples réservés de Kahn1, Jev 1.13.0 obtient 73,2 % et Kahn1 4B 71,0 %."),
+    ("Quelles alternatives acceptent le format de requête de Jev ?", "Clef est annoncé entièrement compatible avec l'API Jev, et JevK5 et Laya (via laya-serve) servent des requêtes au format POST /v1/systemone. Kahn1 prend les mêmes champs de question (type, instructions, criteria) sous une clé « schema » sur POST /v1/evaluate/jev : un client Jev demande donc un petit adaptateur."),
+    ("Kahn1 est-il affilié à TypeSafe ?", "Non. Kahn1 est un projet indépendant ; il prend les champs de question de Jev et se compare à Jev sur les mêmes exemples."),
 ]
 
 
 def alternatives(fr: bool) -> tuple[str, list]:
     if fr:
         items = [("reponse", "La réponse courte"), ("alternatives", "Les alternatives ouvertes"), ("mesures", "Ce qui est mesuré"),
-                 ("migrer", "Passer de JEV à un modèle ouvert"), ("jev", "Quand JEV reste le bon choix"), ("faq", "Questions fréquentes")]
-        h = hero("Alternatives open source à JEV",
-                 "Oui, JEV a des alternatives ouvertes : plusieurs modèles de décision à poids ouverts répondent au même "
-                 "type de questions typées sur votre propre matériel, et trois acceptent le format de requête de JEV. "
-                 "Aucun n'est mesuré comme remplaçant direct sur toutes les tâches.", items, True, "Mis à jour le 1er octobre 2026")
-        alt = table(["Alternative", "Éditeur", "Licence", "Tailles", "Compatible JEV", "Mesurée ici à périmètre égal"], [
-            ['<a href="https://blog.cloudflare.com/clef-decision-models/" rel="noopener">Clef, Clef-flash</a>', "Cloudflare", "Apache 2.0", "27B, 9B", "Oui, annoncé (API JEV)", "Pas encore"],
-            ['<a href="https://github.com/allebee/jevk5" rel="noopener">JevK5 v0.3</a>', "allebee", "Apache 2.0", "4B, 9B (+ 2B, Lite)", "Format /v1/systemone", "v0.2 sur JevBench public (sa propre exécution)"],
-            ['<a href="/fr/modeles/">Kahn1</a>', "Kahn1", "4B Apache 2.0, 3B Qwen Research License", "4B, 3B", "Schéma JEV sur /v1/evaluate/jev", "Oui : holdout et JevBench public"],
+                 ("migrer", "Passer de Jev à un modèle ouvert"), ("jev", "Quand Jev reste le bon choix"), ("faq", "Questions fréquentes")]
+        h = hero("Alternatives open source à Jev",
+                 "Oui, Jev a des alternatives ouvertes : plusieurs modèles de décision à poids ouverts répondent au même "
+                 "type de questions typées sur votre propre matériel, et quatre prennent des questions au format de Jev : "
+                 "Clef, JevK5 et Laya servent son format de requête, Kahn1 prend les mêmes champs de question sur sa propre "
+                 "route. Aucun n'est mesuré comme remplaçant direct sur toutes les tâches.", items, True, "Mis à jour le 1er octobre 2026")
+        alt = table(["Alternative", "Éditeur", "Licence", "Tailles", "Compatible Jev", "Mesurée ici à périmètre égal"], [
+            ['<a href="https://blog.cloudflare.com/clef-decision-models/" rel="noopener">Clef, Clef-flash</a>', "Cloudflare", "Apache 2.0", "27B, 9B", "Oui, annoncé (API Jev)", "Pas encore"],
+            ['<a href="https://github.com/allebee/jevk5" rel="noopener">JevK5 v0.3</a>', "allebee", "Apache 2.0", "4B, 9B (+ 2B, Lite)", "Format /v1/systemone", "v0.2 sur JevBench public (exécution de ses auteurs et de JevBench)"],
+            ['<a href="https://huggingface.co/convaiinnovations/laya" rel="noopener">Laya</a>', "Convai Innovations", "Apache 2.0", "421M, 322M (encodeurs)", "Format /v1/systemone (laya-serve)", "Non"],
+            ['<a href="/fr/modeles/">Kahn1</a>', "Kahn1", "4B Apache 2.0, 3B Qwen Research License", "4B, 3B", "Champs de question de Jev sous une clé « schema » sur /v1/evaluate/jev ; pas un remplaçant direct pour un client Jev", "Oui : holdout et JevBench public"],
             ['<a href="https://github.com/ikermoel/open-alternative-jev" rel="noopener">open-alternative-jev (so1)</a>', "ikermoel", "Apache 2.0", "N'importe quel LLM ouvert", "", "Non"],
-            ['<a href="https://huggingface.co/togethercomputer/Tev1-4B-experimental" rel="noopener">Tev1-4B-experimental</a>', "Together AI", "En cours", "4B", "", "Non"],
-            ['<a href="https://huggingface.co/convaiinnovations/laya" rel="noopener">Laya</a>', "Convai", "Apache 2.0", "421M, 322M (encodeurs)", "", "Non"]])
-        mes = table(["", "Exemples", "JEV / Jev 1.13.0", "JevK5 v0.2", "Kahn1 4B"], [
-            ["Holdout Kahn1, même 8 options", f"14{N}663", f"<b>73,2{N}%</b>", "", f"71,0{N}%"],
-            ["JevBench public, tous niveaux", "231", f"<b>86,6{N}%</b>", f"86,1{N}%", f"86,1{N}%"],
-            ["JevBench public, niveau difficile", "111", f"73,0{N}%", f"<b>73,9{N}%</b>", f"72,1{N}%"]], {1, 2, 3, 4})
+            ['<a href="https://huggingface.co/togethercomputer/Tev1-4B-experimental" rel="noopener">Tev1-4B-experimental</a>', "Together AI", "En cours", "4B", "", "Non"]])
+        mes = table(["", "Exemples", "Jev 1.13.0", "JevK5 v0.2, exécution JevBench", "JevK5 v0.2, exécution de ses auteurs", "Kahn1 4B"], [
+            ["Holdout Kahn1, Choice sur les mêmes 8 options", f"14{N}663", f"<b>73,2{N}%</b>", "", "", f"71,0{N}%"],
+            ["JevBench public, tous niveaux", "231", f"<b>86,6{N}%</b>", f"85,3{N}%", f"86,1{N}%", f"86,1{N}%"],
+            ["JevBench public, niveau difficile", "111", f"73,0{N}%", "", f"<b>73,9{N}%</b>", f"72,1{N}%"]], {1, 2, 3, 4, 5})
         body = [sec(1, "reponse", "La réponse courte", p(
             "Si vous voulez des décisions typées avec probabilités sans envoyer vos données à une API, prenez un modèle "
-            "de décision ouvert. Si vous voulez la meilleure précision mesurée sans rien héberger, JEV reste devant sur "
+            "de décision ouvert. Si vous voulez la meilleure précision mesurée sans rien héberger, Jev reste devant sur "
             f"nos mesures : 73,2{N}% contre 71,0{N}% pour Kahn1 4B sur 14{N}663 exemples réservés.")),
                 sec(2, "alternatives", "Les alternatives ouvertes", alt + p(
                     "Le paysage complet, hébergé et ouvert, est sur la page <a href=\"/fr/comparer/paysage/\">Paysage</a>.")),
                 sec(3, "mesures", "Ce qui est mesuré", mes + p(
-                    f"Mêmes exemples, mêmes options, mêmes labels. Kahn1 : k{N}={N}3 ordres d'options, calibré. Jev : les "
-                    "résultats publiés par JevBench ; JevK5 : sa propre exécution publique. Sur JevBench, Kahn1 4B et JevK5 "
-                    f"réussissent chacun 199 exemples sur 231 (test exact de McNemar, p{N}={N}1,00). Détails : "
-                    "<a href=\"/fr/resultats/\">Résultats</a>.")),
-                sec(4, "migrer", "Passer de JEV à un modèle ouvert", p(
-                    "Les trois types de question se retrouvent tels quels : choice, score et noul. Kahn1 accepte le "
-                    "dictionnaire de schéma de JEV (<code>type</code>, <code>instructions</code>, <code>criteria</code>) sur "
-                    "<code>POST /v1/evaluate/jev</code> ; JevK5 sert des requêtes au format <code>/v1/systemone</code>. "
-                    "Recalibrez sur quelques centaines de vos exemples avant de reprendre les seuils réglés pour JEV.") +
+                    "Mêmes exemples, mêmes options, mêmes labels, mais trois exécutions distinctes : les résultats de Jev "
+                    "sont ceux que publie JevBench, ceux de JevK5 viennent de l'exécution publiée par ses auteurs et de celle "
+                    f"de JevBench, ceux de Kahn1 de la nôtre (k{N}={N}3 ordres d'options, calibré). Apparié à l'exécution "
+                    f"publiée par les auteurs de JevK5, Kahn1 4B et JevK5 réussissent chacun 199 exemples sur 231 (test exact "
+                    f"de McNemar, p{N}={N}1,00) ; dans l'exécution de JevBench, JevK5 v0.2 en réussit 197 (85,3{N}%). "
+                    "Détails : <a href=\"/fr/resultats/\">Résultats</a>.")),
+                sec(4, "migrer", "Passer de Jev à un modèle ouvert", p(
+                    "Les trois types de question se retrouvent tels quels : choice, score et noul. Clef, JevK5 et Laya "
+                    "servent le format de requête de Jev, <code>POST /v1/systemone</code>. Kahn1 prend les mêmes champs de "
+                    "question (<code>type</code>, <code>instructions</code>, <code>criteria</code>) sous une clé "
+                    "<code>schema</code> sur <code>POST /v1/evaluate/jev</code>, alors qu'un client Jev envoie "
+                    "<code>questions</code> et <code>model</code> à <code>/v1/systemone</code> : prévoyez un petit "
+                    "adaptateur. Recalibrez sur quelques centaines de vos exemples avant de reprendre les seuils réglés pour Jev.") +
                     '      <pre class="term"><span class="d">$ </span>SYSONE_MODEL=Okura66/Kahn1-Qwen3.5-4B uv run sysone serve --port 8000\n'
                     '<span class="d">$ </span>curl -X POST http://127.0.0.1:8000/v1/evaluate/jev -H "Content-Type: application/json" \\\n'
-                    '    -d \'{"state": "Bonjour, impossible de me connecter depuis ce matin.","schema": {"categorie": {"type": "choice",\n'
+                    '    -d \'{"state": "Bonjour, impossible de me connecter depuis ce matin.", "schema": {"categorie": {"type": "choice",\n'
                     '         "instructions": "Catégorie du ticket", "criteria": {"bug": "Une erreur", "compte": "Connexion, accès"}}}}\'</pre>\n'),
-                sec(5, "jev", "Quand JEV reste le bon choix", ul([
+                sec(5, "jev", "Quand Jev reste le bon choix", ul([
                     "Vous voulez la meilleure précision mesurée sur nos jeux, sans infrastructure à gérer.",
-                    f"Vos textes sont longs : JEV accepte 64k tokens par requête (32k pour l'état et la plus longue question), selon sa documentation.",
-                    "Vous travaillez en anglais, la langue où JEV est le plus précis selon TypeSafe.",
+                    "Vos textes sont longs : Jev accepte 64k tokens par requête (32k pour l'état et la plus longue question), selon sa documentation.",
+                    "Vous travaillez en anglais, la langue où Jev est le plus précis selon TypeSafe.",
                     "Vous acceptez qu'un tiers traite vos données et un prix par token d'entrée."])),
                 sec(6, "faq", "Questions fréquentes", "".join(
-                    f"      <h3 class=\"sub\">{q}</h3>\n      <p>{a}</p>\n" for q, a in FAQ_FR))]
+                    f"      <h3 class=\"sub\">{q}</h3>\n      <p>{esc(a)}</p>\n" for q, a in FAQ_FR))]
         return h + "".join(body), FAQ_FR
     items = [("answer", "The short answer"), ("alternatives", "The open alternatives"), ("measured", "What is measured"),
-             ("switch", "Switching from JEV"), ("jev", "When JEV is still the right pick"), ("faq", "FAQ")]
-    h = hero("Open-source alternatives to JEV",
-             "Yes, JEV has open alternatives: several open-weight decision models answer the same kind of typed questions "
-             "on your own hardware, and three accept JEV's request format. None has been measured as a drop-in "
-             "replacement on every task.", items, False, "Updated October 1, 2026")
-    alt = table(["Alternative", "Provider", "Licence", "Sizes", "JEV-compatible", "Measured here like for like"], [
-        ['<a href="https://blog.cloudflare.com/clef-decision-models/" rel="noopener">Clef, Clef-flash</a>', "Cloudflare", "Apache 2.0", "27B, 9B", "Yes, announced (JEV API)", "Not yet"],
-        ['<a href="https://github.com/allebee/jevk5" rel="noopener">JevK5 v0.3</a>', "allebee", "Apache 2.0", "4B, 9B (+ 2B, Lite)", "/v1/systemone request shape", "v0.2 on public JevBench (its own run)"],
-        ['<a href="/models/">Kahn1</a>', "Kahn1", "4B Apache 2.0, 3B Qwen Research License", "4B, 3B", "JEV schema at /v1/evaluate/jev", "Yes: held-out and public JevBench"],
+             ("switch", "Switching from Jev"), ("jev", "When Jev is still the right pick"), ("faq", "FAQ")]
+    h = hero("Open-source alternatives to Jev",
+             "Yes, Jev has open alternatives: several open-weight decision models answer the same kind of typed questions "
+             "on your own hardware, and four take Jev-style questions: Clef, JevK5 and Laya serve its request format, and "
+             "Kahn1 takes the same question fields on its own route. None has been measured as a drop-in replacement on "
+             "every task.", items, False, "Updated October 1, 2026")
+    alt = table(["Alternative", "Provider", "Licence", "Sizes", "Jev-compatible", "Measured here like for like"], [
+        ['<a href="https://blog.cloudflare.com/clef-decision-models/" rel="noopener">Clef, Clef-flash</a>', "Cloudflare", "Apache 2.0", "27B, 9B", "Yes, announced (Jev API)", "Not yet"],
+        ['<a href="https://github.com/allebee/jevk5" rel="noopener">JevK5 v0.3</a>', "allebee", "Apache 2.0", "4B, 9B (+ 2B, Lite)", "/v1/systemone request shape", "v0.2 on public JevBench (its authors' run and JevBench's)"],
+        ['<a href="https://huggingface.co/convaiinnovations/laya" rel="noopener">Laya</a>', "Convai Innovations", "Apache 2.0", "421M, 322M (encoders)", "/v1/systemone request shape (laya-serve)", "No"],
+        ['<a href="/models/">Kahn1</a>', "Kahn1", "4B Apache 2.0, 3B Qwen Research License", "4B, 3B", "Jev's question fields under a “schema” key at /v1/evaluate/jev; not a drop-in for Jev clients", "Yes: held-out and public JevBench"],
         ['<a href="https://github.com/ikermoel/open-alternative-jev" rel="noopener">open-alternative-jev (so1)</a>', "ikermoel", "Apache 2.0", "Any open LLM", "", "No"],
-        ['<a href="https://huggingface.co/togethercomputer/Tev1-4B-experimental" rel="noopener">Tev1-4B-experimental</a>', "Together AI", "Being finalized", "4B", "", "No"],
-        ['<a href="https://huggingface.co/convaiinnovations/laya" rel="noopener">Laya</a>', "Convai", "Apache 2.0", "421M, 322M (encoders)", "", "No"]])
-    mes = table(["", "Items", "JEV / Jev 1.13.0", "JevK5 v0.2", "Kahn1 4B"], [
-        ["Kahn1 held-out, same 8 options", "14,663", "<b>73.2%</b>", "", "71.0%"],
-        ["Public JevBench, all tiers", "231", "<b>86.6%</b>", "86.1%", "86.1%"],
-        ["Public JevBench, hard tier", "111", "73.0%", "<b>73.9%</b>", "72.1%"]], {1, 2, 3, 4})
+        ['<a href="https://huggingface.co/togethercomputer/Tev1-4B-experimental" rel="noopener">Tev1-4B-experimental</a>', "Together AI", "Being finalized", "4B", "", "No"]])
+    mes = table(["", "Items", "Jev 1.13.0", "JevK5 v0.2, JevBench's run", "JevK5 v0.2, its authors' run", "Kahn1 4B"], [
+        ["Kahn1 held-out, Choice over the same 8 options", "14,663", "<b>73.2%</b>", "", "", "71.0%"],
+        ["Public JevBench, all tiers", "231", "<b>86.6%</b>", "85.3%", "86.1%", "86.1%"],
+        ["Public JevBench, hard tier", "111", "73.0%", "", "<b>73.9%</b>", "72.1%"]], {1, 2, 3, 4, 5})
     body = [sec(1, "answer", "The short answer", p(
         "If you want typed decisions with probabilities without sending your data to an API, pick an open decision "
-        "model. If you want the best measured accuracy with nothing to host, JEV is still ahead on our measurements: "
+        "model. If you want the best measured accuracy with nothing to host, Jev is still ahead on our measurements: "
         "73.2% against 71.0% for Kahn1 4B on 14,663 held-out items.")),
             sec(2, "alternatives", "The open alternatives", alt + p(
                 "The full landscape, hosted and open, is on the <a href=\"/compare/landscape/\">landscape</a> page.")),
             sec(3, "measured", "What is measured", mes + p(
-                "Same items, same options, same labels. Kahn1: k&nbsp;=&nbsp;3 option orders, calibrated. Jev: the outcomes "
-                "JevBench publishes; JevK5: its own public run. On JevBench, Kahn1 4B and JevK5 each get 199 of 231 items "
-                "right (exact McNemar test, p&nbsp;=&nbsp;1.00). Details: <a href=\"/benchmarks/\">benchmarks</a>.")),
-            sec(4, "switch", "Switching from JEV", p(
-                "The three question types carry over as they are: choice, score and noul. Kahn1 accepts JEV's schema "
-                "dictionary (<code>type</code>, <code>instructions</code>, <code>criteria</code>) at "
-                "<code>POST /v1/evaluate/jev</code>; JevK5 serves the <code>/v1/systemone</code> request shape. Recalibrate "
-                "on a few hundred of your own examples before reusing thresholds tuned for JEV.") +
+                "Same items, same options, same labels, but three separate runs: Jev's outcomes are the ones JevBench "
+                "publishes, JevK5's come from its authors' published run and from JevBench's own run, and Kahn1's from ours "
+                "(k&nbsp;=&nbsp;3 option orders, calibrated). Paired with JevK5's own published run, Kahn1 4B and JevK5 each "
+                "get 199 of 231 items right (exact McNemar test, p&nbsp;=&nbsp;1.00); in JevBench's own run, JevK5 v0.2 gets "
+                "197 (85.3%). Details: <a href=\"/benchmarks/\">benchmarks</a>.")),
+            sec(4, "switch", "Switching from Jev", p(
+                "The three question types carry over as they are: choice, score and noul. Clef, JevK5 and Laya serve Jev's "
+                "request format, <code>POST /v1/systemone</code>. Kahn1 takes the same question fields (<code>type</code>, "
+                "<code>instructions</code>, <code>criteria</code>) under a <code>schema</code> key at "
+                "<code>POST /v1/evaluate/jev</code>, while a Jev client sends <code>questions</code> and <code>model</code> "
+                "to <code>/v1/systemone</code>: plan a small adapter. Recalibrate on a few hundred of your own examples "
+                "before reusing thresholds tuned for Jev.") +
                 '      <pre class="term"><span class="d">$ </span>SYSONE_MODEL=Okura66/Kahn1-Qwen3.5-4B uv run sysone serve --port 8000\n'
                 '<span class="d">$ </span>curl -X POST http://127.0.0.1:8000/v1/evaluate/jev -H "Content-Type: application/json" \\\n'
                 '    -d \'{"state": "Hello, I cannot log in to my account.", "schema": {"category": {"type": "choice",\n'
                 '         "instructions": "Support ticket category", "criteria": {"bug": "Something is broken", "account": "Login, access"}}}}\'</pre>\n'),
-            sec(5, "jev", "When JEV is still the right pick", ul([
+            sec(5, "jev", "When Jev is still the right pick", ul([
                 "You want the best measured accuracy on our test sets, with no infrastructure to run.",
-                "Your texts are long: JEV takes 64k tokens per request (32k for the state plus the longest question), per its documentation.",
-                "You work in English, where TypeSafe says JEV is most accurate.",
+                "Your texts are long: Jev takes 64k tokens per request (32k for the state plus the longest question), per its documentation.",
+                "You work in English, where TypeSafe says Jev is most accurate.",
                 "You are fine with a third party processing your data and a price per input token."])),
-            sec(6, "faq", "FAQ", "".join(f"      <h3 class=\"sub\">{q}</h3>\n      <p>{a}</p>\n" for q, a in FAQ_EN))]
+            sec(6, "faq", "FAQ", "".join(f"      <h3 class=\"sub\">{q}</h3>\n      <p>{esc(a)}</p>\n" for q, a in FAQ_EN))]
     return h + "".join(body), FAQ_EN
 
 
@@ -560,12 +590,12 @@ PAGES = [
                  "décision, LLM, encodeurs, guardrails. Licence, prix, source.",
          crumb_en="Landscape", crumb_fr="Paysage", nav_en="Landscape", nav_fr="Paysage"),
     dict(key="alternatives", en="/alternatives/jev/", fr="/fr/alternatives/jev/",
-         title_en="Open-source alternatives to JEV, compared like for like",
-         title_fr="Alternatives open source à JEV, comparées à périmètre égal",
-         desc_en="Open-weight alternatives to TypeSafe's JEV: Clef, JevK5, Kahn1 and more. Licences, JEV-compatible "
-                 "APIs, like-for-like accuracy, when JEV is still the pick.",
-         desc_fr="Les alternatives à poids ouverts au JEV de TypeSafe : Clef, JevK5, Kahn1 et d'autres. Licences, API "
-                 "compatibles, précision à périmètre égal, quand garder JEV.",
+         title_en="Open-source alternatives to Jev, compared like for like",
+         title_fr="Alternatives open source à Jev, comparées à périmètre égal",
+         desc_en="Open-weight alternatives to TypeSafe's Jev: Clef, JevK5, Kahn1 and more. Licences, Jev-compatible "
+                 "APIs, like-for-like accuracy, when Jev is still the pick.",
+         desc_fr="Les alternatives à poids ouverts au Jev de TypeSafe : Clef, JevK5, Kahn1 et d'autres. Licences, API "
+                 "compatibles, précision à périmètre égal, quand garder Jev.",
          crumb_en="JEV alternatives", crumb_fr="Alternatives à JEV", nav_en="JEV alternatives", nav_fr="Alternatives à JEV"),
 ]
 

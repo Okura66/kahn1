@@ -38,7 +38,8 @@ Kahn1 3B weights under the [Qwen Research License](https://huggingface.co/Qwen/Q
 **[Okura66/Kahn1-Qwen3.5-4B-LoRA](https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B-LoRA)** (57 MB adapter on `Qwen/Qwen3.5-4B`)
 
 Qwen3.5-4B fine-tuned with LoRA, native chat template. Version 2 (2026-10): 71.0 % on the held-out set
-(3B: 70.3 %), 86.1 % on JevBench (3B: 67.5 %; hard tier 72.1 % vs 42.3 %), on par with JevK5 (86.1 %);
+(3B: 70.3 %), 86.1 % on JevBench (3B: 67.5 %; hard tier 72.1 % vs 42.3 %), on par with JevK5's own published
+run (86.1 %; JevBench's own run of JevK5 v0.2: 85.3 %);
 p50 82.4 ms at k = 3 on one RTX 5070 Ti. Version 1 (2026-09) stays on the Hub under the tag
 [`v1-2026-09`](https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B/tree/v1-2026-09).
 
@@ -289,7 +290,7 @@ This playbook covers:
 
 ## Compatibility with JEV / TypeSafe Schema Format
 
-The API natively accepts the canonical JEV dictionary schema via `POST /v1/evaluate/jev` (or in the `"schema"` field of `POST /v1/evaluate`):
+The API accepts JEV's per-question fields (`type`, `instructions`, `criteria`) under a `"schema"` key via `POST /v1/evaluate/jev` (or in the `"schema"` field of `POST /v1/evaluate`). It is not a drop-in for JEV clients, which call `/v1/systemone` with `"questions"` and `"model"`: they need a small adapter.
 
 ```bash
 curl -X POST http://127.0.0.1:8000/v1/evaluate/jev \
@@ -364,7 +365,7 @@ Choice over every intent (77 / 60 options), same 1,184 items: Kahn1 4B 70.4 %, K
 68.4 %, JEV **79.1 %** (Kahn1 through its two-stage router).
 
 **JevBench, 231 public items.** Kahn1: k = 3, calibrated. Jev: the outcomes JevBench publishes.
-JevK5 v0.2 ([allebee/jevk5](https://github.com/allebee/jevk5), another open Qwen3.5-4B model): its own public run.
+JevK5 v0.2 ([allebee/jevk5](https://github.com/allebee/jevk5), another open Qwen3.5-4B model): its authors' own public run.
 
 | Tier | Items | Kahn1 4B | Kahn1 4B v1 | Kahn1 3B | JevK5 v0.2 | Jev 1.13.0 |
 |---|---:|---:|---:|---:|---:|---:|
@@ -373,8 +374,11 @@ JevK5 v0.2 ([allebee/jevk5](https://github.com/allebee/jevk5), another open Qwen
 | Hard | 111 | 72.1 % | 70.3 % | 42.3 % | **73.9 %** | 73.0 % |
 | All | 231 | 86.1 % | 83.1 % | 67.5 % | 86.1 % | **86.6 %** |
 
-Kahn1 4B is on par with JevK5: 199 of 231 each; item by item, 12 items only Kahn1 4B gets right
-and 12 only JevK5 (exact McNemar p = 1.00).
+Kahn1 4B is on par with JevK5's own published run: 199 of 231 each; item by item, 12 items only
+Kahn1 4B gets right and 12 only JevK5 (exact McNemar p = 1.00). JevBench's own run of JevK5 v0.2 scores
+85.3 % on the same 231 items ([v1.4 aggregates](https://github.com/fstandhartinger/jevbench/blob/main/results/v1.4/measurement-aggregates.json)).
+The Kahn1, JevK5 and Jev figures come from three different runners on the same items: ours, JevK5's
+authors' and JevBench's.
 
 **Hard decision dev split.** 317 questions written by Claude Opus on long, realistic documents,
 English and French, checked by two blind Opus solvers, never trained on (used to choose the
@@ -385,7 +389,7 @@ checkpoint, so a dev score, not a benchmark), k = 1, balanced over primitives: b
 Kahn1 3B p50 36.4 ms. JEV: p50 248 ms round trip over the network.
 
 **The honest reading.** JEV is ahead on every held-out primitive, by 2.2 points overall. On
-JevBench, Kahn1 4B is 0.5 points behind Jev (0.9 on the hard tier) and on par with JevK5.
+JevBench, Kahn1 4B is 0.5 points behind Jev (0.9 on the hard tier) and on par with JevK5's own run.
 Kahn1's case is that it is open, runs locally, is better calibrated and costs nothing per call.
 Where the 4B is weak: dates, durations and amounts computed in a single forward pass (7 of 15
 on JevBench's hard temporal items); Score, its weakest primitive; Noul on the held-out set,

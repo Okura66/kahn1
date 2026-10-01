@@ -275,9 +275,12 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
         JevBench's runner. Kahn1 answered the same items, k&nbsp;=&nbsp;3, calibrated. The held-out half of JevBench is
         not public, so Kahn1 was not run on it.</p>
       <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col">Tier</th><th scope="col" class="r">Public items</th><th scope="col" class="r">Kahn1 4B</th><th scope="col" class="r">Kahn1 3B</th><th scope="col" class="r">JevK5 v0.2</th><th scope="col" class="r">Jev 1.13.0</th><th scope="col" class="r">Jev, public + held-out</th></tr></thead><tbody><tr><td>Easy</td><td class="r">48</td><td class="r"><b>100.0%</b></td><td class="r"><b>100.0%</b></td><td class="r"><b>100.0%</b></td><td class="r"><b>100.0%</b></td><td class="r">100.0%</td></tr><tr><td>Standard</td><td class="r">72</td><td class="r"><b>98.6%</b></td><td class="r">84.7%</td><td class="r">95.8%</td><td class="r"><b>98.6%</b></td><td class="r">99.0%</td></tr><tr><td>Hard</td><td class="r">111</td><td class="r">72.1%</td><td class="r">42.3%</td><td class="r"><b>73.9%</b></td><td class="r">73.0%</td><td class="r">74.1%</td></tr><tr><td>All</td><td class="r">231</td><td class="r">86.1%</td><td class="r">67.5%</td><td class="r">86.1%</td><td class="r"><b>86.6%</b></td><td class="r">—</td></tr></tbody></table></div>
-      <p class="small faint" style="margin-top:12px">Kahn1 4B against JevK5, item by item: 12 items only Kahn1 4B gets
-        right, 12 only JevK5; exact McNemar test, p&nbsp;=&nbsp;1.00, not a significant difference. The 4B closes most of
-        the 3B's gap on the hard tier (72.1% against 42.3%).</p>
+      <p class="small faint" style="margin-top:12px">Kahn1 4B against JevK5's own published run, item by item: 12 items
+        only Kahn1 4B gets right, 12 only JevK5; exact McNemar test, p&nbsp;=&nbsp;1.00, not a significant difference.
+        JevBench's own run of JevK5 v0.2 scores 85.3% on the same 231 items
+        (<a href="https://github.com/fstandhartinger/jevbench/blob/main/results/v1.4/measurement-aggregates.json" rel="noopener">v1.4 aggregates</a>).
+        The Kahn1, JevK5 and Jev figures come from three different runners on the same items: ours, JevK5's authors' and
+        JevBench's. The 4B closes most of the 3B's gap on the hard tier (72.1% against 42.3%).</p>
     </section>
 
     <section class="sec doc" id="hard" aria-labelledby="h-hard">

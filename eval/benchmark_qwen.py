@@ -133,7 +133,7 @@ def run_qwen_benchmark(
 
     report_content = f"""# System 1 Benchmark Report: {model}
 
-Empirical evaluation of **{model}** under the OpenJEV System 1 constrained inference architecture.
+Empirical evaluation of **{model}** under the Kahn1 System 1 constrained inference architecture.
 
 ## 1. Performance & Hardware Metrics
 

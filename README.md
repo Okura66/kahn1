@@ -9,9 +9,9 @@
   <img src="https://img.shields.io/badge/Weights%204B-Apache%202.0-yellow.svg" alt="Kahn1 4B weights: Apache 2.0" />
   <a href="https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/blob/main/LICENSE"><img src="https://img.shields.io/badge/Weights%203B-Qwen%20Research%20License-lightgrey.svg" alt="Kahn1 3B weights: Qwen Research License" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/Python-3.11%2B-blue.svg" alt="Python 3.11+" /></a>
-  <a href="tests/"><img src="https://img.shields.io/badge/Tests-143%20passed-success.svg" alt="Tests: 143 passed" /></a>
+  <a href="tests/"><img src="https://img.shields.io/badge/Tests-148%20passed-success.svg" alt="Tests: 148 passed" /></a>
   <a href="https://docs.vllm.ai/"><img src="https://img.shields.io/badge/Engine-vLLM%20%7C%20Prefix%20Caching-purple.svg" alt="Engine: vLLM" /></a>
-  <img src="https://img.shields.io/badge/Latency%20p50-36%20ms%20(3B)%20%C2%B7%2088%20ms%20(4B)-brightgreen.svg" alt="Median latency: 36 ms (3B), 88 ms (4B)" />
+  <img src="https://img.shields.io/badge/Latency%20p50-36%20ms%20(3B)%20%C2%B7%2082%20ms%20(4B)-brightgreen.svg" alt="Median latency: 36 ms (3B), 82 ms (4B)" />
 </p>
 
 > [!NOTE]
@@ -37,8 +37,10 @@ Kahn1 3B weights under the [Qwen Research License](https://huggingface.co/Qwen/Q
 👉 **[Okura66/Kahn1-Qwen3.5-4B](https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B)** (8.4 GB merged) ·
 **[Okura66/Kahn1-Qwen3.5-4B-LoRA](https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B-LoRA)** (57 MB adapter on `Qwen/Qwen3.5-4B`)
 
-Qwen3.5-4B fine-tuned with LoRA, native chat template. Level with the 3B on the held-out set (70.3 %),
-far ahead on JevBench (83.1 % vs 67.5 %, hard tier 70.3 % vs 42.3 %); p50 87.5 ms at k = 3 on one RTX 5070 Ti.
+Qwen3.5-4B fine-tuned with LoRA, native chat template. Version 2 (2026-10): 71.0 % on the held-out set
+(3B: 70.3 %), 86.1 % on JevBench (3B: 67.5 %; hard tier 72.1 % vs 42.3 %), on par with JevK5 (86.1 %);
+p50 82.4 ms at k = 3 on one RTX 5070 Ti. Version 1 (2026-09) stays on the Hub under the tag
+[`v1-2026-09`](https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B/tree/v1-2026-09).
 
 ```bash
 # Serve directly with vLLM (Prefix Caching enabled):
@@ -116,7 +118,7 @@ A common enterprise misconception is that zero-shot LLM classifiers make classic
 |---|---|---|
 | **Taxonomy / Schema Agility** | **Rigid**: Adding a class requires relabeling data, retraining, and redeploying. | **Instantaneous**: Change the JSON schema in the request; works immediately in zero-shot. |
 | **Data Requirements** | Requires hundreds/thousands of domain-labeled examples per class. | Zero domain labels required for immediate cold-start deployment. |
-| **Inference Latency** | Ultra-fast (**< 1 ms to 10 ms** on CPU/GPU). | Fast for LLMs (median **36 ms** for the 3B, **88 ms** for the 4B on one GPU, k = 3), but heavier than tabular ML. |
+| **Inference Latency** | Ultra-fast (**< 1 ms to 10 ms** on CPU/GPU). | Fast for LLMs (median **36 ms** for the 3B, **82 ms** for the 4B on one GPU, k = 3), but heavier than tabular ML. |
 | **Hardware Footprint** | Extremely lightweight (runs on small CPUs or tiny edge devices). | A modern GPU for throughput (measured on a 16 GB RTX 5070 Ti); both sizes also run on a CPU at seconds per question. |
 | **Explainability & Auditing** | Direct feature importances (SHAP, tree splits, linear weights). | Latent attention representations with calibrated post-hoc probabilities. |
 
@@ -138,7 +140,7 @@ While `sysone` guarantees **0.0% schema and typing errors** by reading logits di
    - **Factually non-deterministic**: The model can still be deceived by adversarial prompts, ambiguous inputs, or out-of-distribution texts.
 3. **Calibrated Confidence as an Auditable Safety Valve**:
    - Because raw LLMs are chronically overconfident, raw softmax probabilities cannot be trusted in production.
-   - By measuring Expected Calibration Error (0.064 overall for Kahn1 4B on the held-out set, 0.082 for the 3B) and providing empirical Risk-Coverage curves (AURC), `sysone` enables **defensible risk management**:
+   - By measuring Expected Calibration Error (0.077 overall for Kahn1 4B on the held-out set, 0.082 for the 3B) and providing empirical Risk-Coverage curves (AURC), `sysone` enables **defensible risk management**:
      $$\text{If } \text{confidence}(x) \ge \tau \implies \text{Automate action (low risk)}$$
      $$\text{If } \text{confidence}(x) < \tau \implies \text{Route to human auditor or System 2}$$
    - This selective prediction threshold is what transforms an experimental LLM into an enterprise-ready, compliant decision engine.
@@ -223,7 +225,7 @@ panel says so rather than showing invented numbers.
 uv run pytest tests/ -q
 ```
 
-Runs the complete suite of 144 deterministic unit and integration tests, 143 passed and 1 skipped (validating token mapping, prompt formats, debiasing invariance, ordinal scoring, post-hoc calibration, and REST API endpoints).
+Runs the complete suite of 149 deterministic unit and integration tests, 148 passed and 1 skipped (validating token mapping, prompt formats, debiasing invariance, ordinal scoring, post-hoc calibration, and REST API endpoints).
 
 Historical logit verification of Phase 0 is archived in [`reports/SPIKE.md`](reports/SPIKE.md).
 
@@ -323,7 +325,7 @@ curl -X POST http://127.0.0.1:8000/v1/evaluate/jev \
 
 The codebase is **model-agnostic** via `EngineConfig.model` / `--model` / `SYSONE_MODEL`.
 
-- **Kahn1 4B**: `Qwen/Qwen3.5-4B` + LoRA (r = 16 on the attention and linear-attention projections), served with the model's native chat template (thinking off): [`Okura66/Kahn1-Qwen3.5-4B`](https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B).
+- **Kahn1 4B**: `Qwen/Qwen3.5-4B` + LoRA (r = 16 on the attention and linear-attention projections, version 2), served with the model's native chat template (thinking off): [`Okura66/Kahn1-Qwen3.5-4B`](https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B).
 - **Kahn1 3B**: `Qwen/Qwen2.5-3B-Instruct` + LoRA (v3), tag prompt layout: [`Okura66/Kahn1-Qwen2.5-3B`](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B). The browser demos run a 4-bit GGUF of its v1 checkpoint.
 - **Default Backbone**: `EngineConfig.model` defaults to `Qwen/Qwen2.5-3B-Instruct` (the server uses `checkpoints/qwen_merged` when present); point `SYSONE_MODEL` / `EngineConfig.model` at a Kahn1 checkpoint. `EngineConfig.prompt_format` defaults to `"auto"`: the native chat template for Qwen3 / Qwen3.5 checkpoints (Kahn1 4B), the tag layout for everything else (Kahn1 3B). Set it to `"tags"`, `"chatml"` or `"qwen3"` to force one.
 - **Also Supported**: `meta-llama/Llama-3.2-3B-Instruct`.
@@ -334,24 +336,29 @@ The codebase is **model-agnostic** via `EngineConfig.model` / `--model` / `SYSON
 (banking77, MASSIVE), 5-level scales (SST-5, app reviews), entailment (RTE, SciTail). Every system
 answers Choice over the same 8 options (the right one and 7 distractors seeded from the state);
 JEV's Noul items ask whether the text supports the statement. Kahn1: k = 3, temperature
-calibration, one RTX 5070 Ti with vLLM. ECE: 15 bins on p_max.
+calibration, one RTX 5070 Ti with vLLM. ECE: 15 bins on p_max. Kahn1 4B is version 2 (2026-10);
+version 1 (2026-09) is shown for comparison.
 
-| Primitive | Items | Kahn1 4B | Kahn1 3B | JEV 1.13.0 |
+| Primitive | Items | Kahn1 4B | Kahn1 4B v1 | Kahn1 3B | JEV 1.13.0 |
+|---|---:|---:|---:|---:|---:|
+| Choice | 6,050 | 92.3 % | 91.9 % | 90.9 % | **94.5 %** |
+| Score | 6,210 | 50.6 % | 48.6 % | 51.4 % | **52.0 %** |
+| Noul | 2,403 | 70.0 % | 72.2 % | 67.0 % | **74.4 %** |
+| All | 14,663 | 71.0 % | 70.3 % | 70.3 % | **73.2 %** |
+| ECE, all | | 0.077 | **0.064** | 0.082 | 0.113 |
+
+| Source | Kahn1 4B | Kahn1 4B v1 | Kahn1 3B | JEV 1.13.0 |
 |---|---:|---:|---:|---:|
-| Choice | 6,050 | 91.9 % | 90.9 % | **94.5 %** |
-| Score | 6,210 | 48.6 % | 51.4 % | **52.0 %** |
-| Noul | 2,403 | 72.2 % | 67.0 % | **74.4 %** |
-| All | 14,663 | 70.3 % | 70.3 % | **73.2 %** |
-| ECE, all | | **0.064** | 0.082 | 0.113 |
+| banking77 | 91.5 % | 91.5 % | 91.1 % | **94.8 %** |
+| MASSIVE | 93.1 % | 92.4 % | 90.8 % | **94.1 %** |
+| RTE | 84.1 % | 86.6 % | 82.7 % | **89.9 %** |
+| SciTail | 68.2 % | 70.4 % | 65.0 % | **72.4 %** |
+| SST-5 | 50.2 % | 49.2 % | 52.4 % | **57.7 %** |
+| App reviews | **50.9 %** | 48.2 % | **50.9 %** | 48.9 % |
 
-| Source | Kahn1 4B | Kahn1 3B | JEV 1.13.0 |
-|---|---:|---:|---:|
-| banking77 | 91.5 % | 91.1 % | **94.8 %** |
-| MASSIVE | 92.4 % | 90.8 % | **94.1 %** |
-| RTE | 86.6 % | 82.7 % | **89.9 %** |
-| SciTail | 70.4 % | 65.0 % | **72.4 %** |
-| SST-5 | 49.2 % | 52.4 % | **57.7 %** |
-| App reviews | 48.2 % | **50.9 %** | 48.9 % |
+Ordinal scores, Kahn1 4B (version 1 in brackets): SST-5 50.2 % exact (49.2), 94.4 % within one
+level (93.6), Spearman ρ 0.837 (0.823); app reviews 50.9 % exact (48.2), 86.2 % within one level
+(81.5), Spearman ρ 0.789 (0.768). RTE and SciTail went down from version 1.
 
 Choice over every intent (77 / 60 options), same 1,184 items: Kahn1 4B 70.4 %, Kahn1 3B
 68.4 %, JEV **79.1 %** (Kahn1 through its two-stage router).
@@ -359,29 +366,31 @@ Choice over every intent (77 / 60 options), same 1,184 items: Kahn1 4B 70.4 %, K
 **JevBench, 231 public items.** Kahn1: k = 3, calibrated. Jev: the outcomes JevBench publishes.
 JevK5 v0.2 ([allebee/jevk5](https://github.com/allebee/jevk5), another open Qwen3.5-4B model): its own public run.
 
-| Tier | Items | Kahn1 4B | Kahn1 3B | JevK5 v0.2 | Jev 1.13.0 |
-|---|---:|---:|---:|---:|---:|
-| Easy | 48 | **100.0 %** | **100.0 %** | **100.0 %** | **100.0 %** |
-| Standard | 72 | 91.7 % | 84.7 % | 95.8 % | **98.6 %** |
-| Hard | 111 | 70.3 % | 42.3 % | **73.9 %** | 73.0 % |
-| All | 231 | 83.1 % | 67.5 % | 86.1 % | **86.6 %** |
+| Tier | Items | Kahn1 4B | Kahn1 4B v1 | Kahn1 3B | JevK5 v0.2 | Jev 1.13.0 |
+|---|---:|---:|---:|---:|---:|---:|
+| Easy | 48 | **100.0 %** | **100.0 %** | **100.0 %** | **100.0 %** | **100.0 %** |
+| Standard | 72 | **98.6 %** | 91.7 % | 84.7 % | 95.8 % | **98.6 %** |
+| Hard | 111 | 72.1 % | 70.3 % | 42.3 % | **73.9 %** | 73.0 % |
+| All | 231 | 86.1 % | 83.1 % | 67.5 % | 86.1 % | **86.6 %** |
 
-Kahn1 4B vs JevK5, item by item: 11 items only Kahn1 4B gets right, 18 only JevK5; exact McNemar
-p = 0.26, not significant.
+Kahn1 4B is on par with JevK5: 199 of 231 each; item by item, 12 items only Kahn1 4B gets right
+and 12 only JevK5 (exact McNemar p = 1.00).
 
 **Hard decision dev split.** 317 questions written by Claude Opus on long, realistic documents,
 English and French, checked by two blind Opus solvers, never trained on (used to choose the
-checkpoint): base Qwen3.5-4B 48.9 %, Kahn1 4B 62.1 % (English 60.5 %, French 66.7 %).
+checkpoint, so a dev score, not a benchmark), k = 1, balanced over primitives: base Qwen3.5-4B
+48.8 %, Kahn1 4B v1 62.2 %, Kahn1 4B 65.0 %.
 
-**Latency** (one RTX 5070 Ti, vLLM, k = 3): Kahn1 4B p50 87.5 ms, p95 204.8 ms, 9.3 q/s;
+**Latency** (one RTX 5070 Ti, vLLM, k = 3, during the held-out run): Kahn1 4B p50 82.4 ms, p95 287.9 ms, 8.0 q/s;
 Kahn1 3B p50 36.4 ms. JEV: p50 248 ms round trip over the network.
 
-**The honest reading.** JEV is ahead on every held-out primitive, by 2.9 points overall. On
-JevBench, Kahn1 4B is 3.5 points behind Jev (2.7 on the hard tier) and within noise of JevK5.
+**The honest reading.** JEV is ahead on every held-out primitive, by 2.2 points overall. On
+JevBench, Kahn1 4B is 0.5 points behind Jev (0.9 on the hard tier) and on par with JevK5.
 Kahn1's case is that it is open, runs locally, is better calibrated and costs nothing per call.
-Where the 4B is weak: dates, durations and amounts computed in a single forward pass; short
-intent classification, where it lost a little against the 3B on JevBench; Score, its weakest
-primitive; calibration fitted on the training distribution (recalibrate on your domain).
+Where the 4B is weak: dates, durations and amounts computed in a single forward pass (7 of 15
+on JevBench's hard temporal items); Score, its weakest primitive; Noul on the held-out set,
+which went down from version 1 (70.0 % vs 72.2 %); calibration fitted on the training
+distribution (recalibrate on your domain).
 An earlier comparison asked Choice over 8 options for Kahn1 and over every intent for JEV, which
 made Kahn1 look ahead; it was unequal and has been corrected
 ([`reports/CHOICE_FAIRNESS.md`](reports/CHOICE_FAIRNESS.md)).
@@ -390,13 +399,14 @@ Reports: 👉 [`reports/KAHN1_4B_REPORT.md`](reports/KAHN1_4B_REPORT.md) ·
 [`reports/CHOICE_FAIRNESS.md`](reports/CHOICE_FAIRNESS.md) ·
 [`reports/JEVK5_VS_KAHN1.md`](reports/JEVK5_VS_KAHN1.md) ·
 [`reports/JEVBENCH_VS_JEV.md`](reports/JEVBENCH_VS_JEV.md) ·
-[`reports/QWEN35_4B_FULL_EVAL.md`](reports/QWEN35_4B_FULL_EVAL.md) (4B) ·
+[`reports/QWEN35_V6_FULL_EVAL.md`](reports/QWEN35_V6_FULL_EVAL.md) (4B) ·
+[`reports/JEVBENCH_v6.md`](reports/JEVBENCH_v6.md) (4B, JevBench) ·
 [`reports/QWEN_FULL_EVAL_v3_temponly.md`](reports/QWEN_FULL_EVAL_v3_temponly.md) (3B v3) ·
 [kahn1.com/benchmarks](https://kahn1.com/benchmarks/).
 
 ### Understanding Ordinal Scoring & Human Agreement (SST-5)
 
-On fine-grained ordinal scales like SST-5 (5 sentiment degrees from *Very Negative* to *Very Positive*), discrete exact-match accuracy is **52.35 %** for Kahn1 3B (v3) and **49.2 %** for Kahn1 4B; JEV reaches 57.7 % on the same items, so this is not a ceiling. What the 3B does well:
+On fine-grained ordinal scales like SST-5 (5 sentiment degrees from *Very Negative* to *Very Positive*), discrete exact-match accuracy is **52.35 %** for Kahn1 3B (v3) and **50.2 %** for Kahn1 4B; JEV reaches 57.7 % on the same items, so this is not a ceiling. What the 3B does well:
 1. **Human Inter-Annotator Agreement**: Human agreement on 5-way SST-5 is only **~55% - 60%** due to the natural subjectivity of nuances (e.g. distinguishing *Positive* from *Very Positive*).
 2. **Zero Catastrophic Inversion**: With **95.16 % off-by-one accuracy** (3B v3), the model's prediction is either exact or immediately adjacent in 95% of cases. It virtually never confuses opposite polarities.
 3. **Monotonic Ranking ($\rho = 0.834$)**: The high Spearman correlation shows strong ordering fidelity across continuous latent sentiment.
@@ -430,7 +440,7 @@ kahn1/
 - **Single-batch** `llm.generate()` for all questions × permutations. Looping one call per question is forbidden.
 - **Averaging in probability space**, not logit space (averaging logits is not an average of beliefs).
 - **Evaluation on disjoint, held-out datasets**, never seen during training.
-- **Log validation NLL, not accuracy**, for checkpoint selection.
+- **Choose checkpoints on dev splits, never on a benchmark.** Log validation NLL and dev accuracy: for Kahn1 4B v2 the NLL bottomed out at step 250 of 1,400 while dev accuracy kept rising, so the final step was kept.
 - **No RL.** Log-loss on the target answer token is already a strictly proper scoring rule: supervised fine-tuning directly optimizes calibration. **Do not attempt to "fix" the absence of RL.**
 
 ## Key Formulas

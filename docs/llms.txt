@@ -21,6 +21,12 @@ Caveats: 4B and 3B models, not frontier models; JEV is more accurate on every he
 
 ## Pages
 
+- [System One models](https://kahn1.com/learn/system-one-models/): what a System One (decision) model is, how it reads typed answers from logits, the families, how to choose
+- [Modèles System One (français)](https://kahn1.com/fr/apprendre/modeles-system-one/): la même page en français
+- [Decision model landscape](https://kahn1.com/compare/landscape/): every proprietary and open way to turn text into a typed decision, with licence, output, price and source (CSV: https://kahn1.com/data/landscape.csv)
+- [Paysage des modèles de décision (français)](https://kahn1.com/fr/comparer/paysage/): la même page en français
+- [Open-source alternatives to JEV](https://kahn1.com/alternatives/jev/): Clef, JevK5, Kahn1 and others, JEV-compatible APIs, like-for-like figures, when JEV is still the right pick
+- [Alternatives open source à JEV (français)](https://kahn1.com/fr/alternatives/jev/): la même page en français
 - [Home (English)](https://kahn1.com/): what Kahn1 is, the three primitives, how it compares, use cases, caveats
 - [Accueil (français)](https://kahn1.com/fr/): la même page en français
 - [Benchmarks](https://kahn1.com/benchmarks/): every result, Kahn1 vs JEV on the same items, latency, how to reproduce

@@ -28,6 +28,9 @@ data/
 *.parquet
 *.csv
 *.tsv
+# the site's own downloadable data (docs/data/) is published
+!docs/data/
+!docs/data/*.csv
 
 # Heavy weights & Checkpoints
 checkpoints/

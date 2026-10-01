@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google Tag Manager, loaded only once the visitor accepts analytics cookies
+     (ePrivacy / CNIL: no non-essential cookie before consent). See the consent banner. -->
+<script>
+function loadGTM() {
+  if (window.__gtmLoaded) return;
+  window.__gtmLoaded = true;
+  (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-TTC5WPRN');
+}
+try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); } catch (e) {}
+</script>
+<!-- End Google Tag Manager -->
+<!-- GoatCounter: cookieless visit count, exempt from consent. Runs for every visitor. -->
+<script data-goatcounter="https://kahn1.goatcounter.com/count"
+        async src="https://gc.zgo.at/count.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>System One models: what they are and how to choose</title>
+<meta name="description" content="What a System One (decision) model is, how it reads typed answers from logits, the families, proprietary and open, and how to choose one. Like-for-like figures.">
+<link rel="canonical" href="https://kahn1.com/learn/system-one-models/">
+<link rel="alternate" hreflang="en" href="https://kahn1.com/learn/system-one-models/">
+<link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/apprendre/modeles-system-one/">
+<link rel="alternate" hreflang="x-default" href="https://kahn1.com/learn/system-one-models/">
+<meta name="author" content="Axel Montzamir">
+<meta name="theme-color" content="#faf8f5">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kahn1">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="fr_FR">
+<meta property="og:url" content="https://kahn1.com/learn/system-one-models/">
+<meta property="og:title" content="System One models: what they are and how to choose">
+<meta property="og:description" content="What a System One (decision) model is, how it reads typed answers from logits, the families, proprietary and open, and how to choose one. Like-for-like figures.">
+<meta property="og:image" content="https://kahn1.com/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Kahn1: any text in, typed answers out.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231c1b19'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='20' font-weight='700' fill='%23d9542b' text-anchor='middle'%3E1%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;1,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<!-- Instrument Serif draws its 1 like an l ("Kahnl"): that one glyph comes from Libre Caslon Display. -->
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Display&text=1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css?v=20260928">
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "TechArticle",
+ "image": "https://kahn1.com/assets/og.png",
+ "headline": "System One models: what they are and how to choose",
+ "inLanguage": "en",
+ "url": "https://kahn1.com/learn/system-one-models/",
+ "description": "What a System One (decision) model is, how it reads typed answers from logits, the families, proprietary and open, and how to choose one. Like-for-like figures.",
+ "keywords": "System One model, System 1 model, decision model, Jev-class model, typed decisions, logit-based classification, calibrated LLM classifier",
+ "author": {
+  "@type": "Person",
+  "@id": "https://kahn1.com/#author",
+  "name": "Axel Montzamir",
+  "url": "https://www.linkedin.com/in/amontzamir/"
+ },
+ "publisher": {
+  "@id": "https://kahn1.com/#author"
+ },
+ "about": {
+  "@type": "SoftwareApplication",
+  "@id": "https://kahn1.com/#software",
+  "name": "Kahn1",
+  "url": "https://kahn1.com/"
+ },
+ "isPartOf": {
+  "@type": "WebSite",
+  "@id": "https://kahn1.com/#website",
+  "name": "Kahn1",
+  "url": "https://kahn1.com/"
+ },
+ "datePublished": "2026-10-01",
+ "dateModified": "2026-10-01"
+}
+</script>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "BreadcrumbList",
+ "itemListElement": [
+  {
+   "@type": "ListItem",
+   "position": 1,
+   "name": "Kahn1",
+   "item": "https://kahn1.com/"
+  },
+  {
+   "@type": "ListItem",
+   "position": 2,
+   "name": "System One models",
+   "item": "https://kahn1.com/learn/system-one-models/"
+  }
+ ]
+}
+</script>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "DefinedTermSet",
+ "@id": "https://kahn1.com/learn/system-one-models/#terms",
+ "name": "System One model key terms",
+ "hasDefinedTerm": [
+  {
+   "@type": "DefinedTerm",
+   "name": "System One model",
+   "description": "A model that answers typed questions about a text in one forward pass, reading a probability for each allowed answer instead of generating text. Also called a decision model or a Jev-class model.",
+   "inDefinedTermSet": "https://kahn1.com/learn/system-one-models/#terms"
+  },
+  {
+   "@type": "DefinedTerm",
+   "name": "Choice",
+   "description": "A question with a fixed list of options; the answer is one option and a probability for each.",
+   "inDefinedTermSet": "https://kahn1.com/learn/system-one-models/#terms"
+  },
+  {
+   "@type": "DefinedTerm",
+   "name": "Score",
+   "description": "A question on ordered levels (low, medium, high); the answer is a level and an expected value over the levels.",
+   "inDefinedTermSet": "https://kahn1.com/learn/system-one-models/#terms"
+  },
+  {
+   "@type": "DefinedTerm",
+   "name": "Noul",
+   "description": "JEV's name for a yes / no question: does the text support this statement? Kahn1 uses the same name.",
+   "inDefinedTermSet": "https://kahn1.com/learn/system-one-models/#terms"
+  },
+  {
+   "@type": "DefinedTerm",
+   "name": "Logit",
+   "description": "The raw score a language model gives each token before the softmax turns scores into probabilities.",
+   "inDefinedTermSet": "https://kahn1.com/learn/system-one-models/#terms"
+  },
+  {
+   "@type": "DefinedTerm",
+   "name": "Calibration",
+   "description": "How well probabilities match reality: of the answers given at 80% confidence, about 80% should be right.",
+   "inDefinedTermSet": "https://kahn1.com/learn/system-one-models/#terms"
+  },
+  {
+   "@type": "DefinedTerm",
+   "name": "ECE",
+   "description": "Expected calibration error: the average gap between confidence and accuracy, over bins of confidence. 0 is perfect.",
+   "inDefinedTermSet": "https://kahn1.com/learn/system-one-models/#terms"
+  },
+  {
+   "@type": "DefinedTerm",
+   "name": "Permutation debiasing",
+   "description": "Asking the same question with the options in k different orders and averaging the probabilities, so the position of an option does not sway the answer.",
+   "inDefinedTermSet": "https://kahn1.com/learn/system-one-models/#terms"
+  },
+  {
+   "@type": "DefinedTerm",
+   "name": "Prefix caching",
+   "description": "Reusing the computation of a shared prompt prefix (the state) across all the questions asked about it.",
+   "inDefinedTermSet": "https://kahn1.com/learn/system-one-models/#terms"
+  }
+ ]
+}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<div class="consent" id="consent" role="dialog" aria-labelledby="consentText" hidden>
+  <p id="consentText">Can Google Analytics count this visit? It sets cookies. Refusing changes nothing else on the site, and nothing you type in the demos is sent to it.</p>
+  <div class="row2">
+    <button class="primary" id="consentYes">ACCEPT</button>
+    <button id="consentNo">REFUSE</button>
+  </div>
+</div>
+
+<a class="brand" href="/" aria-label="Kahn1, home">KAHN<span>1</span></a>
+<header class="topbar">
+  <button class="menu-btn" type="button" data-menu="open" aria-label="Open menu"><span>MENU</span><i></i></button>
+</header>
+<aside class="side" aria-label="Site navigation">
+  <div class="menu-head"><span class="wordmark">KAHN<span>1</span></span><button class="menu-close" type="button" data-menu="close" aria-label="Close menu">CLOSE ✕</button></div>
+  <nav class="otp" aria-label="On this page"><div class="kick">ON THIS PAGE</div><div class="otp-list"></div></nav>
+  <div class="side-links">
+    <div class="rule"></div>
+    <div class="kick">TRY</div>
+    <a href="/playground/">Playground</a>
+    <a href="/snake/">Kahn1 plays Snake</a>
+    <div class="kick">LEARN</div>
+    <a href="/get-started/">Get started</a>
+    <a href="/learn/system-one-models/" aria-current="page">System One models</a>
+    <a href="/caveats/">Caveats</a>
+    <div class="kick">COMPARE</div>
+    <a href="/benchmarks/">Benchmarks</a>
+    <a href="/compare/landscape/">Landscape</a>
+    <a href="/alternatives/jev/">JEV alternatives</a>
+    <a href="/models/">Models</a>
+    <div class="icons">
+      <a href="https://huggingface.co/Okura66" target="_blank" rel="noopener" title="Hugging Face" aria-label="Hugging Face">🤗</a>
+      <a href="https://github.com/Okura66/kahn1" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+      <a href="https://www.linkedin.com/in/amontzamir/" target="_blank" rel="noopener" title="LinkedIn" aria-label="LinkedIn"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M0 1.15C0 .52.52 0 1.18 0h13.64C15.48 0 16 .52 16 1.15v13.7c0 .63-.52 1.15-1.18 1.15H1.18C.52 16 0 15.48 0 14.85V1.15zm4.94 12.24V6.17H2.54v7.22h2.4zM3.74 5.18c.84 0 1.36-.55 1.36-1.25-.02-.71-.52-1.25-1.35-1.25-.82 0-1.36.54-1.36 1.25 0 .7.52 1.25 1.33 1.25h.02zm4.9 8.21V9.36c0-.22.02-.43.08-.59.18-.43.57-.88 1.23-.88.87 0 1.22.66 1.22 1.64v3.86h2.4V9.25c0-2.22-1.18-3.25-2.76-3.25-1.27 0-1.84.7-2.16 1.19v.02h-.02l.02-.02V6.17h-2.4c.03.68 0 7.22 0 7.22h2.4z"/></svg></a>
+    </div>
+  </div>
+</aside>
+<div class="prefs" role="group" aria-label="Language and cookies">
+  <a href="/learn/system-one-models/" hreflang="en" lang="en" aria-current="page">EN</a>
+  <a href="/fr/apprendre/modeles-system-one/" hreflang="fr" lang="fr" title="Lire en français">FR</a>
+  <i aria-hidden="true"></i>
+  <button type="button" data-cookies title="Change your cookie choice">COOKIES</button>
+</div>
+
+<div class="shell">
+
+  <main id="main" class="page">
+    <section class="page-hero" aria-labelledby="title">
+      <h1 id="title">System One models</h1>
+      <p class="lead">A System One model answers typed questions about a text in one forward pass: it reads a probability for each allowed answer from the model's logits instead of writing text. TypeSafe's JEV made the term popular in September 2026; open models now do the same.</p>
+      <p class="small faint">Updated October 1, 2026</p>
+      <nav class="toc" aria-label="On this page">
+        <ol>
+          <li><a href="#definition">Definition</a></li>
+          <li><a href="#how">How it works</a></li>
+          <li><a href="#families">The families</a></li>
+          <li><a href="#choose">How to choose</a></li>
+          <li><a href="#measure">How they are measured</a></li>
+          <li><a href="#limits">Limits</a></li>
+          <li><a href="#terms">Key terms</a></li>
+        </ol>
+      </nav>
+    </section>
+    <section class="sec doc" id="definition" aria-labelledby="h-definition">
+      <h2 id="h-definition">01 · Definition</h2>
+      <p>The name comes from Daniel Kahneman's <em>System 1</em> (<em>Thinking, Fast and Slow</em>, 2011): fast, cheap judgments that settle most cases and leave the hard ones to a slower System 2 (a frontier model or a person). TypeSafe writes “System One”; you will also read “System 1”, “decision model” and “Jev-class model”.</p>
+      <p>Such a model takes a <em>state</em> (a message, a document, a ticket) and typed questions. For each it returns a typed value and a probability distribution: nothing is generated, so nothing has to be parsed, and an answer outside the schema cannot happen.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col">Question type</th><th scope="col">What you ask</th><th scope="col">What comes back</th></tr></thead><tbody><tr><td>Choice</td><td>A fixed list of options</td><td>One option + a probability for each</td></tr><tr><td>Score</td><td>Ordered levels</td><td>A level + an expected value over the levels</td></tr><tr><td>Noul (yes / no)</td><td>A statement to check</td><td>The probability that the text supports it</td></tr></tbody></table></div>
+    </section>
+    <section class="sec doc" id="how" aria-labelledby="h-how">
+      <h2 id="h-how">02 · How it works</h2>
+      <p>The prompt holds the state, the question and the options, each tagged with a letter. The model runs one forward pass; at the answer position, only the logits of the option tokens (A, B, C… or yes / no) are kept, and the softmax turns them into probabilities. For a Score, the expected value Σ i · p<sub>i</sub> gives a continuous value.</p>
+      <p>Two settings make those probabilities usable. <strong>Permutation debiasing</strong> asks the question with the options in k orders and averages the results. <strong>Calibration</strong> (one temperature per question type) aligns confidence with accuracy, measured by the ECE. And <strong>prefix caching</strong> computes the state once for every question asked about it.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col"></th><th scope="col">System One model</th><th scope="col">LLM generating JSON</th></tr></thead><tbody><tr><td>Output</td><td>A typed value read from the logits</td><td>Text to validate and parse</td></tr><tr><td>Format errors</td><td>Impossible by construction</td><td>Rare with structured outputs, possible otherwise</td></tr><tr><td>Probabilities</td><td>One per option, always</td><td>Logprobs depending on the provider, often none</td></tr><tr><td>What drives latency</td><td>One pass over the state</td><td>The length of the generated answer</td></tr><tr><td>What drives cost</td><td>Input tokens</td><td>Input and output tokens</td></tr></tbody></table></div>
+    </section>
+    <section class="sec doc" id="families" aria-labelledby="h-families">
+      <h2 id="h-families">03 · The families</h2>
+      <p>Seven families turn a text into a typed decision; only decision models combine a guaranteed format, a probability per option and a single pass. Product by product, with licences and sources, see the <a href="/compare/landscape/">landscape</a>.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col">Family</th><th scope="col">Examples</th><th scope="col">Licence</th><th scope="col">Where it runs</th></tr></thead><tbody><tr><td>Hosted decision models</td><td>JEV (TypeSafe), d1 (Liquid AI)</td><td>Closed</td><td>API</td></tr><tr><td>Open decision models</td><td>Clef (Cloudflare), JevK5, Kahn1, Tev1 (Together), Laya</td><td>Mostly Apache 2.0</td><td>Local, sometimes also hosted</td></tr><tr><td>LLMs with structured outputs</td><td>OpenAI, Anthropic, Google</td><td>Closed</td><td>API</td></tr><tr><td>Constrained decoding</td><td>Outlines, XGrammar, vLLM, llama.cpp, Guidance</td><td>Apache 2.0 or MIT</td><td>Local, with any model</td></tr><tr><td>Cloud classification</td><td>Google Natural Language, AWS Comprehend, Azure Language</td><td>Closed</td><td>API</td></tr><tr><td>Zero-shot encoders</td><td>bart-large-mnli, DeBERTa-v3 zeroshot, GLiClass, SetFit</td><td>MIT or Apache 2.0</td><td>CPU</td></tr><tr><td>Guard and judge models</td><td>Llama Guard 4, ShieldGemma, Granite Guardian, Qwen3Guard, Prometheus 2</td><td>Mixed</td><td>Local</td></tr></tbody></table></div>
+    </section>
+    <section class="sec doc" id="choose" aria-labelledby="h-choose">
+      <h2 id="h-choose">04 · How to choose</h2>
+      <ul>
+        <li><strong>Can your data leave your infrastructure?</strong> No: an open model, run locally. Yes: a hosted API becomes an option.</li>
+        <li><strong>Which language?</strong> JEV is trained first for English, per its documentation; check the language of each model.</li>
+        <li><strong>Which licence?</strong> Apache 2.0 and MIT allow commercial use; some licences (Qwen Research, CC BY-NC) limit it.</li>
+        <li><strong>Does calibration hold on your data?</strong> Measure the ECE on a few hundred labelled examples before you set a threshold.</li>
+        <li><strong>How many options, how long a text?</strong> The number of options and the context window differ from one model to the next.</li>
+        <li><strong>What throughput, what hardware?</strong> A GPU for production; a CPU is enough to try it, at seconds per question.</li>
+        <li><strong>Is an encoder enough?</strong> For short, fixed intents, a zero-shot encoder on a CPU is often faster and good enough.</li>
+      </ul>
+    </section>
+    <section class="sec doc" id="measure" aria-labelledby="h-measure">
+      <h2 id="h-measure">05 · How they are measured</h2>
+      <p><a href="https://github.com/fstandhartinger/jevbench" rel="noopener">JevBench</a> is the independent benchmark of the category: states and bounded rubrics, a typed answer, four axes (accuracy, calibration, speed, cost). Vendors also cite their own indices: Cloudflare and Liquid AI each report beating JEV on a “Decision Index”, figures not reproduced here.</p>
+      <p>A comparison only means something like for like: the same items, the same options, the same labels. That is the rule of our <a href="/benchmarks/">benchmarks</a>: on 14,663 held-out items, JEV 1.13.0 scores 73.2% and Kahn1 4B 71.0%; on the 231 public JevBench items, Jev 86.6%, JevK5 v0.2 and Kahn1 4B 86.1% each (Kahn1: k&nbsp;=&nbsp;3, calibrated).</p>
+    </section>
+    <section class="sec doc" id="limits" aria-labelledby="h-limits">
+      <h2 id="h-limits">06 · Limits</h2>
+      <ul>
+        <li>They are not reasoning models: computing a date, a duration or an amount in one pass stays a weak spot.</li>
+        <li>Calibration holds on the distribution it was fitted on: recalibrate on your domain.</li>
+        <li>Confidence is not the probability of being right: set thresholds on your own data.</li>
+        <li>Regulation still applies (EU AI Act, sector rules): keep a person or a larger model on the low-confidence path.</li>
+      </ul>
+      <p>For Kahn1 in detail, see the <a href="/caveats/">caveats</a>.</p>
+    </section>
+    <section class="sec doc" id="terms" aria-labelledby="h-terms">
+      <h2 id="h-terms">07 · Key terms</h2>
+      <ul class="plain">
+        <li><b>System One model.</b> A model that answers typed questions about a text in one forward pass, reading a probability for each allowed answer instead of generating text. Also called a decision model or a Jev-class model.</li>
+        <li><b>Choice.</b> A question with a fixed list of options; the answer is one option and a probability for each.</li>
+        <li><b>Score.</b> A question on ordered levels (low, medium, high); the answer is a level and an expected value over the levels.</li>
+        <li><b>Noul.</b> JEV's name for a yes / no question: does the text support this statement? Kahn1 uses the same name.</li>
+        <li><b>Logit.</b> The raw score a language model gives each token before the softmax turns scores into probabilities.</li>
+        <li><b>Calibration.</b> How well probabilities match reality: of the answers given at 80% confidence, about 80% should be right.</li>
+        <li><b>ECE.</b> Expected calibration error: the average gap between confidence and accuracy, over bins of confidence. 0 is perfect.</li>
+        <li><b>Permutation debiasing.</b> Asking the same question with the options in k different orders and averaging the probabilities, so the position of an option does not sway the answer.</li>
+        <li><b>Prefix caching.</b> Reusing the computation of a shared prompt prefix (the state) across all the questions asked about it.</li>
+      </ul>
+    </section>
+  </main>
+
+<footer class="foot">
+  <div>KAHN1 · MIT License · by <a href="https://www.linkedin.com/in/amontzamir/" rel="noopener">Axel Montzamir</a></div>
+  <nav aria-label="Footer">
+    <a href="/playground/">Playground</a>
+    <a href="/snake/">Snake</a>
+    <a href="https://github.com/Okura66/kahn1" rel="noopener">GitHub</a>
+    <a href="https://huggingface.co/Okura66" rel="noopener">Hugging Face</a>
+  </nav>
+  <span class="disc">Kahn1 is an independent project. It accepts the JEV schema format and is not affiliated with TypeSafe.</span>
+</footer>
+</div>
+<script src="/assets/site.js?v=20260928"></script>
+</body>
+</html>

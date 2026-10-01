@@ -21,6 +21,11 @@ The run of 2026-09-30 (a ~20 % teacher share):
     python training/build_teacher_mix.py --round2 --trim --teacher-repeat 5 --round2-repeat 4
         --replay arc=1000,csqa=1000,mmlu_pro_val=70 --out data/train_4b_v2.jsonl
 
+--round3 adds data/teacher/t3: the questions scripts/teacher_dedup.py kept, minus those the
+spot-check solver contradicted (scripts/teacher_spotcheck.py). Spot-checked documents whose three
+questions all agree become data/dev_teacher_t3.jsonl, a second hard dev split from the newest
+round; data/dev_teacher.jsonl stays the same.
+
 --replay adds multiple-choice reasoning questions the base model already answers (ARC,
 CommonsenseQA, the 70 MMLU-Pro validation questions; never MMLU-Pro test), so training on
 our tasks erodes less of what it knows (JevK5 v0.2 replays such sets): --replay default, or
@@ -124,6 +129,8 @@ def main() -> None:
     ap.add_argument("--round2", action="store_true", help="add data/teacher/t2, BoolQ, more CLINC150")
     ap.add_argument("--round2-repeat", type=int, default=3)
     ap.add_argument("--trim", action="store_true", help="with --round2: fewer NLI, yes/no and intent rows")
+    ap.add_argument("--round3", action="store_true", help="add data/teacher/t3 (deduplicated, spot-checked)")
+    ap.add_argument("--round3-repeat", type=int, default=2)
     ap.add_argument("--replay", default=None, metavar="SPEC",
                     help='"default" (%s), "src=n,..." or "none"' % ",".join(f"{k}={v}" for k, v in REPLAY_DEFAULT.items()))
     ap.add_argument("--out", default="data/train_v5.jsonl")
@@ -194,14 +201,33 @@ def main() -> None:
         round2 = [row(r) for r in t2.values() if r["state"] not in dev_states]
         print(f"round 2: {len(round2)} teacher questions x {args.round2_repeat}, "
               f"{dict(Counter(r.get('form', '-') for r in round2 if r['kind'] == 'noul'))}")
+    round3, dev3 = [], []
+    if args.round3:
+        t3d = T / "t3"
+        keep = {d["id"] for d in map(json.loads, (t3d / "dedup.jsonl").open(encoding="utf-8")) if d["status"] == "keep"}
+        spot_f = t3d / "spotcheck.jsonl"
+        spot = {s["id"]: s["agree"] for s in map(json.loads, spot_f.open(encoding="utf-8"))} if spot_f.exists() else {}
+        old_states = {r["state"] for r in dev}
+        t3 = {q: r for q, r in load("author_*.jsonl", t3d).items() if q in keep and r["state"] not in old_states}
+        by_doc = defaultdict(list)
+        for q in spot:
+            by_doc[doc(q)].append(q)
+        dev3_docs = {d for d, qs in by_doc.items() if len(qs) == 3 and all(spot[q] for q in qs)}
+        dev3 = [row(t3[q]) for d in sorted(dev3_docs) for q in sorted(by_doc[d]) if q in t3]
+        round3 = [row(r) for q, r in t3.items() if doc(q) not in dev3_docs and spot.get(q, True)]
+        print(f"round 3: {len(round3)} teacher questions x {args.round3_repeat}, dev_teacher_t3 {len(dev3)} "
+              f"({len(dev3_docs)} documents), {sum(not v for v in spot.values())} contradicted by the spot check")
     replay = load_replay(parse_replay(args.replay), rng)
     if replay:
         print("replay:", dict(Counter(r["source"] for r in replay)))
-    train = base + teacher_train * args.teacher_repeat + round2 * args.round2_repeat + replay
+    train = (base + teacher_train * args.teacher_repeat + round2 * args.round2_repeat
+             + round3 * args.round3_repeat + replay)
     rng.shuffle(train)
 
     outs = [(ROOT / "data" / "dev_teacher.jsonl", dev), (ROOT / "data" / "train_teacher.jsonl", teacher_train),
             (ROOT / args.out, train)]
+    if args.round3:
+        outs.append((ROOT / "data" / "dev_teacher_t3.jsonl", dev3))
     for path, rows in outs:
         with path.open("w", encoding="utf-8") as f:
             for r in rows:
@@ -211,6 +237,7 @@ def main() -> None:
     print(f"train_teacher: {len(teacher_train)} questions, {dict(Counter(r['lang'] for r in teacher_train))}")
     print(f"{args.out}: {len(train)} rows = {len(base)} public + {len(teacher_train)} x {args.teacher_repeat} teacher"
           + (f" + {len(round2)} x {args.round2_repeat} round 2" if round2 else "")
+          + (f" + {len(round3)} x {args.round3_repeat} round 3" if round3 else "")
           + (f" + {len(replay)} replay" if replay else ""))
     n_teacher = sum(r["source"].startswith("teacher-") for r in train)
     print(f"  teacher share: {n_teacher / len(train):.1%}")

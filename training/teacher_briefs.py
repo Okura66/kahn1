@@ -98,7 +98,7 @@ EXAMPLES = {
 
 def brief(n: int, lang: str, trio: tuple[str, ...], domains: list[str], out_path: Path, prefix: str = "t",
           question_noul: bool = False, mechanisms: list[str] | None = None,
-          names: dict[str, list[str]] | None = None) -> str:
+          names: dict[str, list[str]] | None = None, length_rule: bool = False) -> str:
     fam = ", ".join(f'"{f}" ({FAMILIES[f]})' for f in trio)
     if mechanisms:
         # Document k: the family, domain and deciding detail it is built around.
@@ -109,6 +109,12 @@ def brief(n: int, lang: str, trio: tuple[str, ...], domains: list[str], out_path
     else:
         plan = (f"- Families (spread evenly over the 10 documents): {fam}.\n"
                 f"- Domains (use each one exactly twice): {'; '.join(domains)}.")
+    # Wave 1 of round 3 made the correct option the longest one 35 % of the time (chance 23 %):
+    # the deciding nuance went into the right answer only. Wave 2 gets this rule.
+    length_text = (" Write every wrong option with the same length and level of detail as the correct one "
+                   "(conditions, amounts, qualifiers): across your choice questions the correct option must be the "
+                   "longest one no more often than any other option, and never the only one that states a "
+                   "condition or a nuance." if length_rule else "")
     names_rule = ("" if not names else
                   "\n- Names: for people use ONLY names from this list: " + ", ".join(names["people"])
                   + ". For organisations use ONLY these: " + ", ".join(names["organisations"])
@@ -135,7 +141,7 @@ Document rules:
 - Do the arithmetic and date computations exactly (use Python to check them).
 
 Question rules (mix across your 30 questions: about 13 "choice", 9 "noul", 8 "score"):
-- "choice": a clear question and 3 to 6 options. Options are full descriptions of outcomes or handlers, written neutrally: no option may give away the answer by wording ("correct", "actually", "properly", "trap", "naive"...), and wrong options must be what a careless or manipulated reader would pick. You may include an option like {cbd} only when that is truly the answer, and it must also appear, as a wrong option, in some questions where the answer is settled. Spread the position of the correct option across first, middle and last.
+- "choice": a clear question and 3 to 6 options. Options are full descriptions of outcomes or handlers, written neutrally: no option may give away the answer by wording ("correct", "actually", "properly", "trap", "naive"...), and wrong options must be what a careless or manipulated reader would pick. You may include an option like {cbd} only when that is truly the answer, and it must also appear, as a wrong option, in some questions where the answer is settled. Spread the position of the correct option across first, middle and last.{length_text}
 {noul_rule}
 - "score": an ordinal scale of 3 to 5 levels, ordered from lowest to highest, each level precisely described (e.g. severity, eligibility tier, compliance, completeness), so that specific details rule the right level in and the neighbouring levels out. Label = 0-based index of the correct level. Spread the correct level over the whole scale: among your 8 score questions, at least 2 must be answered by the LOWEST level and at least 2 by the HIGHEST level.
 - The answer must follow from the document alone, without outside knowledge.
@@ -237,7 +243,8 @@ def main() -> None:
         out = (root / f"author_{n:02d}.jsonl").resolve()
         (root / "briefs" / f"author_{n:02d}.md").write_text(
             brief(n, lang, rd["trios"][ti], domains, out, rd["prefix"], rd["question_noul"],
-                  mech[n - 1], names[n - 1]), encoding="utf-8")
+                  mech[n - 1], names[n - 1], length_rule=bool(rd.get("catalog")) and n > 34),
+            encoding="utf-8")
     print(f"{len(plan)} briefs in {root / 'briefs'}")
 
 

@@ -8,6 +8,9 @@ Checks, in author order, so the later of two near-identical items is the one dro
   (the share of the smaller one): dropped, JevBench stays clean;
 - a question whose content words overlap more than --question-jaccard with an earlier question
   of the same family: dropped;
+- with --balance-length, Choice questions whose correct option is the longest one are dropped at
+  random until that happens no more often than chance (sum of 1/n): t3's first wave had it at 35 %
+  against 23 %, a cue a model can learn instead of reading the document;
 - names: a two-word name that recurs in earlier documents or JevBench (the favourites the
   briefs' name pools are there to avoid, training/teacher_catalog.py) is reported, not dropped.
 
@@ -23,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import random
 import re
 from collections import Counter
 from pathlib import Path
@@ -87,6 +91,8 @@ def main() -> None:
     ap.add_argument("--doc-jaccard", type=float, default=0.15)
     ap.add_argument("--jevbench-share", type=float, default=0.02)
     ap.add_argument("--question-jaccard", type=float, default=0.7)
+    ap.add_argument("--balance-length", action="store_true",
+                    help="drop Choice questions answered by their longest option down to the chance rate")
     args = ap.parse_args()
     rd = Path(args.round_dir)
     teacher = rd.parent
@@ -107,7 +113,7 @@ def main() -> None:
     name_docs = Counter(n for t in set(ref_docs) | set(jb) for n in set(NAME.findall(t)))
     favourites = {n for n, c in name_docs.items() if c >= 2}
 
-    decisions, out_by_author = [], {}
+    decisions, out_by_author, rows_by_id = [], {}, {}
     seen_docs = dict(ref_docs)                       # state -> 5-grams, grows with this round
     seen_q = list(ref_q)                             # (family, content words), grows too
     doc_verdict: dict[str, str] = {}
@@ -144,7 +150,27 @@ def main() -> None:
             decisions.append({"id": qid, "author": n, "status": "drop" if why else "keep", "reason": why,
                               "recurring_names": stray})
             if not why:
-                out_by_author.setdefault(n, []).append({k: r[k] for k in SOLVER_KEYS if k in r})
+                rows_by_id[qid] = r
+
+    if args.balance_length:
+        longest = lambda r: max(range(len(r["options"])), key=lambda i: len(r["options"][i]))
+        ch = [r for r in rows_by_id.values() if r["kind"] == "choice"]
+        cue = [r for r in ch if longest(r) == r["label"]]
+        rate = sum(1 / len(r["options"]) for r in ch) / max(len(ch), 1)
+        k = 0
+        while k < len(cue) and (len(cue) - k) / (len(ch) - k) > rate:
+            k += 1
+        drop = {r["id"] for r in random.Random(0).sample(cue, k)}
+        for d in decisions:
+            if d["id"] in drop:
+                d["status"], d["reason"] = "drop", "length cue (correct option the longest; balanced to chance)"
+                del rows_by_id[d["id"]]
+        print(f"length cue: {len(cue)} of {len(ch)} Choice questions answered by their longest option "
+              f"(chance {100 * rate:.0f} %), {k} dropped")
+    for d in decisions:
+        if d["status"] == "keep":
+            r = rows_by_id[d["id"]]
+            out_by_author.setdefault(d["author"], []).append({k: r[k] for k in SOLVER_KEYS if k in r})
 
     qdir = rd / "questions"
     qdir.mkdir(exist_ok=True)

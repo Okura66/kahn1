@@ -7,12 +7,21 @@ keeps a question when both give the author's label.
 
     python training/teacher_briefs.py data/teacher/t1      # writes t1/briefs/author_NN.md
     python training/teacher_briefs.py data/teacher/t2      # round 2: harder families, yes/no questions
+    python training/teacher_briefs.py data/teacher/t3      # round 3: 68 authors in two waves, each
+                                                           # with its own names and a per-document plan
+
+Round 3 fights duplicates at the source (training/teacher_catalog.py): every author gets a
+document-by-document plan (family, domain, deciding mechanism) and its own people and
+organisation names; scripts/teacher_dedup.py then filters what still repeats before the solvers.
 """
 
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from training.teacher_catalog import assign_mechanisms, author_names  # noqa: E402
 
 FAMILIES = {
     "long_policy": "a long policy or terms document with numbered sections, definitions and exceptions; the question "
@@ -88,8 +97,23 @@ EXAMPLES = {
 
 
 def brief(n: int, lang: str, trio: tuple[str, ...], domains: list[str], out_path: Path, prefix: str = "t",
-          question_noul: bool = False) -> str:
+          question_noul: bool = False, mechanisms: list[str] | None = None,
+          names: dict[str, list[str]] | None = None) -> str:
     fam = ", ".join(f'"{f}" ({FAMILIES[f]})' for f in trio)
+    if mechanisms:
+        # Document k: the family, domain and deciding detail it is built around.
+        docs = "\n".join(f"  {k + 1}. family \"{trio[k % len(trio)]}\", domain \"{domains[k // 2]}\": built around this "
+                         f"deciding detail: {m}." for k, m in enumerate(mechanisms))
+        plan = (f"- Families: {fam}.\n- Follow this plan, one line per document (the 3 questions of a document may "
+                f"use other details too, but the first one hinges on the listed one):\n{docs}")
+    else:
+        plan = (f"- Families (spread evenly over the 10 documents): {fam}.\n"
+                f"- Domains (use each one exactly twice): {'; '.join(domains)}.")
+    names_rule = ("" if not names else
+                  "\n- Names: for people use ONLY names from this list: " + ", ".join(names["people"])
+                  + ". For organisations use ONLY these: " + ", ".join(names["organisations"])
+                  + ". You may add a department, a product or a place name, but invent no other person or "
+                    "company name, and do not reuse one person in more than two documents.")
     noul_ex, cbd = EXAMPLES[lang]
     language = ("Write every document, question, option and level in English." if lang == "en" else
                 "Write every document, question, option and level in natural, idiomatic French (French business "
@@ -101,12 +125,11 @@ def brief(n: int, lang: str, trio: tuple[str, ...], domains: list[str], out_path
     return f"""You are writing training data for a small "typed decision" model: it reads a document (the "state") and answers one typed question about it in a single pass, without reasoning out loud. Your job is to write HARD, realistic decision questions whose correct answer depends on a detail that a quick reading gets wrong. Two other models will later solve each question independently; questions they do not both solve are discarded, so every question must have exactly one defensible answer from the document alone.
 
 WRITE 10 documents, and 3 questions per document (30 questions total).
-- Families (spread evenly over the 10 documents): {fam}.
-- Domains (use each one exactly twice): {"; ".join(domains)}.
+{plan}
 - Language: {language}
 
 Document rules:
-- Realistic business text with plausible names, numbers, section numbers and dates. No placeholders like [Company].
+- Realistic business text with plausible names, numbers, section numbers and dates. No placeholders like [Company].{names_rule}
 - Length: 400 to 2000 words. At least 4 of your 10 documents must be over 1000 words, and at least 2 over 1500 words; in long documents put a deciding detail far from the start.
 - Each of the 3 questions about a document hinges on a DIFFERENT easy-to-miss detail (an exception, a definition, a threshold, a later amendment, an overriding clause, a correction later in a thread, a time zone).
 - Do the arithmetic and date computations exactly (use Python to check them).
@@ -141,10 +164,50 @@ TRIOS_T2 = [
     ("temporal_numeric", "adversarial", "multi_hop"),
     ("tradeoff", "trap", "judge"),
 ]
+# Round 3 leans on what Kahn1 4B v2 still misses most: long policies, judging a response, dates
+# and amounts, multi-hop lookups and ambiguity; every other family keeps at least one trio.
+TRIOS_T3 = [
+    ("long_policy", "judge", "temporal_numeric"),
+    ("long_policy", "multi_hop", "ambiguous"),
+    ("judge", "temporal_numeric", "multi_hop"),
+    ("long_policy", "temporal_numeric", "trap"),
+    ("judge", "ambiguous", "long_policy"),
+    ("multi_hop", "long_policy", "routing"),
+    ("temporal_numeric", "judge", "extraction"),
+    ("ambiguous", "multi_hop", "tradeoff"),
+    ("long_policy", "rubric", "adversarial"),
+    ("judge", "multi_hop", "temporal_numeric"),
+]
 ROUNDS = {
     "t1": dict(trios=TRIOS, prefix="t", offset=0, question_noul=False),
     "t2": dict(trios=TRIOS_T2, prefix="u", offset=2, question_noul=True),
+    "t3": dict(trios=TRIOS_T3, prefix="w", offset=4, question_noul=True, catalog=True),
 }
+EXTRA_DOMAINS = {
+    "en": ["clinical trial site contracts (administrative terms only)", "airport ground handling", "freight customs brokerage",
+           "franchise agreements", "event venue hire", "pension plan administration", "cloud infrastructure SLAs",
+           "academic research grants", "municipal permits and licensing", "veterinary clinic billing",
+           "co-working memberships", "warehouse safety audits", "film and media licensing", "esports league rules",
+           "agricultural cooperatives"],
+    "fr": ["fiscalité des particuliers (impôt sur le revenu)", "permis de construire et urbanisme",
+           "contrats de maintenance industrielle", "aides agricoles (PAC)", "auto-entrepreneurs et micro-entreprises",
+           "location saisonnière", "associations loi 1901", "transport aérien et indemnisation",
+           "énergie (contrats d'électricité et de gaz)", "pompes funèbres et obsèques"],
+}
+
+
+def _existing_texts(root: Path) -> list[str]:
+    """Documents of the earlier rounds and of JevBench, whose names a new round must not reuse."""
+    import json
+
+    teacher = root.parent
+    files = [f for d in ("pilot", "t1", "t2") for f in sorted((teacher / d).glob("author_*.jsonl"))]
+    files.append(teacher.parent / "jevbench_eval.jsonl")
+    texts = set()
+    for f in files:
+        if f.exists():
+            texts.update(json.loads(l)["state"] for l in f.open(encoding="utf-8") if l.strip())
+    return sorted(texts)
 
 
 def main() -> None:
@@ -156,15 +219,25 @@ def main() -> None:
     # trios still cover every family.
     plan = [("en", t) for t in range(10)] + [("en", t) for t in (4, 5, 7, 9)] + \
            [("fr", t) for t in (0, 1, 2, 3, 5, 8)]
+    if rd.get("catalog"):
+        # 68 authors, two waves of 34 (authors 1-34, then 35-68), each wave 24 English and 10 French.
+        wave = [("en", t % 10) for t in range(24)] + [("fr", (t * 3) % 10) for t in range(10)]
+        plan = wave + [(lang, (t + 5) % 10) for lang, t in wave]
+    domains_of = {lang: DOMAINS[lang] + (EXTRA_DOMAINS[lang] if rd.get("catalog") else []) for lang in DOMAINS}
+    trios = [rd["trios"][ti] for _, ti in plan]
+    mech = assign_mechanisms(trios) if rd.get("catalog") else [None] * len(plan)
+    names = (author_names(len(plan), [lang for lang, _ in plan], _existing_texts(root)) if rd.get("catalog")
+             else [None] * len(plan))
     seen = {"en": 0, "fr": 0}
     for n, (lang, ti) in enumerate(plan, 1):
-        pool, j = DOMAINS[lang], seen[lang]
+        pool, j = domains_of[lang], seen[lang]
         seen[lang] += 1
         # 5 domains per author, rotated so each language's pool is covered and neighbours differ.
         domains = [pool[(j * 5 + k + rd["offset"]) % len(pool)] for k in range(5)]
         out = (root / f"author_{n:02d}.jsonl").resolve()
         (root / "briefs" / f"author_{n:02d}.md").write_text(
-            brief(n, lang, rd["trios"][ti], domains, out, rd["prefix"], rd["question_noul"]), encoding="utf-8")
+            brief(n, lang, rd["trios"][ti], domains, out, rd["prefix"], rd["question_noul"],
+                  mech[n - 1], names[n - 1]), encoding="utf-8")
     print(f"{len(plan)} briefs in {root / 'briefs'}")
 
 

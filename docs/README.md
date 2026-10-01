@@ -66,7 +66,7 @@ Two backends, toggled from the page:
 ## Run the server backend (WSL2, vLLM)
 
 ```bash
-cd /mnt/c/dev/OpenJEV
+cd /mnt/c/path/to/kahn1      # the repository root, from WSL2
 SYSONE_MODEL=checkpoints/qwen_merged PYTHONPATH=src \
   ~/.venvs/sysone/bin/python -m uvicorn sysone.server:app --host 0.0.0.0 --port 8000
 ```

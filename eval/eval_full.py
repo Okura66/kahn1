@@ -231,7 +231,7 @@ if __name__ == "__main__":
     parser.add_argument("--n-permutations", type=int, default=3)
     parser.add_argument("--out", default="reports/FULL_EVAL_8260.md")
     parser.add_argument("--preds-out", default="reports/eval_8260_preds.json")
-    parser.add_argument("--prompt-format", default="tags", choices=["tags", "chatml", "qwen3"])
+    parser.add_argument("--prompt-format", default="tags", choices=["tags", "chatml", "qwen3", "letters"])
     parser.add_argument("--max-model-len", type=int, default=2048,
                         help="raise for long-context benchmarks (e.g. JevBench hard, ~4k tokens)")
     args = parser.parse_args()

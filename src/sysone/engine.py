@@ -51,6 +51,7 @@ from .tokens import (
     ResolvedTokens,
     resolve_choice_tokens,
     resolve_noul_tokens,
+    resolve_option_tokens,
 )
 from .types import (
     Answer,
@@ -303,10 +304,14 @@ class Engine:
 
     # -- Token resolution --
     def _resolve(self, spec: PromptSpec) -> ResolvedTokens:
-        key = (spec.kind, spec.suffix, spec.n_options)
+        key = (spec.kind, spec.suffix, spec.n_options, spec.labels)
         if key in self._resolved_cache:
             return self._resolved_cache[key]
-        if spec.kind == "noul":
+        if spec.labels:
+            # Index order is the kind's order: for a Noul, 0 = yes / true, 1 = no / false.
+            res = ResolvedTokens(labels=list(spec.labels),
+                                 token_ids=resolve_option_tokens(self._tokenizer, spec.suffix, list(spec.labels)))
+        elif spec.kind == "noul":
             res = resolve_noul_tokens(self._tokenizer, spec.suffix)
         else:
             res = resolve_choice_tokens(self._tokenizer, spec.suffix, spec.n_options)

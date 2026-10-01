@@ -29,6 +29,10 @@ Prompt formats:
     assistant), and "qwen3" also closes an empty thinking block, as Qwen3.5 renders its
     template with enable_thinking=False. In both chat formats the answer token follows
     the assistant header directly, so labels resolve without a leading space.
+    "letters" follows SemIf's option-logit protocol (TheoLeeCJ/SemIf, MIT), which JevK5
+    uses: every primitive is a lettered list of options in a JSON user turn
+    ({"evidence", "criterion", "options"}), under the Qwen3 chat template with thinking
+    off; a Noul is the options "true" / "false", read on the letters A / B.
 
 Binary (Noul) Primitives:
     Binary questions present a single proposition evaluated as true/false.
@@ -38,6 +42,7 @@ Binary (Noul) Primitives:
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 
 from .types import ChoiceQuestion, NoulQuestion, ScoreQuestion
@@ -61,11 +66,17 @@ CHAT_SYSTEM_PROMPT = (
     "or with yes or no when asked whether a statement is true."
 )
 
-FORMATS = ("tags", "chatml", "qwen3")
+FORMATS = ("tags", "chatml", "qwen3", "letters")
+LETTERS_SYSTEM_PROMPT = (
+    "Apply the supplied criterion to the supplied evidence. Choose exactly one listed option. "
+    "Respond with only its uppercase letter, with no explanation or reasoning."
+)
+NOUL_LETTER_OPTIONS = ("true: The proposition is true.", "false: The proposition is false.")
 # The assistant header each chat format ends with; the answer token comes right after it.
 _CHAT_OPEN = {
     "chatml": "<|im_start|>assistant\n",
     "qwen3": "<|im_start|>assistant\n<think>\n\n</think>\n\n",
+    "letters": "<|im_start|>assistant\n<think>\n\n</think>\n\n",
 }
 
 
@@ -87,6 +98,21 @@ def _check_format(fmt: str) -> None:
         raise ValueError(f"Unknown prompt format {fmt!r}; expected one of {FORMATS}.")
 
 
+def _letters_prompt(state: str, criterion: str, options: list[str]) -> str:
+    """SemIf's layout: the state first, so questions on one state share the prefix cache."""
+    payload = {"evidence": state, "criterion": criterion,
+               "options": [{"letter": chr(ord("A") + i), "description": d} for i, d in enumerate(options)]}
+    return (f"<|im_start|>system\n{LETTERS_SYSTEM_PROMPT}<|im_end|>\n"
+            f"<|im_start|>user\n{json.dumps(payload, ensure_ascii=False)}{_close('letters')}")
+
+
+def _noul_criterion(question: NoulQuestion) -> str:
+    """The question itself when the caller asks it as the statement (JEV style), else both."""
+    if not question.prompt or question.prompt.strip() == question.statement.strip():
+        return question.statement
+    return f"{question.prompt}\n{question.statement}"
+
+
 def shared_state_prefix(state: str, fmt: str = "tags") -> str:
     """Build the prompt segment strictly identical across all questions in a query batch.
 
@@ -94,6 +120,10 @@ def shared_state_prefix(state: str, fmt: str = "tags") -> str:
     This common prefix is cached by the vLLM prefix-caching subsystem.
     """
     _check_format(fmt)
+    if fmt == "letters":
+        # Everything up to the end of the state string inside the JSON payload.
+        head = json.dumps({"evidence": state}, ensure_ascii=False)[:-1]
+        return f"<|im_start|>system\n{LETTERS_SYSTEM_PROMPT}<|im_end|>\n<|im_start|>user\n{head}"
     if fmt == "tags":
         return (
             f"<system>{SYSTEM_PROMPT}</system>\n"
@@ -129,6 +159,9 @@ def build_choice_prompt(state: str, question: ChoiceQuestion, options: list[str]
         include_other: Whether to append the fallback 'None of these answers' label.
         fmt: Prompt format, one of FORMATS.
     """
+    if fmt == "letters":
+        opts = list(options) + ([OTHER_LABEL_TEXT] if include_other and question.allow_other else [])
+        return _letters_prompt(state, question.prompt, opts)
     body_lines = [_format_options(options)]
     n = len(options)
     if include_other and question.allow_other:
@@ -150,6 +183,8 @@ def build_score_prompt(state: str, question: ScoreQuestion, levels: list[str] | 
     Levels are formatted as lettered sequential candidates (A, B, C...).
     """
     levels_to_use = levels if levels is not None else question.levels
+    if fmt == "letters":
+        return _letters_prompt(state, question.prompt, [f"{i}: {lv}" for i, lv in enumerate(levels_to_use)])
     body = _format_options(levels_to_use)
     return (
         f"{shared_state_prefix(state, fmt)}"
@@ -162,8 +197,11 @@ def build_score_prompt(state: str, question: ScoreQuestion, levels: list[str] | 
 def build_noul_prompt(state: str, question: NoulQuestion, fmt: str = "tags") -> str:
     """Construct the evaluation prompt for a binary NoulQuestion.
 
-    Presents the proposition directly under the shared state prefix without lettered options.
+    Presents the proposition directly under the shared state prefix without lettered options
+    (in "letters", as the two options true / false).
     """
+    if fmt == "letters":
+        return _letters_prompt(state, _noul_criterion(question), list(NOUL_LETTER_OPTIONS))
     return (
         f"{shared_state_prefix(state, fmt)}"
         f"\n## Question\n{question.prompt or NOUL_PROMPT}\n"
@@ -184,6 +222,7 @@ class PromptSpec:
     suffix: str  # Text the answer token follows ('Answer:' in "tags", the assistant header in chat formats)
     kind: str  # Question kind: 'choice', 'score', or 'noul'
     n_options: int  # Number of active candidate tokens to evaluate
+    labels: tuple[str, ...] | None = None  # Answer tokens when not the kind's default (letters Noul: A, B)
 
 
 def build_prompt_spec(state: str, question, options: list[str] | None = None, include_other: bool = True,
@@ -209,7 +248,8 @@ def build_prompt_spec(state: str, question, options: list[str] | None = None, in
         return PromptSpec(full_text=full, suffix=full, kind="score", n_options=len(levels))
     elif isinstance(question, NoulQuestion):
         full = build_noul_prompt(state, question, fmt=fmt)
-        return PromptSpec(full_text=full, suffix=full, kind="noul", n_options=2)
+        return PromptSpec(full_text=full, suffix=full, kind="noul", n_options=2,
+                          labels=("A", "B") if fmt == "letters" else None)
     else:
         raise TypeError(f"Unsupported question type: {type(question)}")
 

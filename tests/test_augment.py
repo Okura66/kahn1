@@ -190,6 +190,8 @@ def test_augment_noul_form_selects_template_family():
         ex = dict(base, statement="Is water wet?" if "question" in form else "Water is wet.",
                   form=form)
         prompts = {p for p, _, _ in family}
+        if form == "yesno_question":
+            prompts.add(ex["statement"])      # also asked as itself, the JEV way
         for seed in range(50):
             aug = augment_noul(ex, random.Random(seed))
             assert aug.prompt in prompts, (form, aug.prompt)

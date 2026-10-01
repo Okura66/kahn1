@@ -286,13 +286,22 @@ def augment_score(ex: dict, rng: random.Random, reverse_prob: float = 0.0) -> Au
     )
 
 
-def augment_noul(ex: dict, rng: random.Random) -> AugmentedExample:
+def augment_noul(ex: dict, rng: random.Random, p_own_question: float = 0.35) -> AugmentedExample:
     """Augment a binary Noul instance with form-aware templates and polarity flips.
 
     The template family follows the statement's form (declarative hypothesis, yes/no
     question, or answerability question); negative-polarity templates invert the label.
+    A yes/no question is also asked as itself, p_own_question of the time: the question
+    is both the instruction and the statement, which is how JEV-format callers (JevBench
+    among them) send one.
     """
     form = ex.get("form", "statement")
+    if form == "yesno_question" and rng.random() < p_own_question:
+        return AugmentedExample(
+            state=ex["state"], kind="noul", prompt=ex["statement"],
+            options=[], levels=[], statement=ex["statement"],
+            label=ex["label"], lang=ex.get("lang", "EN").upper(), source=ex["source"],
+        )
     templates = NOUL_TEMPLATES.get(form, NOUL_TEMPLATES["statement"])
     prompt, lang, flip = rng.choice(templates)
     label = ex["label"]

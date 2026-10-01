@@ -97,7 +97,7 @@ def summarize(rows: list[dict]) -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--model", required=True)
-    ap.add_argument("--format", default="tags", choices=["tags", "chatml", "qwen3"])
+    ap.add_argument("--format", default="tags", choices=["tags", "chatml", "qwen3", "letters"])
     ap.add_argument("--multimodal", action="store_true", help="checkpoint has a vision tower: load text only")
     ap.add_argument("--max-model-len", type=int, default=6144)
     ap.add_argument("--per-kind", type=int, default=400)

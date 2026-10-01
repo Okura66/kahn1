@@ -26,7 +26,7 @@ import random
 import sys
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 # Ensure repository root is available on sys.path for sysone and training imports
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -87,7 +87,22 @@ def build_lora(model, rank: int = 32, alpha: int = 64, targets: list[str] | None
     return get_peft_model(model, cfg)
 
 
-def build_prompt_for_training(aug, tokenizer, fmt: str = "tags") -> tuple[str, int]:
+class Target(NamedTuple):
+    """A training prompt and its answer: the answer token, and the candidate tokens it is read among.
+
+    option_ids are the tokens inference restricts the softmax to (the option letters, or
+    yes / no), answer_pos the answer's index among them. ordinal marks a Score question,
+    whose options are levels in scale order: reversing the scale (augment_score) keeps
+    neighbours adjacent, so distances between positions are distances between levels.
+    """
+    text: str
+    answer_id: int
+    option_ids: tuple[int, ...] = ()
+    answer_pos: int = 0
+    ordinal: bool = False
+
+
+def build_prompt_for_training(aug, tokenizer, fmt: str = "tags") -> Target:
     """Construct training prompt ending with 'Answer:' followed by target label token ID.
 
     Tokenizes the complete prompt context (without trailing letter) and appends
@@ -114,25 +129,25 @@ def build_prompt_for_training(aug, tokenizer, fmt: str = "tags") -> tuple[str, i
         )
         resolved = resolve_choice_tokens(tokenizer, spec.suffix, spec.n_options)
         label_idx = aug.label if aug.label >= 0 else len(aug.options)  # 'other' is mapped to last index
-        label_token_id = resolved.token_ids[label_idx]
     elif aug.kind == "score":
         q = ScoreQuestion(key="q", prompt=aug.prompt, levels=aug.levels)
         spec = build_prompt_spec(aug.state, q, fmt=fmt)
         resolved = resolve_choice_tokens(tokenizer, spec.suffix, len(aug.levels))
-        label_token_id = resolved.token_ids[aug.label]
+        label_idx = aug.label
     elif aug.kind == "noul":
         q = NoulQuestion(key="q", statement=aug.statement, prompt=aug.prompt)
         spec = build_prompt_spec(aug.state, q, fmt=fmt)
         resolved = resolve_noul_tokens(tokenizer, spec.suffix)
         # Dataset label 1 == yes, but NOUL_LABELS index 0 == 'yes': go through the helper.
-        label_token_id = resolved.token_ids[noul_token_index(aug.label)]
+        label_idx = noul_token_index(aug.label)
     else:
         raise ValueError(f"Unknown question kind: {aug.kind}")
 
-    return spec.full_text, label_token_id
+    return Target(spec.full_text, resolved.token_ids[label_idx], tuple(resolved.token_ids),
+                  label_idx, aug.kind == "score")
 
 
-def collate_fn(batch: list[tuple[str, int]], tokenizer, max_len: int = 2048):
+def collate_fn(batch: list[tuple], tokenizer, max_len: int = 2048):
     """Tokenize a batch of prompts for a loss on the answer token only.
 
     Each prompt is cut on the left to max_len tokens (the question and the answer cue at
@@ -140,14 +155,19 @@ def collate_fn(batch: list[tuple[str, int]], tokenizer, max_len: int = 2048):
     predicts the answer. `answer_loss` reads only that position: computing logits over
     the whole vocabulary at every position (up to 248k entries for Qwen3.5) is what the
     loss does not need and memory cannot afford at 4k tokens.
+
+    Items are Targets (or bare (text, answer id) pairs). When they carry their candidate
+    tokens, those are padded to the widest row (option_mask marks the real ones) for the
+    restricted and ordinal terms of `answer_terms`.
     """
     import torch
 
+    items = [Target(*b) for b in batch]
     rows, labels = [], []
-    for prompt_text, label_token_id in batch:
-        ids = tokenizer.encode(prompt_text, add_special_tokens=False)
+    for it in items:
+        ids = tokenizer.encode(it.text, add_special_tokens=False)
         rows.append(ids[-max_len:])
-        labels.append(label_token_id)
+        labels.append(it.answer_id)
     width = max(len(r) for r in rows)
     pad_id = tokenizer.pad_token_id
     input_ids = [[pad_id] * (width - len(r)) + r for r in rows]
@@ -161,16 +181,66 @@ def collate_fn(batch: list[tuple[str, int]], tokenizer, max_len: int = 2048):
     if any(len(r) < width for r in rows):  # a single row needs neither
         out["attention_mask"] = torch.tensor(attn, dtype=torch.long)
         out["position_ids"] = torch.tensor(positions, dtype=torch.long)
+    if all(it.option_ids for it in items):
+        n = max(len(it.option_ids) for it in items)
+        out["option_ids"] = torch.tensor([list(it.option_ids) + [it.option_ids[0]] * (n - len(it.option_ids))
+                                          for it in items], dtype=torch.long)
+        out["option_mask"] = torch.tensor([[i < len(it.option_ids) for i in range(n)] for it in items])
+        out["answer_pos"] = torch.tensor([it.answer_pos for it in items], dtype=torch.long)
+        out["ordinal"] = torch.tensor([it.ordinal for it in items])
     return out
 
 
-def answer_loss(model, batch: dict):
-    """Mean cross-entropy of the answer token, from the logits at the last position."""
+MODEL_INPUTS = ("input_ids", "attention_mask", "position_ids")
+
+
+def answer_terms(model, batch: dict) -> dict:
+    """Per-row loss terms at the answer position, from one forward pass.
+
+    - vocab: cross-entropy of the answer token over the whole vocabulary (v1-v5).
+    - options: cross-entropy over the candidate tokens only, the softmax inference takes
+      (allowed_token_ids), so no weight goes to pushing down tokens it never reads.
+    - emd: squared earth mover's distance between the predicted distribution over a Score
+      question's levels and the true level, Σ_k (CDF_pred(k) - CDF_true(k))²; zero on Choice
+      and Noul rows. It grows with the distance to the true level, where cross-entropy
+      treats a neighbouring level and the far end of the scale alike, and the answer is
+      read as the expectation Σ p_i·i.
+    The last two need the candidate tokens (batches collated from Targets).
+    """
+    import torch
     import torch.nn.functional as F
 
-    inputs = {k: v for k, v in batch.items() if k != "answer_ids"}
-    out = model(**inputs, logits_to_keep=1)
-    return F.cross_entropy(out.logits[:, -1, :].float(), batch["answer_ids"])
+    inputs = {k: v for k, v in batch.items() if k in MODEL_INPUTS}
+    logits = model(**inputs, logits_to_keep=1).logits[:, -1, :].float()
+    terms = {"vocab": F.cross_entropy(logits, batch["answer_ids"], reduction="none")}
+    if "option_ids" not in batch:
+        return terms
+    opt = logits.gather(1, batch["option_ids"]).masked_fill(~batch["option_mask"], float("-inf"))
+    terms["options"] = F.cross_entropy(opt, batch["answer_pos"], reduction="none")
+    k = torch.arange(opt.shape[1], device=opt.device)
+    cdf_true = (k[None, :] >= batch["answer_pos"][:, None]).float()
+    emd = ((opt.softmax(-1).cumsum(-1) - cdf_true) ** 2).sum(-1)
+    terms["emd"] = emd * batch["ordinal"].float()
+    terms["correct"] = (opt.argmax(-1) == batch["answer_pos"]).float()
+    return terms
+
+
+def answer_loss(model, batch: dict, restrict: bool = False, ordinal_weight: float = 0.0):
+    """Mean training loss: the answer's cross-entropy (over the vocabulary, or over the
+    candidates when restrict), plus ordinal_weight × the Score rows' EMD.
+
+    The EMD is averaged over every row of the batch, Score or not, so a Score question
+    weighs the same whatever else shares its batch (with micro_batch 1, the loss of a
+    Score row is exactly CE + ordinal_weight × EMD).
+    """
+    return combine_loss(answer_terms(model, batch), restrict, ordinal_weight)
+
+
+def combine_loss(terms: dict, restrict: bool = False, ordinal_weight: float = 0.0):
+    loss = (terms["options"] if restrict else terms["vocab"]).mean()
+    if ordinal_weight:
+        loss = loss + ordinal_weight * terms["emd"].mean()
+    return loss
 
 
 def compute_nll(
@@ -184,13 +254,18 @@ def compute_nll(
     per_kind: bool = False,
     fmt: str = "tags",
     max_len: int = 2048,
-) -> float | tuple[float, dict[str, float]]:
+    metric: str = "vocab",
+) -> float | tuple[float, dict[str, float], dict[str, float]]:
     """Compute validation NLL over a deterministic, frozen evaluation set.
 
     Checkpoint selection is strictly driven by negative log-likelihood (log-loss),
     rather than top-1 classification accuracy. The sample is stratified across the
     three primitives; per_kind additionally returns the breakdown, so a primitive
-    regressing behind a flat overall NLL is visible rather than averaged away.
+    regressing behind a flat overall NLL is visible rather than averaged away, and
+    both NLLs plus the Score rows' mean EMD, whatever the loss trained.
+
+    metric picks the NLL returned: "vocab" (the answer token over the vocabulary) or
+    "options" (over the candidates, as inference reads it).
     """
     import torch
     from torch.utils.data import DataLoader
@@ -210,7 +285,7 @@ def compute_nll(
     present = [k for k, v in by_kind.items() if v]
     if not present:
         model.train()
-        return (float("nan"), {}) if per_kind else float("nan")
+        return (float("nan"), {}, {}) if per_kind else float("nan")
 
     per_kind_quota = max(1, max_eval // len(present))
     selected: list[tuple[str, dict]] = []
@@ -220,7 +295,7 @@ def compute_nll(
         selected.extend((k, ex) for ex in pool_k[:per_kind_quota])
 
     # Deterministic generation of (prompt, label) pairs to eliminate sampling noise
-    val_items: list[tuple[str, int]] = []
+    val_items: list[Target] = []
     val_kinds: list[str] = []
     for kind, ex in selected:
         try:
@@ -233,7 +308,7 @@ def compute_nll(
 
     if not val_items:
         model.train()
-        return (float("nan"), {}) if per_kind else float("nan")
+        return (float("nan"), {}, {}) if per_kind else float("nan")
 
     val_loader = DataLoader(
         list(zip(val_items, val_kinds)),
@@ -243,28 +318,30 @@ def compute_nll(
                               [x[1] for x in b]),
     )
 
-    total_loss = 0.0
-    total_tokens = 0
-    kind_loss: dict[str, float] = {}
-    kind_n: dict[str, int] = {}
+    # Per-row terms, so each row's loss goes to its own primitive even in a mixed batch.
+    rows: list[tuple[str, dict[str, float]]] = []
     with torch.no_grad():
         for batch, kinds in val_loader:
             batch = {k: v.to(model.device) for k, v in batch.items()}
-            loss = answer_loss(model, batch).item()
-            n_active = batch["answer_ids"].numel()
-            if math.isfinite(loss):
-                total_loss += loss * n_active
-                total_tokens += n_active
-                # One target token per instance, so the batch mean applies uniformly.
-                for k in kinds:
-                    kind_loss[k] = kind_loss.get(k, 0.0) + loss
-                    kind_n[k] = kind_n.get(k, 0) + 1
+            terms = {name: t.tolist() for name, t in answer_terms(model, batch).items()}
+            for i, k in enumerate(kinds):
+                row = {name: vals[i] for name, vals in terms.items()}
+                if all(math.isfinite(v) for v in row.values()):
+                    rows.append((k, row))
 
     model.train()
-    overall = total_loss / max(total_tokens, 1)
+    mean = lambda vals: sum(vals) / len(vals) if vals else float("nan")
+    overall = mean([r[metric] for _, r in rows])
     if not per_kind:
         return overall
-    return overall, {k: kind_loss[k] / kind_n[k] for k in sorted(kind_loss) if kind_n[k]}
+    by_kind = {k: mean([r[metric] for kk, r in rows if kk == k]) for k in sorted({kk for kk, _ in rows})}
+    extra = {"vocab": mean([r["vocab"] for _, r in rows]),
+             "options": mean([r["options"] for _, r in rows]),
+             "score_emd": mean([r["emd"] for k, r in rows if k == "score"]),
+             # Accuracy as the mean of the per-primitive accuracies, like eval_base's "balanced".
+             "acc": mean([mean([r["correct"] for kk, r in rows if kk == k]) for k in by_kind]),
+             "acc_by_kind": {k: mean([r["correct"] for kk, r in rows if kk == k]) for k in by_kind}}
+    return overall, by_kind, extra
 
 
 def _fmt_by_kind(by_kind: dict[str, float],
@@ -339,17 +416,30 @@ def train(
     targets: list[str] | None = None,
     max_len: int = 2048,
     prompt_format: str = "tags",
+    loss: str = "vocab",
+    ordinal_weight: float = 0.0,
+    early_stop_patience: int = 0,
+    select_on: str = "nll",
 ):
     import torch
     from torch.utils.data import DataLoader
     from training.augment import AugmentingDataset, DistractorPool
 
+    if loss not in ("vocab", "options"):
+        raise ValueError(f"Unknown loss {loss!r}; expected 'vocab' or 'options'.")
+    restrict = loss == "options"
     print(f"[train] Initializing LoRA training with {model_name}...")
     model, tokenizer = build_model(model_name)
     model = build_lora(model, rank=rank, alpha=alpha, targets=targets)
     model.print_trainable_parameters()
     print(f"[train] LoRA r={rank} alpha={alpha} targets={targets or DEFAULT_TARGETS} | "
           f"max_len={max_len} | prompt_format={prompt_format}")
+    # The validation NLL (and so the 'best' checkpoint) is the one the loss trains.
+    print(f"[train] Loss: cross-entropy over {'the candidate tokens' if restrict else 'the vocabulary'}"
+          + (f" + {ordinal_weight} x EMD on Score" if ordinal_weight else "") + f" | val NLL: {loss}"
+          + f" | best and early stop on: {select_on}")
+    if select_on not in ("nll", "acc"):
+        raise ValueError(f"Unknown select_on {select_on!r}; expected 'nll' or 'acc'.")
 
     # Data loading
     print(f"[train] Loading datasets: {train_path} and {eval_path}...")
@@ -378,9 +468,10 @@ def train(
         ds,
         batch_size=micro_batch,
         shuffle=True,
-        collate_fn=lambda b: collate_fn(
-            [build_prompt_for_training(x, tokenizer, prompt_format) for x in b], tokenizer, max_len
-        ),
+        collate_fn=lambda b: {
+            **collate_fn([build_prompt_for_training(x, tokenizer, prompt_format) for x in b], tokenizer, max_len),
+            "is_teacher": torch.tensor([x.source.startswith("teacher-") for x in b]),
+        },
     )
 
     effective_batch = micro_batch * grad_accum
@@ -422,22 +513,39 @@ def train(
 
     metrics_history: list[dict[str, Any]] = []
 
+    def validate():
+        return compute_nll(model, eval_examples, tokenizer, pool, max_eval=eval_samples, seed=seed,
+                           per_kind=True, fmt=prompt_format, max_len=max_len, metric=loss)
+
+    def fmt_extra(extra: dict[str, float]) -> str:
+        return (f"NLL vocab={extra['vocab']:.4f}  NLL options={extra['options']:.4f}  "
+                f"Score EMD={extra['score_emd']:.4f}  acc={100 * extra['acc']:.1f} ("
+                + " ".join(f"{k} {100 * v:.1f}" for k, v in extra["acc_by_kind"].items()) + ")")
+
+    # v6: the val NLL bottomed at step 250 and climbed back to near its start, while dev accuracy
+    # kept rising to the last step (overconfidence, which calibration then removes). "acc"
+    # keeps 'best' and the early stop on accuracy; lower is better for both scores.
+    sel_score = lambda nll, extra: -extra["acc"] if select_on == "acc" else nll
+
     # Baseline pre-training evaluation
     print(f"[train] Initial evaluation (step 0) on {eval_samples} reserved instances...")
     t0_val = time.time()
-    init_val_nll, init_by_kind = compute_nll(
-        model, eval_examples, tokenizer, pool,
-        max_eval=eval_samples, seed=seed, per_kind=True, fmt=prompt_format, max_len=max_len,
-    )
+    init_val_nll, init_by_kind, init_extra = validate()
     print(f"[train] Initial VAL NLL (step 0): {init_val_nll:.4f} (computed in {time.time() - t0_val:.1f}s)")
     print(f"[train]   per primitive: {_fmt_by_kind(init_by_kind)}")
+    print(f"[train]   {fmt_extra(init_extra)}")
     metrics_history.append({"step": 0, "val_nll": init_val_nll,
-                            "val_nll_by_kind": init_by_kind,
+                            "val_nll_by_kind": init_by_kind, "val_terms": init_extra,
                             "train_loss": None, "lr": 0.0})
 
     step = 0
     best_val_nll = init_val_nll
+    best_sel = sel_score(init_val_nll, init_extra)
+    vals_since_best = 0
     accum_loss = 0.0
+    # Answer CE of teacher and public rows since the last log line: teacher questions are
+    # repeated, so their loss falling far below the public one is memorisation.
+    group_ce = {True: [0.0, 0], False: [0.0, 0]}
     micro_step = 0
     t_start = time.time()
 
@@ -451,12 +559,17 @@ def train(
         print(f"[train] --- Starting Epoch {epoch + 1}/{epochs} ---")
         for batch in dl:
             batch = {k: v.to(model.device) for k, v in batch.items()}
-            loss = answer_loss(model, batch) / grad_accum
-            loss_val = loss.item()
-            loss.backward()
+            terms = answer_terms(model, batch)
+            batch_loss = combine_loss(terms, restrict, ordinal_weight) / grad_accum
+            loss_val = batch_loss.item()
+            row_ce = (terms["options"] if restrict else terms["vocab"]).detach().tolist()
+            for ce, teacher in zip(row_ce, batch["is_teacher"].tolist()):
+                group_ce[teacher][0] += ce
+                group_ce[teacher][1] += 1
+            batch_loss.backward()
             accum_loss += loss_val
             micro_step += 1
-            del batch, loss
+            del batch, batch_loss, terms
 
             if micro_step % grad_accum == 0:
                 torch.nn.utils.clip_grad_norm_(trainable_params, 1.0)
@@ -476,23 +589,25 @@ def train(
                     print(
                         f"[train] step {step:4d}/{total_steps} | "
                         f"loss={current_loss:.4f} | lr={current_lr:.2e} | "
-                        f"{rate:.2f} step/s | ETA: {eta/60:.1f}m"
+                        f"{rate:.2f} step/s | ETA: {eta/60:.1f}m | CE "
+                        + " ".join(f"{name}={s / n:.3f}" for name, (s, n) in
+                                   (("teacher", group_ce[True]), ("public", group_ce[False])) if n)
                     )
+                    group_ce = {True: [0.0, 0], False: [0.0, 0]}
 
                 if step % val_every == 0:
-                    val_nll, val_by_kind = compute_nll(
-                        model, eval_examples, tokenizer, pool,
-                        max_eval=eval_samples, seed=seed, per_kind=True, fmt=prompt_format, max_len=max_len,
-                    )
+                    val_nll, val_by_kind, val_extra = validate()
                     delta_vs_init = val_nll - init_val_nll
                     delta_str = f"({delta_vs_init:+.4f} vs step 0)"
                     print(f"[train] >>> VAL NLL @ step {step}: {val_nll:.4f} {delta_str}")
                     print(f"[train]     per primitive: {_fmt_by_kind(val_by_kind, init_by_kind)}")
+                    print(f"[train]     {fmt_extra(val_extra)}")
 
                     metrics_entry = {
                         "step": step,
                         "val_nll": val_nll,
                         "val_nll_by_kind": val_by_kind,
+                        "val_terms": val_extra,
                         "train_loss": current_loss,
                         "lr": current_lr,
                     }
@@ -501,17 +616,28 @@ def train(
                         json.dumps(metrics_history, indent=2), encoding="utf-8"
                     )
 
-                    if val_nll < best_val_nll:
-                        best_val_nll = val_nll
+                    best_val_nll = min(best_val_nll, val_nll)
+                    if sel_score(val_nll, val_extra) < best_sel:
+                        best_sel = sel_score(val_nll, val_extra)
+                        vals_since_best = 0
                         best_path = out_dir_p / "best"
                         model.save_pretrained(str(best_path))
                         tokenizer.save_pretrained(str(best_path))
-                        print(f"[train] -> New best checkpoint saved to {best_path} (NLL {val_nll:.4f})")
+                        print(f"[train] -> New best checkpoint saved to {best_path} "
+                              f"(NLL {val_nll:.4f}, acc {100 * val_extra['acc']:.1f})")
+                    else:
+                        vals_since_best += 1
 
                 if step % save_every == 0:
                     step_path = out_dir_p / f"step_{step}"
                     model.save_pretrained(str(step_path))
                     print(f"[train] Regular checkpoint saved: {step_path}")
+
+                if early_stop_patience and vals_since_best >= early_stop_patience:
+                    # v6 peaked at step 250 of 1400, then spent 6 hours climbing back.
+                    print(f"[train] Early stop: no better val {select_on} in {vals_since_best} validations.")
+                    stop_training = True
+                    break
 
                 if max_steps and step >= max_steps:
                     print(f"[train] Step limit reached ({step}/{max_steps}). Terminating training loop.")
@@ -520,15 +646,13 @@ def train(
 
     # Final evaluation
     print("[train] Running final validation evaluation...")
-    final_val_nll, final_by_kind = compute_nll(
-        model, eval_examples, tokenizer, pool,
-        max_eval=eval_samples, seed=seed, per_kind=True, fmt=prompt_format, max_len=max_len,
-    )
+    final_val_nll, final_by_kind, final_extra = validate()
     print(
         f"[train] Final VAL NLL: {final_val_nll:.4f} "
         f"(Initial: {init_val_nll:.4f}, Best: {best_val_nll:.4f})"
     )
     print(f"[train]   per primitive: {_fmt_by_kind(final_by_kind, init_by_kind)}")
+    print(f"[train]   {fmt_extra(final_extra)}")
 
     final_path = out_dir_p / "final"
     model.save_pretrained(str(final_path))
@@ -537,6 +661,7 @@ def train(
     metrics_history.append({
         "step": step,
         "val_nll": final_val_nll,
+        "val_terms": final_extra,
         "is_final": True,
         "initial_nll": init_val_nll,
         "best_nll": best_val_nll,
@@ -582,6 +707,15 @@ def main():
                     help='comma-separated module names, or "qwen35-attention" (default: the v1-v3 set)')
     ap.add_argument("--max-len", type=int, default=2048, help="tokens kept per prompt (cut on the left)")
     ap.add_argument("--prompt-format", default="tags", choices=["tags", "chatml", "qwen3"])
+    ap.add_argument("--loss", default="vocab", choices=["vocab", "options"],
+                    help="answer cross-entropy over the whole vocabulary (v1-v5) or over the candidate "
+                         "tokens only, as inference reads them; also the validation NLL")
+    ap.add_argument("--ordinal-weight", type=float, default=0.0,
+                    help="weight of the squared EMD between predicted and true Score level (0 = off)")
+    ap.add_argument("--early-stop-patience", type=int, default=0,
+                    help="stop after this many validations without a better --select-on score (0 = off)")
+    ap.add_argument("--select-on", default="nll", choices=["nll", "acc"],
+                    help="score that picks the 'best' checkpoint and drives the early stop")
     args = ap.parse_args()
     targets = (QWEN35_ATTENTION_TARGETS if args.targets == "qwen35-attention"
                else args.targets.split(",") if args.targets else None)
@@ -606,6 +740,10 @@ def main():
         targets=targets,
         max_len=args.max_len,
         prompt_format=args.prompt_format,
+        loss=args.loss,
+        ordinal_weight=args.ordinal_weight,
+        early_stop_patience=args.early_stop_patience,
+        select_on=args.select_on,
     )
 
 

@@ -6,6 +6,7 @@ multi_hop, judge). Solver agents later answer each question blind; scripts/teach
 keeps a question when both give the author's label.
 
     python training/teacher_briefs.py data/teacher/t1      # writes t1/briefs/author_NN.md
+    python training/teacher_briefs.py data/teacher/t2      # round 2: harder families, yes/no questions
 """
 
 from __future__ import annotations
@@ -86,13 +87,17 @@ EXAMPLES = {
 }
 
 
-def brief(n: int, lang: str, trio: tuple[str, ...], domains: list[str], out_path: Path) -> str:
+def brief(n: int, lang: str, trio: tuple[str, ...], domains: list[str], out_path: Path, prefix: str = "t",
+          question_noul: bool = False) -> str:
     fam = ", ".join(f'"{f}" ({FAMILIES[f]})' for f in trio)
     noul_ex, cbd = EXAMPLES[lang]
     language = ("Write every document, question, option and level in English." if lang == "en" else
                 "Write every document, question, option and level in natural, idiomatic French (French business "
                 "and legal context: euros, French dates, French institutions where relevant). Only the JSON keys "
                 "and the rationale may be in English.")
+    noul_rule = (f'''- "noul": 9 items, label 1 = yes / true, 0 = no / false, balanced (4 or 5 of each). Write 5 of them as a yes/no QUESTION a reviewer would ask about the document (e.g. "Is the requested refund permitted under the policy?", "Does the reply follow every constraint the customer set?"), with "form": "yesno_question", and 4 as a declarative statement to judge true or false ({noul_ex}), with "form": "statement".'''
+                 if question_noul else
+                 f'- "noul": a single declarative statement to judge true or false against the document ({noul_ex}). Label 1 = true, 0 = false. Balance true and false (4 or 5 of each).')
     return f"""You are writing training data for a small "typed decision" model: it reads a document (the "state") and answers one typed question about it in a single pass, without reasoning out loud. Your job is to write HARD, realistic decision questions whose correct answer depends on a detail that a quick reading gets wrong. Two other models will later solve each question independently; questions they do not both solve are discarded, so every question must have exactly one defensible answer from the document alone.
 
 WRITE 10 documents, and 3 questions per document (30 questions total).
@@ -108,22 +113,43 @@ Document rules:
 
 Question rules (mix across your 30 questions: about 13 "choice", 9 "noul", 8 "score"):
 - "choice": a clear question and 3 to 6 options. Options are full descriptions of outcomes or handlers, written neutrally: no option may give away the answer by wording ("correct", "actually", "properly", "trap", "naive"...), and wrong options must be what a careless or manipulated reader would pick. You may include an option like {cbd} only when that is truly the answer, and it must also appear, as a wrong option, in some questions where the answer is settled. Spread the position of the correct option across first, middle and last.
-- "noul": a single declarative statement to judge true or false against the document ({noul_ex}). Label 1 = true, 0 = false. Balance true and false (4 or 5 of each).
+{noul_rule}
 - "score": an ordinal scale of 3 to 5 levels, ordered from lowest to highest, each level precisely described (e.g. severity, eligibility tier, compliance, completeness), so that specific details rule the right level in and the neighbouring levels out. Label = 0-based index of the correct level. Spread the correct level over the whole scale: among your 8 score questions, at least 2 must be answered by the LOWEST level and at least 2 by the HIGHEST level.
 - The answer must follow from the document alone, without outside knowledge.
 
 OUTPUT: write the 30 questions as JSON Lines (one JSON object per line, UTF-8) to the file
 {out_path}
 with exactly these fields:
-{{"id": "t{n:02d}-d01-q1", "family": "{trio[0]}", "domain": "{domains[0]}", "lang": "{lang}", "state": "<the full document text>", "kind": "choice", "prompt": "<question>", "options": ["...", "..."], "label": 2, "rationale": "<one or two sentences in English: which detail decides and why the tempting answer is wrong>"}}
-For "noul" use "statement" instead of "prompt"/"options" (and label 1/0). For "score" use "prompt" and "levels" (ordered lowest to highest) instead of "options". Repeat the full document text in "state" for each of its 3 questions. Ids: t{n:02d}-dNN-qK.
+{{"id": "{prefix}{n:02d}-d01-q1", "family": "{trio[0]}", "domain": "{domains[0]}", "lang": "{lang}", "state": "<the full document text>", "kind": "choice", "prompt": "<question>", "options": ["...", "..."], "label": 2, "rationale": "<one or two sentences in English: which detail decides and why the tempting answer is wrong>"}}
+For "noul" use "statement" instead of "prompt"/"options" (and label 1/0){' and add the "form" field' if question_noul else ''}. For "score" use "prompt" and "levels" (ordered lowest to highest) instead of "options". Repeat the full document text in "state" for each of its 3 questions. Ids: {prefix}{n:02d}-dNN-qK.
 
 Write the file with a Python script (json.dumps with ensure_ascii=False), not by hand-escaping JSON. When done, validate it with Python (every line parses, required fields present, labels in range, 30 lines, the score-level and noul balance above) and fix any problem. Finish with a one-paragraph summary: counts per family, kind, label position, document lengths, and any question you are unsure about. Do not read or search for any benchmark or other files in the repository; write the content from scratch.
 """
 
 
+# Round 2 leans on what the 4B still misses on JevBench's hard tier: date and amount
+# computation, judging a response, rule precedence, multi-hop lookups.
+TRIOS_T2 = [
+    ("temporal_numeric", "judge", "tradeoff"),
+    ("temporal_numeric", "multi_hop", "routing"),
+    ("judge", "tradeoff", "temporal_numeric"),
+    ("multi_hop", "temporal_numeric", "judge"),
+    ("tradeoff", "routing", "temporal_numeric"),
+    ("judge", "ambiguous", "multi_hop"),
+    ("temporal_numeric", "extraction", "tradeoff"),
+    ("routing", "judge", "long_policy"),
+    ("temporal_numeric", "adversarial", "multi_hop"),
+    ("tradeoff", "trap", "judge"),
+]
+ROUNDS = {
+    "t1": dict(trios=TRIOS, prefix="t", offset=0, question_noul=False),
+    "t2": dict(trios=TRIOS_T2, prefix="u", offset=2, question_noul=True),
+}
+
+
 def main() -> None:
     root = Path(sys.argv[1] if len(sys.argv) > 1 else "data/teacher/t1")
+    rd = ROUNDS[root.name]
     (root / "briefs").mkdir(parents=True, exist_ok=True)
     # About 70 % English (JevBench, the target, is English), 30 % French so the model does not
     # drift there. English repeats the trios holding the weakest pilot families; the French
@@ -135,9 +161,10 @@ def main() -> None:
         pool, j = DOMAINS[lang], seen[lang]
         seen[lang] += 1
         # 5 domains per author, rotated so each language's pool is covered and neighbours differ.
-        domains = [pool[(j * 5 + k) % len(pool)] for k in range(5)]
+        domains = [pool[(j * 5 + k + rd["offset"]) % len(pool)] for k in range(5)]
         out = (root / f"author_{n:02d}.jsonl").resolve()
-        (root / "briefs" / f"author_{n:02d}.md").write_text(brief(n, lang, TRIOS[ti], domains, out), encoding="utf-8")
+        (root / "briefs" / f"author_{n:02d}.md").write_text(
+            brief(n, lang, rd["trios"][ti], domains, out, rd["prefix"], rd["question_noul"]), encoding="utf-8")
     print(f"{len(plan)} briefs in {root / 'briefs'}")
 
 

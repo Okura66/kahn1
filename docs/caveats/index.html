@@ -144,7 +144,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     <section class="sec cv" id="frontier" data-n="01" data-nav="Not a frontier model" aria-labelledby="h-frontier">
       <h2 id="h-frontier">It is not a frontier model.</h2>
       <p>On subjective or ambiguous judgments it is wrong more often than a large model. On the hard tier of
-        the external JevBench, Kahn1 4B gets 70.3% right against 73.0% for Jev, and the 3B only 42.3%. JEV is
+        the external JevBench, Kahn1 4B gets 72.1% right against 73.0% for Jev, and the 3B only 42.3%. JEV is
         ahead on every primitive of the held-out set. Computing a date, a duration or an amount in a single
         forward pass is a weak spot.</p>
     </section>
@@ -152,16 +152,15 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     <section class="sec cv" id="primitives" data-n="02" data-nav="Accuracy by primitive" aria-labelledby="h-primitives">
       <h2 id="h-primitives">Accuracy depends on the primitive.</h2>
       <p>Choice is strong (92% for the 4B, 91% for the 3B on held-out intent sets, 8 options per question).
-        Score is the weakest primitive: 49% (4B) and 51% (3B) exact match on 5-level scales, though the 3B is
-        within one level 95% of the time on SST-5. Noul: 87% on RTE and 70% on SciTail (out-of-domain science
-        entailment) for the 4B, 83% and 65% for the 3B. On short intent classification the 4B lost a little
-        against the 3B on JevBench.</p>
+        Score is the weakest primitive: 51% (4B) and 51% (3B) exact match on 5-level scales, though the 3B is
+        within one level 95% of the time on SST-5. Noul: 84% on RTE and 68% on SciTail (out-of-domain science
+        entailment) for the 4B, 83% and 65% for the 3B.</p>
     </section>
 
     <section class="sec cv" id="calibration" data-n="03" data-nav="Calibration" aria-labelledby="h-calibration">
       <h2 id="h-calibration">Calibration holds on its own distribution.</h2>
       <p>Temperatures were fitted on the training distribution (a split disjoint from training), not on your
-        data, and Noul's calibration error is still 0.13 for the 4B, 0.23 for the 3B. Recalibrate on your
+        data, and Noul's calibration error is still 0.15 for the 4B, 0.23 for the 3B. Recalibrate on your
         domain before trusting a threshold: <code>sysone calibrate</code>, described in the
         <a href="../get-started/">guide</a>.</p>
     </section>

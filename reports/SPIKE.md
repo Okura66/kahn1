@@ -1,3 +1,5 @@
+> **Prototype report.** This measures the Mistral-7B-Instruct prototype that came before Kahn1, not Kahn1 4B or Kahn1 3B. Kept for the record; for Kahn1's figures see [KAHN1_4B_REPORT.md](KAHN1_4B_REPORT.md).
+
 # Phase 0 — Spike de validation
 
 Modèle : `mistralai/Mistral-7B-Instruct-v0.3`

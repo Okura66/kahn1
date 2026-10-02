@@ -161,7 +161,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
   {
    "@type": "DefinedTerm",
    "name": "Prefix caching",
-   "description": "Reusing the computation of a shared prompt prefix (the state) across all the questions asked about it.",
+   "description": "Reusing the computation of a shared prompt prefix (the state) across the questions asked about it, when the engine can: vLLM caches Kahn1 4B's prefix in 528-token blocks, so only states longer than a block benefit.",
    "inDefinedTermSet": "https://kahn1.com/learn/system-one-models/#terms"
   }
  ]
@@ -242,8 +242,8 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     <section class="sec doc" id="how" aria-labelledby="h-how">
       <h2 id="h-how">02 · How it works</h2>
       <p>The prompt holds the state, the question and the options, each tagged with a letter. The model runs one forward pass; at the answer position, only the logits of the option tokens (A, B, C… or yes / no) are kept, and the softmax turns them into probabilities. For a Score, the expected value Σ i · p<sub>i</sub> gives a continuous value.</p>
-      <p>Two settings make those probabilities usable. <strong>Permutation debiasing</strong> asks the question with the options in k orders and averages the results. <strong>Calibration</strong> (one temperature per question type) aligns confidence with accuracy, measured by the ECE. And <strong>prefix caching</strong> computes the state once for every question asked about it.</p>
-      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col"></th><th scope="col">System One model</th><th scope="col">LLM generating JSON</th></tr></thead><tbody><tr><td>Output</td><td>A typed value read from the logits</td><td>Text to validate and parse</td></tr><tr><td>Format errors</td><td>Impossible by construction</td><td>Rare with structured outputs, possible otherwise</td></tr><tr><td>Probabilities</td><td>One per option, always</td><td>Logprobs depending on the provider, often none</td></tr><tr><td>What drives latency</td><td>One pass over the state</td><td>The length of the generated answer</td></tr><tr><td>What drives cost</td><td>Input tokens</td><td>Input and output tokens</td></tr></tbody></table></div>
+      <p>Two settings make those probabilities usable. <strong>Permutation debiasing</strong> asks the question with the options in k orders and averages the results. <strong>Calibration</strong> (one temperature per question type) aligns confidence with accuracy, measured by the ECE. On a long state, <strong>prefix caching</strong> also reuses the state's computation from one question to the next; on a short state the engine recomputes it for each question, and latency grows with the number of questions.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col"></th><th scope="col">System One model</th><th scope="col">LLM generating JSON</th></tr></thead><tbody><tr><td>Output</td><td>A typed value read from the logits</td><td>Text to validate and parse</td></tr><tr><td>Format errors</td><td>Impossible by construction</td><td>Rare with structured outputs, possible otherwise</td></tr><tr><td>Probabilities</td><td>One per option, always</td><td>Logprobs depending on the provider, often none</td></tr><tr><td>What drives latency</td><td>One pass per question, over the state</td><td>The length of the generated answer</td></tr><tr><td>What drives cost</td><td>Input tokens</td><td>Input and output tokens</td></tr></tbody></table></div>
     </section>
     <section class="sec doc" id="families" aria-labelledby="h-families">
       <h2 id="h-families">03 · The families</h2>
@@ -288,7 +288,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
         <li><b>Calibration.</b> How well probabilities match reality: of the answers given at 80% confidence, about 80% should be right.</li>
         <li><b>ECE.</b> Expected calibration error: the average gap between confidence and accuracy, over bins of confidence. 0 is perfect.</li>
         <li><b>Permutation debiasing.</b> Asking the same question with the options in k different orders and averaging the probabilities, so the position of an option does not sway the answer.</li>
-        <li><b>Prefix caching.</b> Reusing the computation of a shared prompt prefix (the state) across all the questions asked about it.</li>
+        <li><b>Prefix caching.</b> Reusing the computation of a shared prompt prefix (the state) across the questions asked about it, when the engine can: vLLM caches Kahn1 4B's prefix in 528-token blocks, so only states longer than a block benefit.</li>
       </ul>
     </section>
   </main>

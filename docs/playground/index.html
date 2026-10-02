@@ -588,10 +588,10 @@ const probeGpu = () => gpuProbe ??= (async () => {
 })();
 const TOP_LOGPROBS = 100;
 const GGUF = {
-  // Kahn1 v1 (the checkpoint the Hub had when it was quantized), quantized by mradermacher.
+  // An early Kahn1 3B checkpoint (the one the Hub had when it was quantized), quantized by mradermacher.
   repo: "mradermacher/Kahn1-Qwen2.5-3B-GGUF",
   file: (q) => "Kahn1-Qwen2.5-3B." + q + ".gguf",
-  // v1 was trained on inverted Noul targets (dataset label 1 -> 'no'): it says
+  // That checkpoint was trained on inverted Noul targets (dataset label 1 -> 'no'): it says
   // "no" for true statements. Measured on the held-out Noul items: 7/9 right
   // when flipped, 2/9 as-is. Set to false for a checkpoint trained after the fix.
   noulInverted: true,
@@ -600,7 +600,7 @@ const GGUF = {
   quants: { Q4_K_M: { mb: 1930 }, IQ4_XS: { mb: 1753 }, Q3_K_M: { mb: 1591 } },
 };
 // Temperature scaling only (calibration_temponly.json). The isotonic stage is
-// off: fit on the v3 checkpoint, and it raised ECE in the ablation anyway.
+// off: fit on the published 3B, it raised ECE in the ablation anyway.
 const CALIBRATION = { choice: 1.1903007727373394, score: 0.9629625021378685, noul: 1.026405512405134 };
 
 const SYSTEM_PROMPT = "You assess a state and answer with a single letter.";

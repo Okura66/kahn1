@@ -1,6 +1,6 @@
 # Comprehensive Evaluation Report — 231 Holdout Instances
 
-Evaluated Model: `checkpoints/qwen_merged`
+Evaluated Model: `Okura66/Kahn1-Qwen2.5-3B` (run from a local copy of the same weights)
 Timestamp: 2026-09-22 16:36:20
 Mode: Full Pipeline (Merged LoRA + debiasing $k=3$ + post-hoc calibration)
 
@@ -10,10 +10,10 @@ Mode: Full Pipeline (Merged LoRA + debiasing $k=3$ + post-hoc calibration)
 
 | Metric | Value | Description |
 |---|:---:|---|
-| **Total Instances** | **231** | 100% of the reserved holdout evaluation partition |
+| **Total Instances** | **231** | the 231 public JevBench items |
 | **Global Accuracy** | **67.53 %** | Mean top-1 accuracy in pure zero-shot task evaluation |
 | **NLL (Negative Log-Likelihood)** | **0.7744** | Probabilistic cross-entropy over correct answer tokens |
-| **Brier Score** | **0.4534** | Multi-class quadratic accuracy (0 = perfect calibration) |
+| **Brier Score** | **0.4534** | Multi-class quadratic score (lower is better, 0 = perfect) |
 | **ECE (Expected Calibration Error)** | **0.1641** | Calibration gap across 15 equal-width bins |
 | **ACE (Adaptive Calibration Error)** | **0.1491** | Calibration gap across 15 equal-mass quantile bins |
 | **AURC (Area Under Risk-Coverage)** | **0.1392** | Error rejection capability via selective thresholding |
@@ -48,4 +48,4 @@ Mode: Full Pipeline (Merged LoRA + debiasing $k=3$ + post-hoc calibration)
 
 - **Scaling Performance**: Accuracy reached **67.53%** on the full held-out test split when trained on the balanced mixture.
 - **API Determinism & Schema Conformance**: Out-of-schema error rate = **0.0%** (zero risk of JSON malformation or syntax hallucination).
-- **Inference Speed**: 44.5 ms vs ~300 ms for standard autoregressive JSON decoding (**~6.7x faster**).
+- **Inference Speed**: median 44.5 ms per request (k = 3, one RTX 5070 Ti, vLLM).

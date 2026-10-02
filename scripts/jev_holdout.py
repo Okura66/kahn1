@@ -210,7 +210,7 @@ def report() -> None:
     lat = sorted(r["latency_ms"] for r in jev_recs.values())
     summary = {
         "jev_models": models,
-        "kahn1": "v3 checkpoint, k = 3, temperature calibration (reports/QWEN_FULL_EVAL_v3_temponly.md)",
+        "kahn1": "Kahn1 3B, k = 3, temperature calibration (reports/QWEN_FULL_EVAL_v3_temponly.md)",
         "items": len(items), "jev_answered": len(jev_recs),
         "jev_latency_ms": {"p50": lat[len(lat) // 2], "p95": lat[int(0.95 * (len(lat) - 1))]} if lat else None,
         "groups": table,

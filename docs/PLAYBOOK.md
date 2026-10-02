@@ -28,7 +28,7 @@ flowchart TD
     Model["HF Backbone\n(e.g. Qwen, Llama)"] --> Train
     
     Train --> Adapter["LoRA Adapter\n(checkpoints/best)"]
-    Adapter --> Merge["2. Weight Merging\n(scripts/merge_lora_shards.py)"]
+    Adapter --> Merge["2. Weight Merging\n(scripts/merge_qwen_lora.py)"]
     Model --> Merge
     
     Merge --> Standalone["Merged HF Model\n(checkpoints/merged)"]
@@ -40,7 +40,7 @@ flowchart TD
     Standalone --> Serve
     
     Client["JEV / TypeSafe JSON Request\n(state + schema)"] --> Serve
-    Serve --> Out["Calibrated Typed Response (< 50 ms)\n(0 Parse Error, Pydantic)"]
+    Serve --> Out["Calibrated Typed Response\n(0 Parse Error, Pydantic)"]
 ```
 
 ---
@@ -98,7 +98,8 @@ Always split your dataset into two strictly disjoint files:
 `sysone` is natively **model-agnostic**. The `src/sysone/tokens.py` module dynamically resolves token IDs for option letters (`A, B, C...` or `yes / no`) according to the active model's tokenizer.
 
 ### Recommended Backbones:
-- **Qwen 2.5 3B** (default backbone): `Qwen/Qwen2.5-3B-Instruct` (fastest inference, ultra-low 1.26 GB VRAM footprint).
+- **Qwen3.5-4B** (Kahn1 4B): `Qwen/Qwen3.5-4B`, with `--prompt-format qwen3` (its native chat template, thinking off).
+- **Qwen 2.5 3B** (Kahn1 3B, and the code default): `Qwen/Qwen2.5-3B-Instruct`, tag layout (the faster of the two Kahn1 sizes, about 6 GB of weights in bf16).
 - **Llama 3.2 3B**: `meta-llama/Llama-3.2-3B-Instruct`.
 - **Qwen 2.5 7B**: `Qwen/Qwen2.5-7B-Instruct`.
 
@@ -127,21 +128,21 @@ python training/train_lora.py \
 - `--micro-batch 4`: Number of parallel sequences processed per GPU pass.
 - `--grad-accum 4`: Gradient accumulation steps to achieve an effective batch size of `micro-batch * grad-accum = 16`.
 
-The best checkpoint is automatically saved in `checkpoints/best/adapter_model.safetensors` whenever validation NLL improves.
+The best checkpoint is saved in `checkpoints/best/adapter_model.safetensors` whenever validation NLL improves. Pass `--select-on acc` to choose it on dev accuracy instead, as Kahn1 4B was: its validation NLL bottomed out early while dev accuracy kept rising.
 
 ---
 
 ## 5. Step 2: Weight Merging for vLLM Inference
 
-vLLM requires a full standalone Hugging Face checkpoint to run at full inference speed with shared Prefix Caching.
+vLLM runs fastest from a full standalone Hugging Face checkpoint, with the adapter merged into the weights.
 
 Run the merge script:
 
 ```bash
-python scripts/merge_lora_shards.py \
+python scripts/merge_qwen_lora.py \
   --base meta-llama/Llama-3.2-3B-Instruct \
-  --lora checkpoints/best \
-  --out checkpoints/merged
+  --adapter checkpoints/best \
+  --output checkpoints/merged
 ```
 
 This merges $W_{\text{final}} = W_0 + \frac{\alpha}{r} (B \times A)$ into the base weights and outputs a ready-to-serve directory in `checkpoints/merged/`.
@@ -150,7 +151,7 @@ This merges $W_{\text{final}} = W_0 + \frac{\alpha}{r} (B \times A)$ into the ba
 
 ## 6. Step 3: Post-Hoc Temperature Calibration
 
-Calibration fits temperature parameters ($T_{\text{choice}}, T_{\text{score}}, T_{\text{noul}}$) via L-BFGS to guarantee that predicted probabilities match observed empirical frequencies ($ECE < 0.05$).
+Calibration fits temperature parameters ($T_{\text{choice}}, T_{\text{score}}, T_{\text{noul}}$) via L-BFGS so that predicted probabilities track observed frequencies. It lowers the ECE without guaranteeing a level: Kahn1 4B reaches 0.015 on Choice but 0.127 on Noul on its held-out set.
 
 ```bash
 python -m sysone.cli calibrate \
@@ -159,12 +160,13 @@ python -m sysone.cli calibrate \
   --out calibration.json
 ```
 
-The resulting `calibration.json` file contains the fitted temperatures for your domain:
+The resulting `calibration.json` file contains the fitted temperatures for your domain (the values below are Kahn1 4B's; `isotonic` stays empty unless you fit it):
 ```json
 {
-  "choice": 3.28,
-  "score": 17.10,
-  "noul": 0.81
+  "choice": 1.063,
+  "score": 1.072,
+  "noul": 0.938,
+  "isotonic": {}
 }
 ```
 
@@ -181,9 +183,7 @@ SYSONE_MODEL=checkpoints/merged python -m sysone.cli serve --port 8000
 ### Hot-Reload Calibration Parameters
 
 ```bash
-curl -X POST http://127.0.0.1:8000/v1/calibrate/load \
-  -H "Content-Type: application/json" \
-  -d '{"path": "calibration.json"}'
+curl -X POST "http://127.0.0.1:8000/v1/calibrate/load?path=calibration.json"
 ```
 
 ### Send a Direct JEV Schema Query (`POST /v1/evaluate/jev`)
@@ -226,5 +226,7 @@ curl -X POST http://127.0.0.1:8000/v1/evaluate/jev \
 ## 8. Troubleshooting & GPU Memory Optimization
 
 - **WSL2 OOM / Segmentation Faults**: Set `export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:False` to prevent virtual memory mapping collisions (`cuMemMap`) under WSL2.
-- **Inference Acceleration (FP8)**: On modern NVIDIA GPUs (RTX 40xx/50xx, L40, H100), configure `EngineConfig(quantization="fp8")` to double KV-cache token capacity with Cutlass kernels.
-- **Permutation Latency Trade-off**: `n_permutations=3` yields optimal positional debiasing (-47.9% variance) while remaining under 55 ms latency. For maximum speed (< 25 ms), set `n_permutations=1`.
+- **FP8 weights**: on recent NVIDIA GPUs (RTX 40xx/50xx, L40, H100), `EngineConfig(quantization="fp8")` quantizes the weights to FP8, which leaves more memory for the KV cache. The published Kahn1 figures are bf16.
+- **CUDA graphs**: `EngineConfig` runs vLLM in eager mode by default; `enforce_eager=False` turns CUDA graphs on.
+- **Permutation Latency Trade-off**: `n_permutations=3` cancels position bias at the cost of more prompts per question (median 88.7 ms for Kahn1 4B, 36.4 ms for the 3B, on one RTX 5070 Ti). `n_permutations=1` is the fastest.
+- **Prefix caching**: it helps only when the state is long. vLLM caches Kahn1 4B's prefix (a hybrid Gated DeltaNet + attention model) in 528-token blocks: on a 212-token state 10 questions take 319 ms against 45.5 ms for one, on a 1,064-token state 143 ms against 49.3 ms.

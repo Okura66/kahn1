@@ -104,6 +104,11 @@ def main() -> None:
             c["n"] += 1; c["k3b"] += a; c["k4b"] += b
             c["jev"] += per_task[it["id"]][0] == "c"; c["jevk5"] += k5[it["id"]]
     jbt = {t: {k: (v / c["n"] if k != "n" else v) for k, v in c.items()} for t, c in tiers.items()}
+    fams = defaultdict(lambda: defaultdict(int))   # hard ids: hard-<author>-<family>-<nn>
+    for it, b in zip(jb, jb4):
+        if it["source"] == "jevbench-hard":
+            c = fams[it["id"].split("-")[3]]
+            c["n"] += 1; c["k4b"] += b; c["jev"] += per_task[it["id"]][0] == "c"; c["jevk5"] += k5[it["id"]]
     x, y, p = mcnemar(jb4, [k5[it["id"]] for it in jb])
     jx, jy, jp = mcnemar(jb4, [int(per_task[it["id"]][0] == "c") for it in jb])
 
@@ -113,7 +118,7 @@ def main() -> None:
             h = json.loads(f.read_text(encoding="utf-8"))["heldout_sample"]
             dev[name] = {k: v["acc"] for k, v in h.items() if isinstance(v, dict)} | {"balanced": h["balanced_acc"]}
 
-    out = {"heldout": held, "choice_every_intent": full, "jevbench": jbt,
+    out = {"heldout": held, "choice_every_intent": full, "jevbench": jbt, "jevbench_hard_families": fams,
            "jevbench_vs_jevk5": {"k4b_only": x, "jevk5_only": y, "p": p},
            "jevbench_vs_jev": {"k4b_only": jx, "jev_only": jy, "p": jp}, "dev_teacher": dev}
     (R / "kahn1_4b_report.json").write_text(json.dumps(out, indent=1), encoding="utf-8")
@@ -128,9 +133,10 @@ def main() -> None:
     rows = "\n".join(f"| {g.replace('kind:', 'all ').replace('_eval', '')} | {held[g]['n']:,} | {B(held[g], 'k4b', K3)} | "
                      f"{B(held[g], 'k3b', K3)} | {B(held[g], 'jev', K3)} | {held[g]['k4b_ece']:.3f} | "
                      f"{held[g]['k3b_ece']:.3f} | {held[g]['jev_ece']:.3f} |" for g in order if g in held)
-    jrows = "\n".join(f"| {t} | {c['n']} | {B(c, 'k4b', K4)} | {B(c, 'k3b', K4)} | {B(c, 'jevk5', K4)} | "
+    jrows = "\n".join(f"| {t.replace('original', 'standard')} | {c['n']} | {B(c, 'k4b', K4)} | {B(c, 'k3b', K4)} | {B(c, 'jevk5', K4)} | "
                       f"{B(c, 'jev', K4)} |"
                       for t, c in sorted(jbt.items(), key=lambda kv: ["easy", "original", "hard", "all"].index(kv[0])))
+    frows = "\n".join(f"| {f} | {c['n']} | {c['k4b']} | {c['jevk5']} | {c['jev']} |" for f, c in sorted(fams.items()))
     KF = ("k4b", "k3b", "jev")
     fl = (f"| every intent (77 / 60), {full['n']:,} items | {B(full, 'k4b', KF)} | {B(full, 'k3b', KF)} | "
           f"{B(full, 'jev', KF)} |" if both else "| every intent | not run | | |")
@@ -139,14 +145,14 @@ def main() -> None:
                       if all(m in dev and k in dev[m] for m in ("base", "k4b")))
     (R / "KAHN1_4B_REPORT.md").write_text(f"""# Kahn1 4B (Qwen3.5-4B + LoRA): evaluation
 
-Kahn1 4B (internal {CUR}): Qwen3.5-4B, LoRA r = 16 on the attention and linear-attention
+Kahn1 4B: Qwen3.5-4B, LoRA r = 16 on the attention and linear-attention
 projections, native chat template (thinking off), trained for two epochs (2,010 steps) on
-data/train_4b_v3.jsonl (32,170 rows): public NLI, topic, intent and sentiment sources (ShARC, WANLI
+a 32,170-row mix: public NLI, topic, intent and sentiment sources (ShARC, WANLI
 and DocNLI whole), QuALITY, BoolQ, CLINC150, a replay of ARC, CommonsenseQA and the MMLU-Pro
 validation questions (never MMLU-Pro test), and 2,836 distinct hard decision questions written by
 Claude Opus, English and French (402 x 3, 600 x 3, 1,834 x 2; 20.7 % of the rows). Loss:
 cross-entropy restricted to the candidate tokens + squared EMD on Score questions. Checkpoint chosen
-on dev accuracy on the dev splits, never on a benchmark. Kahn1 3B: Qwen2.5-3B (v3).
+on dev accuracy on the dev splits, never on a benchmark. Kahn1 3B: Qwen2.5-3B-Instruct + LoRA.
 
 ## Held-out 14,663 items, like for like
 
@@ -176,6 +182,13 @@ public v0.2 run; JevBench's own run of JevK5 v0.2 scores 85.3 % on the same 231 
 Kahn1 4B vs JevK5's own run, paired: {x} items only Kahn1 4B gets right, {y} only JevK5; exact McNemar p = {p:.2f}.
 Kahn1 4B vs Jev's published per-task outcomes, paired: {jx} items only Kahn1 4B gets right, {jy} only Jev;
 exact McNemar p = {jp:.2f}.
+
+Hard tier by family (the family is the third field of the item id, hard-<author>-<family>-<nn>;
+Kahn1 4B from reports/jevbench_{CUR}_preds.json). Items right:
+
+| Family | Items | Kahn1 4B | JevK5 v0.2 | Jev 1.13.0 |
+|---|---:|---:|---:|---:|
+{frows}
 
 ## Hard decision dev split (317 items, k = 1)
 

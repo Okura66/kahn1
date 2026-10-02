@@ -1,13 +1,13 @@
 # Kahn1 4B (Qwen3.5-4B + LoRA): evaluation
 
-Kahn1 4B (internal v7): Qwen3.5-4B, LoRA r = 16 on the attention and linear-attention
+Kahn1 4B: Qwen3.5-4B, LoRA r = 16 on the attention and linear-attention
 projections, native chat template (thinking off), trained for two epochs (2,010 steps) on
-data/train_4b_v3.jsonl (32,170 rows): public NLI, topic, intent and sentiment sources (ShARC, WANLI
+a 32,170-row mix: public NLI, topic, intent and sentiment sources (ShARC, WANLI
 and DocNLI whole), QuALITY, BoolQ, CLINC150, a replay of ARC, CommonsenseQA and the MMLU-Pro
 validation questions (never MMLU-Pro test), and 2,836 distinct hard decision questions written by
 Claude Opus, English and French (402 x 3, 600 x 3, 1,834 x 2; 20.7 % of the rows). Loss:
 cross-entropy restricted to the candidate tokens + squared EMD on Score questions. Checkpoint chosen
-on dev accuracy on the dev splits, never on a benchmark. Kahn1 3B: Qwen2.5-3B (v3).
+on dev accuracy on the dev splits, never on a benchmark. Kahn1 3B: Qwen2.5-3B-Instruct + LoRA.
 
 ## Held-out 14,663 items, like for like
 
@@ -42,13 +42,29 @@ public v0.2 run; JevBench's own run of JevK5 v0.2 scores 85.3 % on the same 231 
 | Tier | Items | Kahn1 4B | Kahn1 3B | JevK5 v0.2 | Jev 1.13.0 |
 |---|---:|---:|---:|---:|---:|
 | easy | 48 | **100.0 %** | **100.0 %** | **100.0 %** | **100.0 %** |
-| original | 72 | 97.2 % | 84.7 % | 95.8 % | **98.6 %** |
+| standard | 72 | 97.2 % | 84.7 % | 95.8 % | **98.6 %** |
 | hard | 111 | **75.7 %** | 42.3 % | 73.9 % | 73.0 % |
 | all | 231 | **87.4 %** | 67.5 % | 86.1 % | 86.6 % |
 
 Kahn1 4B vs JevK5's own run, paired: 13 items only Kahn1 4B gets right, 10 only JevK5; exact McNemar p = 0.68.
 Kahn1 4B vs Jev's published per-task outcomes, paired: 13 items only Kahn1 4B gets right, 11 only Jev;
 exact McNemar p = 0.84.
+
+Hard tier by family (the family is the third field of the item id, hard-<author>-<family>-<nn>;
+Kahn1 4B from reports/jevbench_v7_preds.json). Items right:
+
+| Family | Items | Kahn1 4B | JevK5 v0.2 | Jev 1.13.0 |
+|---|---:|---:|---:|---:|
+| adversarial | 6 | 6 | 5 | 6 |
+| ambiguous | 7 | 5 | 6 | 6 |
+| judge_hard | 17 | 12 | 13 | 13 |
+| long_policy | 19 | 13 | 11 | 12 |
+| multi_hop | 18 | 14 | 14 | 15 |
+| probability | 10 | 10 | 7 | 7 |
+| routing_hard | 5 | 5 | 5 | 5 |
+| temporal_numeric | 15 | 5 | 7 | 4 |
+| tradeoff | 6 | 6 | 6 | 5 |
+| trap | 8 | 8 | 8 | 8 |
 
 ## Hard decision dev split (317 items, k = 1)
 

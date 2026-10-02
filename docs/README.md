@@ -17,6 +17,13 @@ in `CNAME`) on https://kahn1.com/. No build step: every page is plain HTML.
 | `/fr/demarrer/` | `fr/demarrer/index.html` | the same guide in French |
 | `/playground/` | `playground/index.html` + `samples.json` | the playground |
 | `/snake/` | `snake/index.html` | Kahn1 plays Snake |
+| `/learn/system-one-models/` | `learn/system-one-models/index.html` | knowledge base: what a System One model is, how it works, key terms |
+| `/fr/apprendre/modeles-system-one/` | `fr/apprendre/modeles-system-one/index.html` | the same in French |
+| `/compare/landscape/` | `compare/landscape/index.html` | knowledge base: open and proprietary decision models, side by side |
+| `/fr/comparer/paysage/` | `fr/comparer/paysage/index.html` | the same in French |
+| `/alternatives/jev/` | `alternatives/jev/index.html` | knowledge base: alternatives to Jev, Kahn1 among them |
+| `/fr/alternatives/jev/` | `fr/alternatives/jev/index.html` | the same in French |
+| `/data/landscape.csv` | `data/landscape.csv` | the landscape table as CSV (the Dataset in the landscape pages' JSON-LD) |
 | `/demo/` | `demo/index.html` | redirects old links to `/playground/` |
 | 404 | `404.html` | Pages serves it at any missing path (absolute links only) |
 
@@ -27,7 +34,9 @@ the sidebar (its "on this page" list is built from the `<main>` sections that ha
 title; `data-nav` overrides the label), the menu on small screens, the reveals and the home
 page's logo: five slot letters that settle out of noisy distributions, then fly to the top-left
 corner on the first scroll. The sidebar and footer markup is the same on every page, in EN and
-FR: change it everywhere at once. `assets/kahneman.webp` is the portrait on the home pages.
+FR: change it everywhere at once. `assets/kahneman.webp` is the portrait on the home pages. The six knowledge-base pages are
+generated: edit `scripts/build_kb_pages.py` (it reuses the caveats pages' head, sidebar and footer)
+and run it, never the pages by hand.
 The playground and Snake add their app styles inline, scoped under `.app`, and keep their app script in the page. `sitemap.xml`, `robots.txt`, `llms.txt` and the share images `assets/og.png` /
 `assets/og-fr.png` go with the home pages. EN and FR carry the same facts: when a number
 changes, change it in both pages, in their JSON-LD blocks, and in `llms.txt`.
@@ -40,11 +49,12 @@ and rebuild the page together. The Claude Code link caps `q` at 5,000 characters
 The distributions in the home pages' "three primitives" section are illustrative values,
 not recorded outputs. The benchmark charts show Kahn1 4B
 (`Okura66/Kahn1-Qwen3.5-4B`), Kahn1 3B and JEV side by side; the tables add JevK5. The numbers come
-from `reports/kahn1_4b_report.json` (`scripts/kahn1_4b_report.py`): held-out like for like
+from `reports/KAHN1_4B_REPORT.md` (`scripts/kahn1_4b_report.py`): held-out like for like
 (Choice over the same 8 options on every side, see `reports/CHOICE_FAIRNESS.md`), JevBench,
-the hard decision dev split. `reports/jev_vs_kahn1.json` (`scripts/jev_holdout.py`) is the
-first JEV run, which gave JEV every intent on Choice: do not quote its totals as a
-comparison. The browser demos still run an older GGUF build of the 3B. Licences, as the pages state
+the hard decision dev split; latency and the per-primitive figures from
+`reports/QWEN35_V7_FULL_EVAL.md` and `reports/JEVBENCH_v7.md`. `reports/JEV_VS_KAHN1.md`
+(`scripts/jev_holdout.py`) is the first JEV run, which gave JEV every intent on Choice: do not
+quote its totals as a comparison. The browser demos still run an older GGUF build of the 3B. Licences, as the pages state
 them: code MIT, Kahn1 4B weights Apache 2.0, Kahn1 3B weights under the Qwen Research License
 (inherited from Qwen2.5-3B-Instruct; the pages say "research licence, see its terms" and link it).
 
@@ -68,7 +78,7 @@ Two backends, toggled from the page:
 
 ```bash
 cd /mnt/c/path/to/kahn1      # the repository root, from WSL2
-SYSONE_MODEL=checkpoints/qwen_merged PYTHONPATH=src \
+SYSONE_MODEL=Okura66/Kahn1-Qwen3.5-4B PYTHONPATH=src \
   ~/.venvs/sysone/bin/python -m uvicorn sysone.server:app --host 0.0.0.0 --port 8000
 ```
 
@@ -78,4 +88,6 @@ For the webgpu backend alone, any static server works:
 Then open `http://localhost:8000/demo/playground/` (the sysone server serves `docs/`
 under `/demo`), `http://localhost:8000/playground/` (static server), or
 https://kahn1.com/playground/. The model loads on the first run. Links between pages
-are relative, so the site works under `/demo/` too.
+and to `assets/` are absolute (`/playground/`, `/assets/site.css`), so under `/demo/` the
+shared styles and the links between pages do not resolve: browse the site with the static
+server, and keep `/demo/` for trying the server backend.

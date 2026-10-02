@@ -218,7 +218,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     </section>
     <section class="sec doc" id="answer" aria-labelledby="h-answer">
       <h2 id="h-answer">01 · The short answer</h2>
-      <p>If you want typed decisions with probabilities without sending your data to an API, pick an open decision model. If you want the best measured accuracy with nothing to host, Jev is still ahead on our held-out set: 73.2% against 72.4% for Kahn1 4B on 14,663 items. On the 231 public JevBench items the two are level (87.4% against 86.6%, not a significant gap, p&nbsp;=&nbsp;0.84).</p>
+      <p>If you want typed decisions with probabilities without sending your data to an API, pick an open decision model. If you want the best measured overall accuracy with nothing to host, Jev is still ahead on our held-out set: 73.2% against 72.4% for Kahn1 4B on 14,663 items. On the 231 public JevBench items the two are level (Kahn1 4B 87.4%, Jev 86.6%, not a significant gap, p&nbsp;=&nbsp;0.84).</p>
     </section>
     <section class="sec doc" id="alternatives" aria-labelledby="h-alternatives">
       <h2 id="h-alternatives">02 · The open alternatives</h2>
@@ -227,7 +227,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     </section>
     <section class="sec doc" id="measured" aria-labelledby="h-measured">
       <h2 id="h-measured">03 · What is measured</h2>
-      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col"></th><th scope="col" class="r">Items</th><th scope="col" class="r">Jev 1.13.0</th><th scope="col" class="r">JevK5 v0.2, JevBench's run</th><th scope="col" class="r">JevK5 v0.2, its authors' run</th><th scope="col" class="r">Kahn1 4B</th></tr></thead><tbody><tr><td>Kahn1 held-out, Choice over the same 8 options</td><td class="r">14,663</td><td class="r"><b>73.2%</b></td><td class="r"></td><td class="r"></td><td class="r">72.4%</td></tr><tr><td>Public JevBench, all tiers</td><td class="r">231</td><td class="r">86.6%</td><td class="r">85.3%</td><td class="r">86.1%</td><td class="r"><b>87.4%</b></td></tr><tr><td>Public JevBench, hard tier</td><td class="r">111</td><td class="r">73.0%</td><td class="r"></td><td class="r">73.9%</td><td class="r"><b>75.7%</b></td></tr></tbody></table></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col"></th><th scope="col" class="r">Items</th><th scope="col" class="r">Jev 1.13.0</th><th scope="col" class="r">JevK5 v0.2, JevBench's run</th><th scope="col" class="r">JevK5 v0.2, its authors' run</th><th scope="col" class="r">Kahn1 4B</th></tr></thead><tbody><tr><td>Kahn1 held-out, all primitives (Choice over the same 8 options)</td><td class="r">14,663</td><td class="r"><b>73.2%</b></td><td class="r"></td><td class="r"></td><td class="r">72.4%</td></tr><tr><td>Public JevBench, all tiers</td><td class="r">231</td><td class="r">86.6%</td><td class="r">85.3%</td><td class="r">86.1%</td><td class="r"><b>87.4%</b></td></tr><tr><td>Public JevBench, hard tier</td><td class="r">111</td><td class="r">73.0%</td><td class="r"></td><td class="r">73.9%</td><td class="r"><b>75.7%</b></td></tr></tbody></table></div>
       <p>Same items, same options, same labels, but three separate runs: Jev's outcomes are the ones JevBench publishes, JevK5's come from its authors' published run and from JevBench's own run, and Kahn1's from ours (k&nbsp;=&nbsp;3 option orders, calibrated). Paired with JevK5's own published run, Kahn1 4B gets 202 of 231 items right and JevK5 199 (13 against 10 items only one gets right, exact McNemar test, p&nbsp;=&nbsp;0.68); against Jev's published outcomes (200 of 231), 13 against 11, p&nbsp;=&nbsp;0.84; in JevBench's own run, JevK5 v0.2 gets 197 (85.3%). Details: <a href="/benchmarks/">benchmarks</a>.</p>
     </section>
     <section class="sec doc" id="switch" aria-labelledby="h-switch">
@@ -241,7 +241,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     <section class="sec doc" id="jev" aria-labelledby="h-jev">
       <h2 id="h-jev">05 · When Jev is still the right pick</h2>
       <ul>
-        <li>You want the best measured accuracy on our held-out set, with no infrastructure to run.</li>
+        <li>You want the best measured overall accuracy on our held-out set, with no infrastructure to run.</li>
         <li>Your texts are long: Jev takes 64k tokens per request (32k for the state plus the longest question), per its documentation.</li>
         <li>You work in English, where TypeSafe says Jev is most accurate.</li>
         <li>You are fine with a third party processing your data and a price per input token.</li>

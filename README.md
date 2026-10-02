@@ -9,8 +9,8 @@
   <img src="https://img.shields.io/badge/Weights%204B-Apache%202.0-yellow.svg" alt="Kahn1 4B weights: Apache 2.0" />
   <a href="https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/blob/main/LICENSE"><img src="https://img.shields.io/badge/Weights%203B-Qwen%20Research%20License-lightgrey.svg" alt="Kahn1 3B weights: Qwen Research License" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/Python-3.11%2B-blue.svg" alt="Python 3.11+" /></a>
-  <a href="tests/"><img src="https://img.shields.io/badge/Tests-148%20passed-success.svg" alt="Tests: 148 passed" /></a>
-  <a href="https://docs.vllm.ai/"><img src="https://img.shields.io/badge/Engine-vLLM%20%7C%20Prefix%20Caching-purple.svg" alt="Engine: vLLM" /></a>
+  <a href="tests/"><img src="https://img.shields.io/badge/Tests-150%20passed-success.svg" alt="Tests: 150 passed" /></a>
+  <a href="https://docs.vllm.ai/"><img src="https://img.shields.io/badge/Engine-vLLM-purple.svg" alt="Engine: vLLM" /></a>
   <img src="https://img.shields.io/badge/Latency%20p50-36%20ms%20(3B)%20%C2%B7%2089%20ms%20(4B)-brightgreen.svg" alt="Median latency: 36 ms (3B), 89 ms (4B)" />
 </p>
 
@@ -20,7 +20,7 @@
 > [!TIP]
 > **Official Model Weights on Hugging Face** (4B: Apache 2.0; 3B: [Qwen Research License](https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/blob/main/LICENSE), a research licence, see its terms; the code is MIT):
 > - **Kahn1 4B** (Qwen3.5-4B + LoRA): merged (8.4 GB) [`Okura66/Kahn1-Qwen3.5-4B`](https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B), LoRA adapter (57 MB) [`Okura66/Kahn1-Qwen3.5-4B-LoRA`](https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B-LoRA)
-> - **Kahn1 3B** (Qwen2.5-3B + LoRA): merged (6.17 GB) [`Okura66/Kahn1-Qwen2.5-3B`](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B), LoRA adapter (239 MB) [`Okura66/Kahn1-Qwen2.5-3B-LoRA`](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B-LoRA)
+> - **Kahn1 3B** (Qwen2.5-3B-Instruct + LoRA): merged (6.17 GB) [`Okura66/Kahn1-Qwen2.5-3B`](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B), LoRA adapter (239 MB) [`Okura66/Kahn1-Qwen2.5-3B-LoRA`](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B-LoRA)
 
 **Kahn1** (powered by the `sysone` Python framework) is an open-source, deterministic System 1 decision engine for structured classification, continuous ordinal scoring, and binary verification. Named in homage to Daniel Kahneman (*Thinking, Fast and Slow*), Kahn1 eliminates autoregressive text generation and JSON schema parsing by extracting strictly typed decisions and calibrated probability distributions directly from model logits at the single-token level.
 
@@ -43,7 +43,7 @@ Qwen3.5-4B fine-tuned with LoRA, native chat template: 72.4 % on the held-out se
 85.3 %); p50 88.7 ms at k = 3 on one RTX 5070 Ti.
 
 ```bash
-# Serve directly with vLLM (Prefix Caching enabled):
+# Serve directly with vLLM (prefix caching on; it pays off on long states):
 vllm serve Okura66/Kahn1-Qwen3.5-4B --enable-prefix-caching --dtype bfloat16 --max-model-len 4096
 
 # Or through sysone, which reads the answers from the logits (prompt format picked automatically):
@@ -54,7 +54,7 @@ SYSONE_MODEL=Okura66/Kahn1-Qwen3.5-4B uv run sysone serve --port 8000
 👉 **[Okura66/Kahn1-Qwen2.5-3B](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B)** (6.17 GB merged) ·
 **[Okura66/Kahn1-Qwen2.5-3B-LoRA](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B-LoRA)** (239 MB adapter on `Qwen/Qwen2.5-3B-Instruct`)
 
-Qwen2.5-3B fine-tuned with LoRA, tag prompt layout. Smaller and faster: p50 36.4 ms at k = 3 on the
+Qwen2.5-3B-Instruct fine-tuned with LoRA, tag prompt layout. Smaller and faster: p50 36.4 ms at k = 3 on the
 same GPU. The browser demos (playground, Snake) run a smaller 4-bit GGUF build of the 3B, older than the
 published 3B weights.
 
@@ -82,16 +82,16 @@ model = PeftModel.from_pretrained(base, "Okura66/Kahn1-Qwen3.5-4B-LoRA")
 - Takes a **state** (arbitrary text context) and a **list of typed questions** (Choice / Score / Noul).
 - Returns **strictly typed values + calibrated probability distributions**.
 - **Generates zero tokens** — directly inspects logits on option tokens.
-- Evaluates all questions in a **single unified batch** sharing the state's KV cache (vLLM Prefix Caching).
+- Evaluates all questions in a **single batch**; vLLM's prefix caching reuses the state's computation across them when the state is long enough (it caches Kahn1 4B's prefix in 528-token blocks, so short states are recomputed for each question).
 - Schema/type errors are **guaranteed zero by construction** (Pydantic + option tokens, zero text parsing).
 
 ## What Kahn1 does not do (honestly)
 
 - **Does not match the intelligence of a frontier model** on ambiguous subjective judgments (a 4B or 3B model makes no such claim).
-- **Is not more accurate than JEV**: asked the same questions over the same options, JEV 1.13.0 is ahead on the held-out set overall and on Choice and Score (see [Benchmark results](#benchmark-results)).
+- **Is not more accurate than JEV**: asked the same questions over the same options, JEV 1.13.0 is ahead on the held-out set overall and on Choice, level on Score (see [Benchmark results](#benchmark-results)).
 - **Does not use TypeSafe's proprietary sampler or architecture**.
 - **Calibration is valid only for the training distribution** — hence the `sysone calibrate` command to recalibrate on your domain.
-- **Latency gains stem from prefix caching and single-token output**, not an exotic architectural innovation.
+- **Latency comes from single-token output with no generated text**, helped by prefix caching on long states only, not from an exotic architectural innovation. It grows with the number of questions per request.
 
 ---
 
@@ -99,7 +99,7 @@ model = PeftModel.from_pretrained(base, "Okura66/Kahn1-Qwen3.5-4B-LoRA")
 
 `sysone` is designed to be the **fast sensory cortex ("System 1")** of automated enterprise infrastructure, routing workflows before invoking expensive generative LLMs or human agents:
 
-1. **High-Throughput Inbound Triage & Routing (tens of milliseconds per request)**:
+1. **High-Throughput Inbound Triage & Routing (median 36 ms for the 3B, 89 ms for the 4B per request on one GPU)**:
    - Categorizing thousands of incoming support tickets, emails, or insurance claims per minute.
    - Extracting structured attributes (intent, priority, sentiment, refund requests) simultaneously in one batch pass without generating text.
 2. **Deterministic Agentic Guardrails & Workflow Gating**:
@@ -107,7 +107,7 @@ model = PeftModel.from_pretrained(base, "Okura66/Kahn1-Qwen3.5-4B-LoRA")
 3. **Document Ingestion & Metadata Scoring**:
    - Extracting qualitative dimensions (e.g. document urgency, tone, technical complexity) as continuous expected values ($0.0$ to $5.0$) rather than noisy discrete labels.
 4. **Selective Escalation to "System Two" (Human-in-the-Loop)**:
-   - Using calibrated confidence scores ($p_{\max}$; Choice ECE about 0.02 on the held-out set) to automate routine decisions while safely escalating low-confidence cases to a frontier reasoning model (GPT-4o, Claude 3.5) or a human operator.
+   - Using calibrated confidence scores ($p_{\max}$; Choice ECE 0.015 for Kahn1 4B on the held-out set) to automate routine decisions while safely escalating low-confidence cases to a frontier reasoning model or a human operator.
 
 ---
 
@@ -123,7 +123,7 @@ A common enterprise misconception is that zero-shot LLM classifiers make classic
 | **Hardware Footprint** | Extremely lightweight (runs on small CPUs or tiny edge devices). | A modern GPU for throughput (measured on a 16 GB RTX 5070 Ti); both sizes also run on a CPU at seconds per question. |
 | **Explainability & Auditing** | Direct feature importances (SHAP, tree splits, linear weights). | Latent attention representations with calibrated post-hoc probabilities. |
 
-### The Engineering Takeaway:
+### The Engineering Takeaway
 - Use **Classical ML** when your ontology is fixed for years, latency must be sub-5ms, hardware is constrained, or data is tabular.
 - Use **`sysone`** when your business rules, categories, and criteria change weekly, when cold-starting new product lines, or when interpreting unstructured natural language context with subtle semantic nuances.
 
@@ -208,8 +208,8 @@ it identically (build the eval split first:
 
 Both sides are System 1: neither generates text, and each answers one request
 per item. What the race actually measures is local CPU inference against a
-hosted service, so read the wall clock accordingly — the model card's sub-100ms
-figures describe this same engine on vLLM/GPU. Without `JEV_API_KEY` the JEV
+hosted service, so read the wall clock accordingly — the model cards' median latencies
+(36 ms for the 3B, 89 ms for the 4B) describe this same engine on vLLM/GPU. Without `JEV_API_KEY` the JEV
 panel says so rather than showing invented numbers.
 
 | variable | meaning |
@@ -226,9 +226,11 @@ panel says so rather than showing invented numbers.
 uv run pytest tests/ -q
 ```
 
-Runs the complete suite of 149 deterministic unit and integration tests, 148 passed and 1 skipped (validating token mapping, prompt formats, debiasing invariance, ordinal scoring, post-hoc calibration, and REST API endpoints).
+Runs the complete suite of 151 deterministic unit and integration tests, 150 passed and 1 skipped (validating token mapping, prompt formats, debiasing invariance, ordinal scoring, post-hoc calibration, and REST API endpoints).
 
-Historical logit verification of Phase 0 is archived in [`reports/SPIKE.md`](reports/SPIKE.md).
+The first logit check, on the Mistral-7B prototype that came before Kahn1, is archived in [`reports/SPIKE.md`](reports/SPIKE.md).
+
+The build, train and evaluate commands below use the code defaults, which are the Kahn1 3B setup (Qwen2.5-3B-Instruct, tag layout).
 
 ### Build Dataset
 
@@ -242,7 +244,7 @@ uv run python training/build_dataset.py --out data/train.jsonl --eval-out data/e
 uv run python training/train_lora.py --train data/train.jsonl --eval data/eval.jsonl
 ```
 
-### Evaluate (generates reports/REPORT.md)
+### Evaluate (writes reports/REPORT.md)
 
 ```bash
 uv run python eval/run_eval.py --model Qwen/Qwen2.5-3B-Instruct \
@@ -268,7 +270,7 @@ curl -X POST http://127.0.0.1:8000/v1/evaluate \
 ```bash
 uv run sysone calibrate --data my_examples.jsonl --out calibration.json --model Okura66/Kahn1-Qwen3.5-4B
 # Temperatures belong to one model: fit them for the model you serve. Then hot-reload in the server:
-curl -X POST http://127.0.0.1:8000/v1/calibrate/load -d '{"path":"calibration.json"}'
+curl -X POST "http://127.0.0.1:8000/v1/calibrate/load?path=calibration.json"
 ```
 
 ---
@@ -282,7 +284,7 @@ For a step-by-step playbook on how to adapt `sysone` to **your custom domain dat
 This playbook covers:
 1. Exact `.jsonl` schema format for custom questions (Choice, Score, Noul).
 2. LoRA training with optimized settings (`training/train_lora.py`).
-3. Weight merging (`scripts/merge_lora_shards.py`) for vLLM.
+3. Weight merging (`scripts/merge_qwen_lora.py`) for vLLM.
 4. Post-hoc temperature calibration (`calibration.json`).
 5. Native JEV / TypeSafe schema dictionary compatibility.
 
@@ -387,11 +389,12 @@ checkpoint, so a dev score, not a benchmark), k = 1, balanced over primitives: b
 **Latency** (one RTX 5070 Ti, vLLM, k = 3, during the held-out run): Kahn1 4B p50 88.7 ms, p95 279.3 ms, 8.5 q/s;
 Kahn1 3B p50 36.4 ms. JEV: p50 248 ms round trip over the network.
 
-**The honest reading.** JEV is ahead on the held-out set by 0.8 points overall, on Choice (94.5 % vs
-92.3 %, and 79.1 % vs 71.6 % over every intent) and by 0.1 point on Score; Kahn1 4B is ahead on Noul
-(75.5 % vs 74.4 %). On JevBench, Kahn1 4B scores 0.9 points above Jev in our run and 2.7 on the hard
-tier, gaps that are not significant (p = 0.84), and it is on par with JevK5's own run. Kahn1's case is
-that it is open, runs locally, is better calibrated and costs nothing per call. Where the 4B is weak:
+**The honest reading.** JEV is ahead on the held-out set by 0.8 points overall and on Choice (94.5 % vs
+92.3 %, and 79.1 % vs 71.6 % over every intent); the two are level on Score (52.0 % vs 51.9 %), and
+Kahn1 4B is ahead on Noul (75.5 % vs 74.4 %, a gap not tested for significance). On JevBench, Kahn1 4B
+gets 202 of 231 items right and Jev 200 (p = 0.84, not significant; the hard tier, 84 against 81 of
+111, was not tested on its own), and it is on par with JevK5's own run. Kahn1's case is that it is
+open, runs locally, is better calibrated overall (ECE 0.072 vs 0.113) and costs nothing per call. Where the 4B is weak:
 dates, durations and amounts computed in a single forward pass (5 of 15 on JevBench's hard temporal
 items); Score, its weakest primitive; Choice over every intent (71.6 %, JEV 79.1 %);
 calibration fitted on the training distribution (recalibrate on your domain).
@@ -410,10 +413,10 @@ Reports: 👉 [`reports/KAHN1_4B_REPORT.md`](reports/KAHN1_4B_REPORT.md) ·
 
 ### Understanding Ordinal Scoring & Human Agreement (SST-5)
 
-On fine-grained ordinal scales like SST-5 (5 sentiment degrees from *Very Negative* to *Very Positive*), discrete exact-match accuracy is **52.35 %** for Kahn1 3B and **55.0 %** for Kahn1 4B; JEV reaches 57.7 % on the same items, so this is not a ceiling. What the 3B does well:
+On fine-grained ordinal scales like SST-5 (5 sentiment degrees from *Very Negative* to *Very Positive*), discrete exact-match accuracy is **52.4 %** for Kahn1 3B and **55.0 %** for Kahn1 4B; JEV reaches 57.7 % on the same items, so this is not a ceiling. What both sizes do well:
 1. **Human Inter-Annotator Agreement**: Human agreement on 5-way SST-5 is only **~55% - 60%** due to the natural subjectivity of nuances (e.g. distinguishing *Positive* from *Very Positive*).
-2. **Zero Catastrophic Inversion**: With **95.16 % off-by-one accuracy** (3B), the model's prediction is either exact or immediately adjacent in 95% of cases. It virtually never confuses opposite polarities.
-3. **Monotonic Ranking ($\rho = 0.834$)**: The high Spearman correlation shows strong ordering fidelity across continuous latent sentiment.
+2. **Zero Catastrophic Inversion**: With **95.2 % off-by-one accuracy** (3B; 94.5 % for the 4B), the prediction is either exact or immediately adjacent in about 95 % of cases. It virtually never confuses opposite polarities.
+3. **Monotonic Ranking ($\rho = 0.834$ for the 3B, $0.833$ for the 4B)**: The high Spearman correlation shows strong ordering fidelity across continuous latent sentiment.
 4. **Continuous Expectation**: In production, `sysone` consumes ordinal answers via expected value:
    $$\mathbb{E}[\text{Score}] = \sum_{i=0}^{K-1} i \cdot p_i$$
    This yields continuous scores (e.g. $3.65 / 4.0$) avoiding artificial discrete boundary clipping.

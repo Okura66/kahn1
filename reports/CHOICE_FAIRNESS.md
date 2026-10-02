@@ -4,7 +4,7 @@ Kahn1's held-out evaluation (eval/baselines.py:_prepare_choice_options) answers 
 question over 8 options: the gold one and 7 distractors seeded from the state. The first JEV
 comparison gave JEV every intent. Both conditions, paired:
 
-| Source | Options | Items | Kahn1 v3 | JEV 1.13.0 | Kahn1 ECE | JEV ECE |
+| Source | Options | Items | Kahn1 3B | JEV 1.13.0 | Kahn1 ECE | JEV ECE |
 |---|---|---:|---:|---:|---:|---:|
 | banking77 | 8 options (gold + 7 seeded distractors) | 3076 | 91.09 % | 94.77 % | 0.026 | 0.024 |
 | banking77 | every intent | 604 | 67.38 % | 79.80 % | 0.162 | 0.084 |

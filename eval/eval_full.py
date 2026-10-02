@@ -152,10 +152,10 @@ Mode: Full Pipeline (Merged LoRA + debiasing $k={n_permutations}$ + post-hoc cal
 
 | Metric | Value | Description |
 |---|:---:|---|
-| **Total Instances** | **{total_ex}** | 100% of the reserved holdout evaluation partition |
+| **Total Instances** | **{total_ex}** | every item of the evaluation file |
 | **Global Accuracy** | **{m_global.accuracy * 100:.2f} %** | Mean top-1 accuracy in pure zero-shot task evaluation |
 | **NLL (Negative Log-Likelihood)** | **{m_global.nll:.4f}** | Probabilistic cross-entropy over correct answer tokens |
-| **Brier Score** | **{m_global.brier:.4f}** | Multi-class quadratic accuracy (0 = perfect calibration) |
+| **Brier Score** | **{m_global.brier:.4f}** | Multi-class quadratic score (lower is better, 0 = perfect) |
 | **ECE (Expected Calibration Error)** | **{m_global.ece:.4f}** | Calibration gap across 15 equal-width bins |
 | **ACE (Adaptive Calibration Error)** | **{m_global.ace:.4f}** | Calibration gap across 15 equal-mass quantile bins |
 | **AURC (Area Under Risk-Coverage)** | **{m_global.aurc:.4f}** | Error rejection capability via selective thresholding |
@@ -204,7 +204,7 @@ Mode: Full Pipeline (Merged LoRA + debiasing $k={n_permutations}$ + post-hoc cal
 
 - **Scaling Performance**: Accuracy reached **{m_global.accuracy * 100:.2f}%** on the full held-out test split when trained on the balanced mixture.
 - **API Determinism & Schema Conformance**: Out-of-schema error rate = **0.0%** (zero risk of JSON malformation or syntax hallucination).
-- **Inference Speed**: {lat_stats.p50:.1f} ms vs ~300 ms for standard autoregressive JSON decoding (**~{300 / max(lat_stats.p50, 1):.1f}x faster**).
+- **Inference Speed**: median {lat_stats.p50:.1f} ms per request.
 """
 
     Path(out_report).parent.mkdir(parents=True, exist_ok=True)

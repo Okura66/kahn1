@@ -160,8 +160,8 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     <section class="sec cv" id="pointe" data-n="01" data-nav="Pas un modèle de pointe" aria-labelledby="h-pointe">
       <h2 id="h-pointe">Ce n'est pas un modèle de pointe.</h2>
       <p>Sur des jugements subjectifs ou ambigus, il se trompe plus souvent qu'un grand modèle. Sur le
-        niveau difficile du benchmark externe JevBench, Kahn1 4B obtient 75,7&nbsp;% de bonnes réponses, contre
-        73,0&nbsp;% pour Jev, et le 3B seulement 42,3&nbsp;%. JEV est devant en Choice et en Score sur le holdout.
+        niveau difficile du benchmark externe JevBench, Kahn1 4B est au niveau de Jev (75,7&nbsp;% contre 73,0&nbsp;%,
+        écart non significatif) et le 3B n'obtient que 42,3&nbsp;%. JEV est devant sur le holdout, au global et en Choice.
         Calculer une date, une durée ou un montant en une seule passe est un point faible.</p>
     </section>
 
@@ -169,15 +169,15 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
       <h2 id="h-primitive">La précision dépend de la primitive.</h2>
       <p>Choice est solide (92&nbsp;% pour le 4B, 91&nbsp;% pour le 3B sur les datasets d'intentions du holdout,
         8 options par question). Score est la primitive la plus faible&nbsp;: 52&nbsp;% (4B) et 51&nbsp;% (3B) de
-        correspondance exacte sur des échelles à 5 niveaux, même si le 3B est à un niveau près dans 95&nbsp;%
-        des cas sur SST-5. Noul&nbsp;: 86&nbsp;% sur RTE et 74&nbsp;% sur SciTail (implication scientifique, hors
+        correspondance exacte sur des échelles à 5 niveaux, même si les deux sont à un niveau près dans environ
+        95&nbsp;% des cas sur SST-5. Noul&nbsp;: 86&nbsp;% sur RTE et 74&nbsp;% sur SciTail (implication scientifique, hors
         domaine) pour le 4B, 83&nbsp;% et 65&nbsp;% pour le 3B.</p>
     </section>
 
     <section class="sec cv" id="calibration" data-n="03" data-nav="Calibration" aria-labelledby="h-calibration">
       <h2 id="h-calibration">La calibration vaut pour sa propre distribution.</h2>
-      <p>Les températures ont été ajustées sur la distribution d'entraînement (un split disjoint de
-        l'entraînement), pas sur vos données, et l'erreur de calibration de Noul reste de 0,13 pour le 4B,
+      <p>Les températures ont été ajustées sur un split de calibration tiré de la distribution d'entraînement et
+        tenu à l'écart de l'entraînement, pas sur vos données, et l'erreur de calibration de Noul reste de 0,13 pour le 4B,
         0,23 pour le 3B. Recalibrez sur votre domaine avant de vous fier à un seuil&nbsp;: <code>sysone calibrate</code>,
         décrit dans le <a href="../demarrer/">guide</a>.</p>
     </section>
@@ -203,8 +203,10 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
 
     <section class="sec cv" id="vitesse" data-n="07" data-nav="Vitesse" aria-labelledby="h-vitesse">
       <h2 id="h-vitesse">La vitesse vient de l'ingénierie.</h2>
-      <p>Le prefix caching et une seule position de sortie expliquent la latence, pas une architecture
-        nouvelle. Sur CPU, comptez des secondes par question&nbsp;; dans un navigateur sans WebGPU, des minutes.</p>
+      <p>Une seule position de sortie et aucun texte généré expliquent la latence, pas une architecture
+        nouvelle. Elle augmente quand même à chaque question, presque linéairement sur un état court, que vLLM ne
+        peut pas réutiliser pour Kahn1 4B&nbsp;; les états longs sont mis en cache. Sur CPU, comptez des secondes par
+        question&nbsp;; dans un navigateur sans WebGPU, des minutes.</p>
     </section>
 
     <section class="sec cv" id="demos" data-n="08" data-nav="Démos navigateur" aria-labelledby="h-demos">

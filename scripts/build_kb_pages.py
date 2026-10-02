@@ -116,11 +116,11 @@ FR_FREE_TEXT = {
     "Typed functions": "Fonctions typées", "Choice, regex, JSON": "Choix, regex, JSON",
     "JSON, grammars": "JSON, grammaires", "Choice, regex, JSON, grammar": "Choix, regex, JSON, grammaire",
     "select, regex, JSON": "select, regex, JSON",
-    "Closed, retires 2029-03-31": "Fermée, retrait le 2029-03-31",
-    "Deprecated (September 2025)": "Dépréciée (septembre 2025)",
+    "Closed, retires 2029-03-31": "Fermée, retrait le 31 mars 2029",
+    "Deprecated (September 2025)": "Retirée (septembre 2025)",
     "Being finalized (base Qwen3.5-4B, Apache 2.0)": "En cours (base Qwen3.5-4B, Apache 2.0)",
     "Apache 2.0 (weights and code)": "Apache 2.0 (poids et code)",
-    "4B Apache 2.0, 3B Qwen Research License, code MIT": "4B Apache 2.0, 3B Qwen Research License, code MIT",
+    "4B Apache 2.0, 3B Qwen Research License, code MIT": "4B Apache 2.0, 3B licence de recherche Qwen, code MIT",
     "CC BY-NC 4.0 (non-commercial)": "CC BY-NC 4.0 (non commercial)",
     "TypeSafe API, OpenRouter": "API TypeSafe, OpenRouter", "Liquid API": "API Liquid",
     "Workers AI, weights on Hugging Face; 27B and 9B": "Workers AI, poids sur Hugging Face ; 27B et 9B",
@@ -138,7 +138,7 @@ FR_FREE_TEXT = {
     "Local, 7B and 8x7B": "Local, 7B et 8x7B", "Local, 3.8B": "Local, 3,8B", "Local, 8B and 70B": "Local, 8B et 70B",
     "Local, 0.1B": "Local, 0,1B",
     "Free tier (d1:free); paid rates not published": "Palier gratuit (d1:free) ; tarifs payants non publiés",
-    "API, limited preview": "API, preview limitée",
+    "API, limited preview": "API, accès anticipé limité",
     "Calibrated according to the vendor, ECE published": "Calibrées selon l'éditeur, ECE publiée",
     "Temperature scaling, ECE published": "Calibration par température, ECE publiée",
     "ModernBERT 421M or mmBERT 322M; laya-serve exposes /v1/systemone": "ModernBERT 421M ou mmBERT 322M ; laya-serve expose /v1/systemone",
@@ -177,6 +177,8 @@ def landscape_tables(fr: bool) -> str:
         for name_, _, prov, lic, dep, outp, prob, price, url, *prob_url in rows:
             c = (lambda s: esc(fr_cell(s))) if fr else esc
             pc = f'<a href="{prob_url[0]}" rel="noopener">{c(prob)}</a>' if prob_url and prob else c(prob)
+            if fr and url == "https://kahn1.com/models/":
+                url = "/fr/modeles/"
             out.append(f'<tr><td><a href="{url}" rel="noopener">{esc(name_)}</a></td><td>{c(prov)}</td><td>{c(lic)}</td>'
                        f'<td>{c(dep)}</td><td>{c(outp)}</td><td>{pc}</td><td>{c(price)}</td></tr>')
         out.append("</tbody></table></div>\n    </section>\n")
@@ -239,7 +241,7 @@ TERMS_EN = [
     ("Calibration", "How well probabilities match reality: of the answers given at 80% confidence, about 80% should be right."),
     ("ECE", "Expected calibration error: the average gap between confidence and accuracy, over bins of confidence. 0 is perfect."),
     ("Permutation debiasing", "Asking the same question with the options in k different orders and averaging the probabilities, so the position of an option does not sway the answer."),
-    ("Prefix caching", "Reusing the computation of a shared prompt prefix (the state) across all the questions asked about it."),
+    ("Prefix caching", "Reusing the computation of a shared prompt prefix (the state) across the questions asked about it, when the engine can: vLLM caches Kahn1 4B's prefix in 528-token blocks, so only states longer than a block benefit."),
 ]
 TERMS_FR = [
     ("Modèle System One", "Un modèle qui répond à des questions typées sur un texte en une seule passe, en lisant une probabilité pour chaque réponse permise au lieu de générer du texte. On dit aussi modèle de décision ou modèle de classe Jev."),
@@ -250,7 +252,7 @@ TERMS_FR = [
     ("Calibration", "L'accord entre probabilités et réalité : sur les réponses données à 80 % de confiance, environ 80 % doivent être justes."),
     ("ECE", "Expected calibration error : l'écart moyen entre confiance et précision, par tranches de confiance. 0 est parfait."),
     ("Débiaisage par permutation", "Poser la même question avec les options dans k ordres différents et moyenner les probabilités, pour que la position d'une option ne pèse pas sur la réponse."),
-    ("Cache de préfixe", "Réutiliser le calcul d'un début de prompt commun (l'état) pour toutes les questions posées dessus."),
+    ("Cache de préfixe", "Réutiliser le calcul d'un début de prompt commun (l'état) d'une question à l'autre, quand le moteur le peut : vLLM met le préfixe de Kahn1 4B en cache par blocs de 528 tokens, seuls les états plus longs qu'un bloc en profitent."),
 ]
 
 
@@ -284,20 +286,21 @@ def pillar(fr: bool) -> tuple[str, list]:
                  "Deux réglages rendent ces probabilités utilisables. Le <strong>débiaisage par permutation</strong> "
                  "pose la question avec les options dans k ordres et moyenne les résultats. La <strong>calibration</strong> "
                  "(une température par type de question) aligne la confiance sur la précision ; on la mesure par "
-                 "l'ECE. Enfin, le <strong>cache de préfixe</strong> calcule l'état une seule fois pour toutes les "
-                 "questions posées dessus.") +
+                 "l'ECE. Enfin, sur un état long, le <strong>cache de préfixe</strong> réutilise le calcul de l'état "
+                 "d'une question à l'autre ; sur un état court, le moteur le recalcule pour chaque question, et la "
+                 "latence croît avec le nombre de questions.") +
                  table(["", "Modèle System One", "LLM qui génère du JSON"], [
                      ["Sortie", "Une valeur typée lue dans les logits", "Du texte à valider et parser"],
                      ["Erreur de format", "Impossible par construction", "Rare avec structured outputs, possible sinon"],
                      ["Probabilités", "Une par option, toujours", "Logprobs selon le fournisseur, souvent aucune"],
-                     ["Ce qui fait la latence", "Une passe sur l'état", "La longueur de la réponse générée"],
+                     ["Ce qui fait la latence", "Une passe par question, sur l'état", "La longueur de la réponse générée"],
                      ["Ce qui fait le coût", "Les tokens d'entrée", "Les tokens d'entrée et de sortie"]])),
              sec(3, "familles", "Les familles", p(
                  "Sept familles donnent une décision typée à partir d'un texte ; seuls les modèles de décision "
                  "combinent un format garanti, une probabilité par option et une seule passe. Le détail, produit par "
                  "produit, avec licences et sources, est sur la page <a href=\"/fr/comparer/paysage/\">Paysage</a>.") +
                  table(["Famille", "Exemples", "Licence", "Où ça tourne"], [
-                     ["Modèles de décision hébergés", "Jev (TypeSafe), d1 (Liquid AI), Decisions API (OpenAI, preview limitée)", "Fermée", "API"],
+                     ["Modèles de décision hébergés", "Jev (TypeSafe), d1 (Liquid AI), Decisions API (OpenAI, accès anticipé limité)", "Fermée", "API"],
                      ["Modèles de décision ouverts", "Clef (Cloudflare), JevK5, Kahn1, Tev1 (Together), Laya", "Apache 2.0 le plus souvent", "Local, parfois aussi hébergé"],
                      ["LLM avec structured outputs", "OpenAI, Anthropic, Google", "Fermée", "API"],
                      ["Décodage contraint", "Outlines, XGrammar, vLLM, llama.cpp, Guidance", "Apache 2.0 ou MIT", "Local, avec n'importe quel modèle"],
@@ -328,7 +331,7 @@ def pillar(fr: bool) -> tuple[str, list]:
                  "Ce ne sont pas des modèles de raisonnement : calculer une date, une durée ou un montant en une passe reste un point faible.",
                  "La calibration vaut pour la distribution sur laquelle elle a été ajustée : recalibrez sur votre domaine.",
                  "La confiance n'est pas la probabilité d'avoir raison : fixez vos seuils sur vos propres données.",
-                 "Le règlement s'applique toujours (AI Act, règles sectorielles) : gardez une personne ou un modèle plus grand sur les cas peu sûrs."]) +
+                 "La réglementation s'applique toujours (AI Act, règles sectorielles) : gardez une personne ou un modèle plus grand sur les cas peu sûrs."]) +
                  p("Le détail, pour Kahn1, est sur la page <a href=\"/fr/vigilance/\">Points de vigilance</a>.")),
              sec(7, "termes", "Termes clés", "      <ul class=\"plain\">\n" + "".join(
                  f"        <li><b>{t}.</b> {d}</li>\n" for t, d in TERMS_FR) + "      </ul>\n")]
@@ -359,13 +362,14 @@ def pillar(fr: bool) -> tuple[str, list]:
              "gives a continuous value.",
              "Two settings make those probabilities usable. <strong>Permutation debiasing</strong> asks the question "
              "with the options in k orders and averages the results. <strong>Calibration</strong> (one temperature per "
-             "question type) aligns confidence with accuracy, measured by the ECE. And <strong>prefix caching</strong> "
-             "computes the state once for every question asked about it.") +
+             "question type) aligns confidence with accuracy, measured by the ECE. On a long state, <strong>prefix "
+             "caching</strong> also reuses the state's computation from one question to the next; on a short state the "
+             "engine recomputes it for each question, and latency grows with the number of questions.") +
              table(["", "System One model", "LLM generating JSON"], [
                  ["Output", "A typed value read from the logits", "Text to validate and parse"],
                  ["Format errors", "Impossible by construction", "Rare with structured outputs, possible otherwise"],
                  ["Probabilities", "One per option, always", "Logprobs depending on the provider, often none"],
-                 ["What drives latency", "One pass over the state", "The length of the generated answer"],
+                 ["What drives latency", "One pass per question, over the state", "The length of the generated answer"],
                  ["What drives cost", "Input tokens", "Input and output tokens"]])),
          sec(3, "families", "The families", p(
              "Seven families turn a text into a typed decision; only decision models combine a guaranteed format, a "
@@ -419,7 +423,7 @@ def landscape(fr: bool) -> str:
                  f"{len(ROWS)} entrées, chacune liée à sa source, relevées le 1er octobre 2026.", items, True, "Mis à jour le 2 octobre 2026")
         intro = sec(1, "apercu", "En bref", p(
             "Seuls les modèles de décision, hébergés ou ouverts, combinent un format garanti, une probabilité par option "
-            "et une seule passe sur un état partagé. Les LLM avec structured outputs garantissent le format mais pas les "
+            "et une seule passe par question. Les LLM avec structured outputs garantissent le format mais pas les "
             "probabilités ; les encodeurs zero-shot donnent des probabilités, sur CPU, mais sans calibration annoncée.",
             "Les chiffres de performance publiés par chacun viennent de jeux différents : ils ne se comparent pas entre "
             "eux. Nos comparaisons à périmètre égal sont sur la page <a href=\"/fr/resultats/\">Résultats</a>."))
@@ -440,7 +444,7 @@ def landscape(fr: bool) -> str:
                  "entries, each linked to its source, checked on October 1, 2026.", items, False, "Updated October 2, 2026")
         intro = sec(1, "overview", "At a glance", p(
             "Only decision models, hosted or open, combine a guaranteed format, a probability per option and a single "
-            "pass over a shared state. LLMs with structured outputs guarantee the format but not the probabilities; "
+            "pass per question. LLMs with structured outputs guarantee the format but not the probabilities; "
             "zero-shot encoders give probabilities, on a CPU, but make no calibration claim.",
             "The performance figures each provider publishes come from different test sets: they do not compare with "
             "each other. Our like-for-like comparisons are on the <a href=\"/benchmarks/\">benchmarks</a> page."))
@@ -483,18 +487,18 @@ def alternatives(fr: bool) -> tuple[str, list]:
             ['<a href="https://blog.cloudflare.com/clef-decision-models/" rel="noopener">Clef, Clef-flash</a>', "Cloudflare", "Apache 2.0", "27B, 9B", "Oui, annoncé (API Jev)", "Pas encore"],
             ['<a href="https://github.com/allebee/jevk5" rel="noopener">JevK5 v0.3</a>', "allebee", "Apache 2.0", "4B, 9B (+ 2B, Lite)", "Format /v1/systemone", "v0.2 sur JevBench public (exécution de ses auteurs et de JevBench)"],
             ['<a href="https://huggingface.co/convaiinnovations/laya" rel="noopener">Laya</a>', "Convai Innovations", "Apache 2.0", "421M, 322M (encodeurs)", "Format /v1/systemone (laya-serve)", "Non"],
-            ['<a href="/fr/modeles/">Kahn1</a>', "Kahn1", "4B Apache 2.0, 3B Qwen Research License", "4B, 3B", "Champs de question de Jev sous une clé « schema » sur /v1/evaluate/jev ; pas un remplaçant direct pour un client Jev", "Oui : holdout et JevBench public"],
+            ['<a href="/fr/modeles/">Kahn1</a>', "Kahn1", "4B Apache 2.0, 3B licence de recherche Qwen", "4B, 3B", "Champs de question de Jev sous une clé « schema » sur /v1/evaluate/jev ; pas un remplaçant direct pour un client Jev", "Oui : holdout et JevBench public"],
             ['<a href="https://github.com/ikermoel/open-alternative-jev" rel="noopener">open-alternative-jev (so1)</a>', "ikermoel", "Apache 2.0", "N'importe quel LLM ouvert", "", "Non"],
             ['<a href="https://huggingface.co/togethercomputer/Tev1-4B-experimental" rel="noopener">Tev1-4B-experimental</a>', "Together AI", "En cours", "4B", "", "Non"]])
         mes = table(["", "Exemples", "Jev 1.13.0", "JevK5 v0.2, exécution JevBench", "JevK5 v0.2, exécution de ses auteurs", "Kahn1 4B"], [
-            ["Holdout Kahn1, Choice sur les mêmes 8 options", f"14{N}663", f"<b>73,2{N}%</b>", "", "", f"72,4{N}%"],
+            ["Holdout Kahn1, global (Choice sur les mêmes 8 options)", f"14{N}663", f"<b>73,2{N}%</b>", "", "", f"72,4{N}%"],
             ["JevBench public, tous niveaux", "231", f"86,6{N}%", f"85,3{N}%", f"86,1{N}%", f"<b>87,4{N}%</b>"],
             ["JevBench public, niveau difficile", "111", f"73,0{N}%", "", f"73,9{N}%", f"<b>75,7{N}%</b>"]], {1, 2, 3, 4, 5})
         body = [sec(1, "reponse", "La réponse courte", p(
             "Si vous voulez des décisions typées avec probabilités sans envoyer vos données à une API, prenez un modèle "
-            "de décision ouvert. Si vous voulez la meilleure précision mesurée sans rien héberger, Jev reste devant sur "
+            "de décision ouvert. Si vous voulez la meilleure précision globale mesurée sans rien héberger, Jev reste devant sur "
             f"notre holdout : 73,2{N}% contre 72,4{N}% pour Kahn1 4B sur 14{N}663 exemples réservés. Sur les 231 exemples "
-            f"publics de JevBench, les deux sont au même niveau (87,4{N}% contre 86,6{N}%, écart non significatif, p{N}={N}0,84).")),
+            f"publics de JevBench, les deux sont au même niveau (Kahn1 4B 87,4{N}%, Jev 86,6{N}%, écart non significatif, p{N}={N}0,84).")),
                 sec(2, "alternatives", "Les alternatives ouvertes", alt + p(
                     "Le paysage complet, hébergé et ouvert, est sur la page <a href=\"/fr/comparer/paysage/\">Paysage</a>.")),
                 sec(3, "mesures", "Ce qui est mesuré", mes + p(
@@ -517,7 +521,7 @@ def alternatives(fr: bool) -> tuple[str, list]:
                     '    -d \'{"state": "Bonjour, impossible de me connecter depuis ce matin.", "schema": {"categorie": {"type": "choice",\n'
                     '         "instructions": "Catégorie du ticket", "criteria": {"bug": "Une erreur", "compte": "Connexion, accès"}}}}\'</pre>\n'),
                 sec(5, "jev", "Quand Jev reste le bon choix", ul([
-                    "Vous voulez la meilleure précision mesurée sur notre holdout, sans infrastructure à gérer.",
+                    "Vous voulez la meilleure précision globale mesurée sur notre holdout, sans infrastructure à gérer.",
                     "Vos textes sont longs : Jev accepte 64k tokens par requête (32k pour l'état et la plus longue question), selon sa documentation.",
                     "Vous travaillez en anglais, la langue où Jev est le plus précis selon TypeSafe.",
                     "Vous acceptez qu'un tiers traite vos données et un prix par token d'entrée."])),
@@ -539,14 +543,14 @@ def alternatives(fr: bool) -> tuple[str, list]:
         ['<a href="https://github.com/ikermoel/open-alternative-jev" rel="noopener">open-alternative-jev (so1)</a>', "ikermoel", "Apache 2.0", "Any open LLM", "", "No"],
         ['<a href="https://huggingface.co/togethercomputer/Tev1-4B-experimental" rel="noopener">Tev1-4B-experimental</a>', "Together AI", "Being finalized", "4B", "", "No"]])
     mes = table(["", "Items", "Jev 1.13.0", "JevK5 v0.2, JevBench's run", "JevK5 v0.2, its authors' run", "Kahn1 4B"], [
-        ["Kahn1 held-out, Choice over the same 8 options", "14,663", "<b>73.2%</b>", "", "", "72.4%"],
+        ["Kahn1 held-out, all primitives (Choice over the same 8 options)", "14,663", "<b>73.2%</b>", "", "", "72.4%"],
         ["Public JevBench, all tiers", "231", "86.6%", "85.3%", "86.1%", "<b>87.4%</b>"],
         ["Public JevBench, hard tier", "111", "73.0%", "", "73.9%", "<b>75.7%</b>"]], {1, 2, 3, 4, 5})
     body = [sec(1, "answer", "The short answer", p(
         "If you want typed decisions with probabilities without sending your data to an API, pick an open decision "
-        "model. If you want the best measured accuracy with nothing to host, Jev is still ahead on our held-out set: "
-        "73.2% against 72.4% for Kahn1 4B on 14,663 items. On the 231 public JevBench items the two are level (87.4% "
-        "against 86.6%, not a significant gap, p&nbsp;=&nbsp;0.84).")),
+        "model. If you want the best measured overall accuracy with nothing to host, Jev is still ahead on our held-out set: "
+        "73.2% against 72.4% for Kahn1 4B on 14,663 items. On the 231 public JevBench items the two are level (Kahn1 4B "
+        "87.4%, Jev 86.6%, not a significant gap, p&nbsp;=&nbsp;0.84).")),
             sec(2, "alternatives", "The open alternatives", alt + p(
                 "The full landscape, hosted and open, is on the <a href=\"/compare/landscape/\">landscape</a> page.")),
             sec(3, "measured", "What is measured", mes + p(
@@ -568,7 +572,7 @@ def alternatives(fr: bool) -> tuple[str, list]:
                 '    -d \'{"state": "Hello, I cannot log in to my account.", "schema": {"category": {"type": "choice",\n'
                 '         "instructions": "Support ticket category", "criteria": {"bug": "Something is broken", "account": "Login, access"}}}}\'</pre>\n'),
             sec(5, "jev", "When Jev is still the right pick", ul([
-                "You want the best measured accuracy on our held-out set, with no infrastructure to run.",
+                "You want the best measured overall accuracy on our held-out set, with no infrastructure to run.",
                 "Your texts are long: Jev takes 64k tokens per request (32k for the state plus the longest question), per its documentation.",
                 "You work in English, where TypeSafe says Jev is most accurate.",
                 "You are fine with a third party processing your data and a price per input token."])),
@@ -616,6 +620,15 @@ KW = {
 }
 
 
+def fr_typo(html: str) -> str:
+    """French typography on visible text: no-break space before : ; ! ? % and inside « », outside tags and code."""
+    parts = re.split(r"(<pre.*?</pre>|<code>.*?</code>|<[^>]+>)", html, flags=re.S)
+    for i in range(0, len(parts), 2):
+        s = re.sub(r" ([:;!?%»])", r"&nbsp;\1", parts[i])
+        parts[i] = s.replace("« ", "«&nbsp;")
+    return "".join(parts)
+
+
 def build_page(tpl: str, page: dict, fr: bool, main_html: str, extra_ld: list[dict]) -> str:
     t = tpl.replace("\r\n", "\n")
     path, other = (page["fr"], page["en"]) if fr else (page["en"], page["fr"])
@@ -656,6 +669,8 @@ def build_page(tpl: str, page: dict, fr: bool, main_html: str, extra_ld: list[di
     t = re.sub(r'(<a href=")[^"]*(" hreflang="fr" lang="fr")', lambda m: m[1] + page["fr"] + m[2], t, count=1)
     t = t.replace(' aria-current="page">Caveats</a>', ">Caveats</a>").replace(' aria-current="page">Points de vigilance</a>', ">Points de vigilance</a>")
     # main
+    if fr:
+        main_html = fr_typo(main_html)
     t = re.sub(r"<main id=\"main\" class=\"page\">.*?</main>", f'<main id="main" class="page">\n{main_html}  </main>', t, count=1, flags=re.S)
     return t
 

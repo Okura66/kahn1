@@ -407,8 +407,8 @@ print(resp.answers["urgency"].expected_score, resp.answers["churn_risk"].noul)</
       <ul class="plain">
         <li><b><code>n_permutations</code></b> (k, default 3). Choice is asked k times with the options shuffled and the
           distributions averaged, which cancels position bias. Score, from k&nbsp;=&nbsp;2, is asked in ascending and
-          descending order. Noul is asked once. The prompts share the state's cache, so k&nbsp;=&nbsp;3 costs well under
-          3×; k&nbsp;=&nbsp;1 is the fastest.</li>
+          descending order. Noul is asked once. Each permutation is one more prompt: on a short state k&nbsp;=&nbsp;3 costs
+          close to 3×, less on a long state whose prefix the engine caches; k&nbsp;=&nbsp;1 is the fastest.</li>
         <li><b><code>allow_other</code></b> (Choice, default true) adds <em>None of these answers</em> as a last option.
           Set it to false when one option always applies.</li>
         <li><b>More than 26 options.</b> The direct path reads letters A to Z. Above that, call

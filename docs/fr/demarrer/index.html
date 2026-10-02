@@ -406,8 +406,9 @@ print(resp.answers["urgency"].expected_score, resp.answers["churn_risk"].noul)</
       <ul class="plain">
         <li><b><code>n_permutations</code></b> (k, 3 par défaut). Choice est posée k fois avec les options mélangées, et les
           distributions sont moyennées, ce qui annule le biais de position. Score, à partir de k&nbsp;=&nbsp;2, est posée
-          dans l'ordre croissant puis décroissant. Noul est posée une fois. Les prompts partagent le cache de l'état&nbsp;:
-          k&nbsp;=&nbsp;3 coûte bien moins que 3×&nbsp;; k&nbsp;=&nbsp;1 est le plus rapide.</li>
+          dans l'ordre croissant puis décroissant. Noul est posée une fois. Chaque permutation est un prompt de plus&nbsp;:
+          sur un état court, k&nbsp;=&nbsp;3 coûte près de 3×, moins sur un état long dont le moteur met le préfixe en
+          cache&nbsp;; k&nbsp;=&nbsp;1 est le plus rapide.</li>
         <li><b><code>allow_other</code></b> (Choice, true par défaut) ajoute <em>None of these answers</em> en dernière option.
           Mettez false quand une option s'applique toujours.</li>
         <li><b>Plus de 26 options.</b> La voie directe lit les lettres A à Z. Au-delà, appelez

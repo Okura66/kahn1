@@ -4,13 +4,14 @@ Two comparisons, each paired item by item:
 
 - JevBench, 231 public items: JevK5's per-item outcomes from its own run through
   JevBench's runner (results/public231/jevk5-v0.2.jsonl in its repository), Jev's
-  from JevBench's published per-task file, Kahn1's saved v3 predictions. JevBench's
+  from JevBench's published per-task file, Kahn1 4B's saved predictions. JevBench's
   own v1.4 re-measurement of JevK5 (public and sealed accuracy) is reported next to it.
-- BANKING77 test split: JevK5 run with its own script, bench/many_options.py
-  (knockout, ceil(77/16)+1 passes), on items built by `build` below in the request
-  shape that script uses (empty state, the text in the instructions, every intent as
-  option_<i> in PolyAI's label order). Kahn1 and JEV are the held-out runs already on
-  disk (data/eval.jsonl order). Items are paired by normalized text.
+- BANKING77, every system choosing among all 77 intents: JevK5 run with its own script,
+  bench/many_options.py (knockout, ceil(77/16)+1 passes), on items built by `build` below
+  in the request shape that script uses (empty state, the text in the instructions, every
+  intent as option_<i> in PolyAI's label order); Kahn1 4B's every-intent run (two-stage
+  router, data/kahn1_v7_choice_full.jsonl); JEV's every-intent run through its API. Only
+  items all three answered are compared, paired by normalized text.
 
     python scripts/jevk5_vs_kahn1.py build     # data/jevk5/banking77_test.jsonl (JevK5's input)
     # then, with JevK5 installed (pip install "jevk5 @ git+https://github.com/allebee/jevk5@v0.2.2"):
@@ -89,7 +90,7 @@ def banking(ece) -> dict:
         k5.setdefault(norm(k5_items[r["id"]]["text"]), []).append((int(pick == gold), max(probs) / sum(probs),
                                                                      r["designs"]["knockout"]["seconds"]))
     eval_items = [json.loads(l) for l in (_ROOT / "data" / "eval.jsonl").open(encoding="utf-8")]
-    kahn1 = json.loads((_ROOT / "reports" / "eval_v3_temponly_preds.json").read_text(encoding="utf-8"))
+    kahn1 = {json.loads(l)["i"]: json.loads(l) for l in (_ROOT / "data" / "kahn1_v7_choice_full.jsonl").open(encoding="utf-8")}
     jev = {}
     for line in (_ROOT / "data" / "jev_eval_preds.jsonl").open(encoding="utf-8"):
         rec = json.loads(line)
@@ -97,14 +98,15 @@ def banking(ece) -> dict:
             jev[rec["i"]] = rec["answer"]
     rows = []
     for i, it in enumerate(eval_items):
-        if it["source"] != "banking77" or i not in jev:
+        if it["source"] != "banking77" or i not in jev or "answer" not in kahn1.get(i, {}):
             continue
         cands = k5.get(norm(it["state"]))
         if not cands:
             continue
         kc, kp, ks = cands[0]
         jc, jp, _ = jev_outcome(it, jev[i])
-        rows.append((kahn1["corrects"][i], kahn1["confidences"][i], jc, jp, kc, kp, ks))
+        ka = kahn1[i]["answer"]
+        rows.append((int(ka["choice"] == it["options"][it["label"]]), ka["p_max"], jc, jp, kc, kp, ks))
     n = len(rows)
     col = lambda j: [r[j] for r in rows]
     # A partial run covers only the first intents: PolyAI's test file is ordered by intent.
@@ -129,7 +131,7 @@ def jevbench() -> dict:
     k5 = {json.loads(l)["task_id"]: bool(json.loads(l)["correct"]) for l in PUBLIC231.open(encoding="utf-8")}
     jev = json.loads(fetch(JB_PER_TASK))["systems"]["jev-1.13.0"]["public_tasks"]
     items = [json.loads(l) for l in (_ROOT / "data" / "jevbench_eval.jsonl").open(encoding="utf-8")]
-    k1 = json.loads((_ROOT / "reports" / "jevbench_v3_preds.json").read_text(encoding="utf-8"))["corrects"]
+    k1 = json.loads((_ROOT / "reports" / "jevbench_v7_preds.json").read_text(encoding="utf-8"))["corrects"]
     t = defaultdict(lambda: [0, 0, 0, 0])
     for it, ok in zip(items, k1):
         for key in (it["source"].removeprefix("jevbench-"), "all"):
@@ -152,6 +154,10 @@ def report(_args) -> None:
     bk = banking(ece)
     OUT_JSON.write_text(json.dumps({"jevbench": jb, "banking77": bk}, indent=1), encoding="utf-8")
     P = lambda x: f"{100 * x:.1f} %"
+    def B(v, key):
+        top = max(v["kahn1_acc"], v["jevk5_acc"], v["jev_acc"])
+        return f"**{P(v[key])}**" if v[key] == top else P(v[key])
+
     def best(v, key):
         top = max(v["kahn1"], v["jevk5"], v["jev"])
         return f"**{P(v[key])}**" if v[key] == top else P(v[key])
@@ -162,14 +168,14 @@ def report(_args) -> None:
     OUT_MD.write_text(f"""# Kahn1 vs JevK5 (and JEV)
 
 JevK5 v0.2 (github.com/allebee/jevk5): Qwen3.5-4B + a LoRA distilled from Qwen3.6-27B,
-Apache-2.0. Kahn1: v3 checkpoint, k = 3, temperature calibration.
+Apache-2.0. Kahn1 4B: Qwen3.5-4B + LoRA, k = 3, temperature calibration.
 
 ## JevBench, 231 public items
 
 JevK5: its own run through JevBench's runner (per-item file in its repository). Jev: the
-per-task outcomes JevBench publishes. Kahn1: `reports/jevbench_v3_preds.json`.
+per-task outcomes JevBench publishes. Kahn1 4B: our run. Three runners on the same items.
 
-| Tier | Items | Kahn1 | JevK5 v0.2 | Jev 1.13.0 |
+| Tier | Items | Kahn1 4B | JevK5 v0.2 | Jev 1.13.0 |
 |---|---:|---:|---:|---:|
 {tiers}
 
@@ -177,20 +183,25 @@ JevBench {jb["jevbench_v14_revision"]} re-measured both on its own pods: public 
 {P(o["jevk5-v02"]["public"])}, Jev {P(o["jev-1.13.0"]["public"])}; on the 308 fresh sealed items
 JevK5 {P(o["jevk5-v02"]["sealed"])}, Jev {P(o["jev-1.13.0"]["sealed"])}. Kahn1 cannot run the sealed items.
 
-## BANKING77 test split (77 intents)
+## BANKING77, choosing among all 77 intents
 
-| | Kahn1 v3 | JevK5 v0.2 | JEV 1.13.0 |
+Every system picks one of the 77 intents, each with its own runner and prompt; only the items all
+three answered are compared.
+
+| | Kahn1 4B | JevK5 v0.2 | JEV 1.13.0 |
 |---|---:|---:|---:|
-| Accuracy, {bk["paired"]} paired items | **{P(bk["kahn1_acc"])}** | {P(bk["jevk5_acc"])} | {P(bk["jev_acc"])} |
+| Accuracy, {bk["paired"]} paired items | {B(bk, "kahn1_acc")} | {B(bk, "jevk5_acc")} | {B(bk, "jev_acc")} |
 | ECE (15 bins, p_max) | {bk["kahn1_ece"]:.3f} | {bk["jevk5_ece"]:.3f} | {bk["jev_ece"]:.3f} |
 
-- Coverage: {bk["items_run"]} of {bk["items_total"]} test items were run, which covers {bk["intents_covered"]} of 77
-  intents (PolyAI's test file is ordered by intent). All three systems are scored on the same items.
+- Coverage: JevK5 ran {bk["items_run"]} of {bk["items_total"]} test items, which cover {bk["intents_covered"]} of 77
+  intents (PolyAI's test file is ordered by intent); Kahn1 4B's every-intent run covers a sample of
+  BANKING77's held-out items. The paired items are those in both.
+- Kahn1 4B: two-stage router (one Noul per intent keeps the 10 best, then a Choice among them, k = 1).
 - JevK5: its own `bench/many_options.py`, knockout over ceil(77/16)+1 = 6 passes, in its own
   request shape; {bk["items_jevk5"]} test items, {P(bk["jevk5_all_acc"])} on all of them; median
   {1000 * bk["jevk5_p50_s"]:.0f} ms per item on one RTX 5070 Ti without its optional
   flash-linear-attention kernels (JevK5 reports 116 ms on an H100 with them).
-- Kahn1 and JEV: Kahn1's prompt and option order (the held-out run), JEV through its API.
+- JEV: through its API, every intent as an option.
 - Paired by normalized text; {bk["items_kahn1_eval"]} BANKING77 items in Kahn1's eval set.
 - JevK5 v0.2 trained on 1,500 BANKING77 train texts; Kahn1 never saw BANKING77.
 """, encoding="utf-8")

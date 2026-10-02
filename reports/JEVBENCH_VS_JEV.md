@@ -1,7 +1,7 @@
 # Kahn1 vs Jev on JevBench (public items)
 
 - JevBench revision v1.3.0; Jev = Jev 1.13.0 (TypeSafe AI), per-task outcomes published by JevBench.
-- Kahn1: v3 checkpoint, k = 3, calibrated, predictions in `reports/jevbench_v3_preds.json`.
+- Kahn1: Kahn1 3B, k = 3, calibrated, predictions in `reports/jevbench_v3_preds.json`.
 - Same 231 public items on both sides. "original" is JevBench's "standard" tier.
 
 | Tier | Items | Kahn1 | Jev 1.13.0 |

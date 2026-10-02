@@ -1,8 +1,10 @@
+> **Superseded.** This first run gave JEV every intent on Choice while Kahn1 answered over 8 options, so its totals are not a like-for-like comparison. See [CHOICE_FAIRNESS.md](CHOICE_FAIRNESS.md) and [KAHN1_4B_REPORT.md](KAHN1_4B_REPORT.md).
+
 # Kahn1 vs JEV — paired, on the Kahn1 held-out set
 
 - Items: 14663 held-out items of `data/eval.jsonl`; JEV answered 14663.
 - JEV: TypeSafe API, model jev-1.13.0, one question per request, run with `scripts/jev_holdout.py`.
-- Kahn1: v3 checkpoint, k = 3, temperature calibration (reports/QWEN_FULL_EVAL_v3_temponly.md).
+- Kahn1: Kahn1 3B, k = 3, temperature calibration (reports/QWEN_FULL_EVAL_v3_temponly.md).
 - Same state, prompt and options on both sides, scored against the same labels. ECE: 15 bins on p_max.
 - JEV round trip over the internet: p50 248 ms, p95 308 ms.
 

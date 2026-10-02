@@ -6,7 +6,7 @@
 # - the mix checked row by row first, so a bad row fails here and not at step 55.
 cd /mnt/c/dev/OpenJEV
 export PYTHONUNBUFFERED=1 PYTHONPATH=.:src
-LOSS=${LOSS:-options}; ORD=${ORD:-1.0}; EPOCHS=${EPOCHS:-2}; TRAIN=${TRAIN:-data/train_4b_v2.jsonl}
+LOSS=${LOSS:-options}; ORD=${ORD:-1.0}; EPOCHS=${EPOCHS:-2}; TRAIN=${TRAIN:-data/train_4b_v3.jsonl}
 SELECT_ON=${SELECT_ON:-acc}; PATIENCE=${PATIENCE:-0}; OUT=${OUT:-checkpoints/qwen35_lora_v7}
 LOG=/mnt/c/dev/OpenJEV/.v7_train.log
 ~/.venvs/k1train/bin/python scripts/check_mix.py $TRAIN > $LOG 2>&1 || { echo "TRAIN EXIT mix check failed" >> $LOG; exit 1; }

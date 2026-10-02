@@ -67,3 +67,6 @@ scripts/scratch/
 # Local Calibration & Experiment Artifacts
 calibration*.json
 
+
+# Internal training notes (kept local)
+training/LESSONS.md

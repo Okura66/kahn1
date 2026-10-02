@@ -80,7 +80,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
   "url": "https://kahn1.com/"
  },
  "datePublished": "2026-10-01",
- "dateModified": "2026-10-01"
+ "dateModified": "2026-10-02"
 }
 </script>
 <script type="application/ld+json">
@@ -129,7 +129,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
    "name": "Which open alternative is closest to Jev?",
    "acceptedAnswer": {
     "@type": "Answer",
-    "text": "It depends on the task, and no open model has been measured as a drop-in replacement on every task. In JevBench's own runs on the 231 public items (v1.4), several systems with public code or weights score at or above Jev's 86.6%: NInfer Qwen3.8-Flash-Next and JevOne (89.6%), OpenJev (thinking) and swanOne (88.7%), djev (thinking, 87.4%), reflex-27b (87.0%) and SimpleJev Qwen3.8-27B (86.6%); JevK5 v0.2 scores 85.3%. Kahn1 4B scores 86.1% on the same items in our own run, which JevBench has not reproduced. On Kahn1's 14,663 held-out items, Jev 1.13.0 scores 73.2% and Kahn1 4B 71.0%."
+    "text": "It depends on the task, and no open model has been measured as a drop-in replacement on every task. In JevBench's own runs on the 231 public items (v1.4), several systems with public code or weights score at or above Jev's 86.6%: NInfer Qwen3.8-Flash-Next and JevOne (89.6%), OpenJev (thinking) and swanOne (88.7%), djev (thinking, 87.4%), reflex-27b (87.0%) and SimpleJev Qwen3.8-27B (86.6%); JevK5 v0.2 scores 85.3%. Kahn1 4B scores 87.4% on the same items in our own run, which JevBench has not reproduced; paired against Jev's published outcomes the gap is not significant (exact McNemar p = 0.84). On Kahn1's 14,663 held-out items, Jev 1.13.0 scores 73.2% and Kahn1 4B 72.4%."
    }
   },
   {
@@ -204,7 +204,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     <section class="page-hero" aria-labelledby="title">
       <h1 id="title">Open-source alternatives to Jev</h1>
       <p class="lead">Yes, Jev has open alternatives: several open-weight decision models answer the same kind of typed questions on your own hardware, and four take Jev-style questions: Clef, JevK5 and Laya serve its request format, and Kahn1 takes the same question fields on its own route. None has been measured as a drop-in replacement on every task.</p>
-      <p class="small faint">Updated October 1, 2026</p>
+      <p class="small faint">Updated October 2, 2026</p>
       <nav class="toc" aria-label="On this page">
         <ol>
           <li><a href="#answer">The short answer</a></li>
@@ -218,7 +218,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     </section>
     <section class="sec doc" id="answer" aria-labelledby="h-answer">
       <h2 id="h-answer">01 · The short answer</h2>
-      <p>If you want typed decisions with probabilities without sending your data to an API, pick an open decision model. If you want the best measured accuracy with nothing to host, Jev is still ahead on our measurements: 73.2% against 71.0% for Kahn1 4B on 14,663 held-out items.</p>
+      <p>If you want typed decisions with probabilities without sending your data to an API, pick an open decision model. If you want the best measured accuracy with nothing to host, Jev is still ahead on our held-out set: 73.2% against 72.4% for Kahn1 4B on 14,663 items. On the 231 public JevBench items the two are level (87.4% against 86.6%, not a significant gap, p&nbsp;=&nbsp;0.84).</p>
     </section>
     <section class="sec doc" id="alternatives" aria-labelledby="h-alternatives">
       <h2 id="h-alternatives">02 · The open alternatives</h2>
@@ -227,8 +227,8 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     </section>
     <section class="sec doc" id="measured" aria-labelledby="h-measured">
       <h2 id="h-measured">03 · What is measured</h2>
-      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col"></th><th scope="col" class="r">Items</th><th scope="col" class="r">Jev 1.13.0</th><th scope="col" class="r">JevK5 v0.2, JevBench's run</th><th scope="col" class="r">JevK5 v0.2, its authors' run</th><th scope="col" class="r">Kahn1 4B</th></tr></thead><tbody><tr><td>Kahn1 held-out, Choice over the same 8 options</td><td class="r">14,663</td><td class="r"><b>73.2%</b></td><td class="r"></td><td class="r"></td><td class="r">71.0%</td></tr><tr><td>Public JevBench, all tiers</td><td class="r">231</td><td class="r"><b>86.6%</b></td><td class="r">85.3%</td><td class="r">86.1%</td><td class="r">86.1%</td></tr><tr><td>Public JevBench, hard tier</td><td class="r">111</td><td class="r">73.0%</td><td class="r"></td><td class="r"><b>73.9%</b></td><td class="r">72.1%</td></tr></tbody></table></div>
-      <p>Same items, same options, same labels, but three separate runs: Jev's outcomes are the ones JevBench publishes, JevK5's come from its authors' published run and from JevBench's own run, and Kahn1's from ours (k&nbsp;=&nbsp;3 option orders, calibrated). Paired with JevK5's own published run, Kahn1 4B and JevK5 each get 199 of 231 items right (exact McNemar test, p&nbsp;=&nbsp;1.00); in JevBench's own run, JevK5 v0.2 gets 197 (85.3%). Details: <a href="/benchmarks/">benchmarks</a>.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col"></th><th scope="col" class="r">Items</th><th scope="col" class="r">Jev 1.13.0</th><th scope="col" class="r">JevK5 v0.2, JevBench's run</th><th scope="col" class="r">JevK5 v0.2, its authors' run</th><th scope="col" class="r">Kahn1 4B</th></tr></thead><tbody><tr><td>Kahn1 held-out, Choice over the same 8 options</td><td class="r">14,663</td><td class="r"><b>73.2%</b></td><td class="r"></td><td class="r"></td><td class="r">72.4%</td></tr><tr><td>Public JevBench, all tiers</td><td class="r">231</td><td class="r">86.6%</td><td class="r">85.3%</td><td class="r">86.1%</td><td class="r"><b>87.4%</b></td></tr><tr><td>Public JevBench, hard tier</td><td class="r">111</td><td class="r">73.0%</td><td class="r"></td><td class="r">73.9%</td><td class="r"><b>75.7%</b></td></tr></tbody></table></div>
+      <p>Same items, same options, same labels, but three separate runs: Jev's outcomes are the ones JevBench publishes, JevK5's come from its authors' published run and from JevBench's own run, and Kahn1's from ours (k&nbsp;=&nbsp;3 option orders, calibrated). Paired with JevK5's own published run, Kahn1 4B gets 202 of 231 items right and JevK5 199 (13 against 10 items only one gets right, exact McNemar test, p&nbsp;=&nbsp;0.68); against Jev's published outcomes (200 of 231), 13 against 11, p&nbsp;=&nbsp;0.84; in JevBench's own run, JevK5 v0.2 gets 197 (85.3%). Details: <a href="/benchmarks/">benchmarks</a>.</p>
     </section>
     <section class="sec doc" id="switch" aria-labelledby="h-switch">
       <h2 id="h-switch">04 · Switching from Jev</h2>
@@ -241,7 +241,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     <section class="sec doc" id="jev" aria-labelledby="h-jev">
       <h2 id="h-jev">05 · When Jev is still the right pick</h2>
       <ul>
-        <li>You want the best measured accuracy on our test sets, with no infrastructure to run.</li>
+        <li>You want the best measured accuracy on our held-out set, with no infrastructure to run.</li>
         <li>Your texts are long: Jev takes 64k tokens per request (32k for the state plus the longest question), per its documentation.</li>
         <li>You work in English, where TypeSafe says Jev is most accurate.</li>
         <li>You are fine with a third party processing your data and a price per input token.</li>
@@ -254,7 +254,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
       <h3 class="sub">Can I run Jev locally?</h3>
       <p>Not Jev itself. Open decision models run on your own hardware: Clef and Clef-flash (Cloudflare), JevK5, Laya, Kahn1 and others, several of them under Apache 2.0.</p>
       <h3 class="sub">Which open alternative is closest to Jev?</h3>
-      <p>It depends on the task, and no open model has been measured as a drop-in replacement on every task. In JevBench's own runs on the 231 public items (v1.4), several systems with public code or weights score at or above Jev's 86.6%: NInfer Qwen3.8-Flash-Next and JevOne (89.6%), OpenJev (thinking) and swanOne (88.7%), djev (thinking, 87.4%), reflex-27b (87.0%) and SimpleJev Qwen3.8-27B (86.6%); JevK5 v0.2 scores 85.3%. Kahn1 4B scores 86.1% on the same items in our own run, which JevBench has not reproduced. On Kahn1's 14,663 held-out items, Jev 1.13.0 scores 73.2% and Kahn1 4B 71.0%.</p>
+      <p>It depends on the task, and no open model has been measured as a drop-in replacement on every task. In JevBench's own runs on the 231 public items (v1.4), several systems with public code or weights score at or above Jev's 86.6%: NInfer Qwen3.8-Flash-Next and JevOne (89.6%), OpenJev (thinking) and swanOne (88.7%), djev (thinking, 87.4%), reflex-27b (87.0%) and SimpleJev Qwen3.8-27B (86.6%); JevK5 v0.2 scores 85.3%. Kahn1 4B scores 87.4% on the same items in our own run, which JevBench has not reproduced; paired against Jev's published outcomes the gap is not significant (exact McNemar p = 0.84). On Kahn1's 14,663 held-out items, Jev 1.13.0 scores 73.2% and Kahn1 4B 72.4%.</p>
       <h3 class="sub">Which alternatives accept Jev's request format?</h3>
       <p>Clef is announced as fully Jev-API compatible, and JevK5 and Laya (through laya-serve) serve the POST /v1/systemone request shape. Kahn1 takes the same question fields (type, instructions, criteria) under a "schema" key at POST /v1/evaluate/jev, so a Jev client needs a small adapter.</p>
       <h3 class="sub">Is Kahn1 affiliated with TypeSafe?</h3>

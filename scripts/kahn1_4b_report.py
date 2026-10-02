@@ -27,7 +27,7 @@ for _p in (_ROOT, _ROOT / "src"):
         sys.path.insert(0, str(_p))
 
 R, D = _ROOT / "reports", _ROOT / "data"
-CUR = "v6"   # internal run name of the published Kahn1 4B
+CUR = "v7"   # internal run name of the published Kahn1 4B
 JEV_PER_TASK = ("https://raw.githubusercontent.com/fstandhartinger/jevbench/main/results/v1.2/"
                 "jevbench-v1.2-per-task.json")
 
@@ -105,6 +105,7 @@ def main() -> None:
             c["jev"] += per_task[it["id"]][0] == "c"; c["jevk5"] += k5[it["id"]]
     jbt = {t: {k: (v / c["n"] if k != "n" else v) for k, v in c.items()} for t, c in tiers.items()}
     x, y, p = mcnemar(jb4, [k5[it["id"]] for it in jb])
+    jx, jy, jp = mcnemar(jb4, [int(per_task[it["id"]][0] == "c") for it in jb])
 
     dev = {}
     for name, f in (("base", R / "v4" / "devteacher_base.json"), ("k4b", R / CUR / "k1_final.json")):
@@ -113,7 +114,8 @@ def main() -> None:
             dev[name] = {k: v["acc"] for k, v in h.items() if isinstance(v, dict)} | {"balanced": h["balanced_acc"]}
 
     out = {"heldout": held, "choice_every_intent": full, "jevbench": jbt,
-           "jevbench_vs_jevk5": {"k4b_only": x, "jevk5_only": y, "p": p}, "dev_teacher": dev}
+           "jevbench_vs_jevk5": {"k4b_only": x, "jevk5_only": y, "p": p},
+           "jevbench_vs_jev": {"k4b_only": jx, "jev_only": jy, "p": jp}, "dev_teacher": dev}
     (R / "kahn1_4b_report.json").write_text(json.dumps(out, indent=1), encoding="utf-8")
 
     P = lambda v: f"{100 * v:.1f} %"
@@ -138,13 +140,13 @@ def main() -> None:
     (R / "KAHN1_4B_REPORT.md").write_text(f"""# Kahn1 4B (Qwen3.5-4B + LoRA): evaluation
 
 Kahn1 4B (internal {CUR}): Qwen3.5-4B, LoRA r = 16 on the attention and linear-attention
-projections, native chat template (thinking off), trained for two epochs on data/train_4b_v2.jsonl
-(22,406 rows): the 3B mixture's NLI, topic, intent and sentiment sources (sentiment scales whole),
-DocNLI, ShARC and WANLI (halved), QuALITY, BoolQ, more CLINC150, a replay of ARC, CommonsenseQA and
-the MMLU-Pro validation questions (never MMLU-Pro test), and hard decision questions written by
-Claude Opus, English and French (402 round-1 questions x 5, 600 round-2 questions x 4; 19.7 % of the
-rows). Loss: cross-entropy restricted to the candidate tokens + squared EMD on Score questions.
-Checkpoint chosen on dev accuracy on two dev splits, never on a benchmark. Kahn1 3B: Qwen2.5-3B (v3).
+projections, native chat template (thinking off), trained for two epochs (2,010 steps) on
+data/train_4b_v3.jsonl (32,170 rows): public NLI, topic, intent and sentiment sources (ShARC, WANLI
+and DocNLI whole), QuALITY, BoolQ, CLINC150, a replay of ARC, CommonsenseQA and the MMLU-Pro
+validation questions (never MMLU-Pro test), and 2,836 distinct hard decision questions written by
+Claude Opus, English and French (402 x 3, 600 x 3, 1,834 x 2; 20.7 % of the rows). Loss:
+cross-entropy restricted to the candidate tokens + squared EMD on Score questions. Checkpoint chosen
+on dev accuracy on the dev splits, never on a benchmark. Kahn1 3B: Qwen2.5-3B (v3).
 
 ## Held-out 14,663 items, like for like
 
@@ -172,6 +174,8 @@ public v0.2 run; JevBench's own run of JevK5 v0.2 scores 85.3 % on the same 231 
 {jrows}
 
 Kahn1 4B vs JevK5's own run, paired: {x} items only Kahn1 4B gets right, {y} only JevK5; exact McNemar p = {p:.2f}.
+Kahn1 4B vs Jev's published per-task outcomes, paired: {jx} items only Kahn1 4B gets right, {jy} only Jev;
+exact McNemar p = {jp:.2f}.
 
 ## Hard decision dev split (317 items, k = 1)
 

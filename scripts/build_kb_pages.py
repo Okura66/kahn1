@@ -18,7 +18,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent / "docs"
 SITE = "https://kahn1.com"
-TODAY = "2026-10-01"
+TODAY = "2026-10-01"   # the landscape was checked on this date
+MODIFIED = "2026-10-02"
 N = "&nbsp;"
 
 # ---------------------------------------------------------------------------------------------
@@ -262,7 +263,7 @@ def pillar(fr: bool) -> tuple[str, list]:
                  "Un modèle System One répond à des questions typées sur un texte en une seule passe : il lit une "
                  "probabilité pour chaque réponse permise dans les logits du modèle, au lieu d'écrire du texte. Jev, de "
                  "TypeSafe, a popularisé le terme en septembre 2026 ; des modèles ouverts font aujourd'hui la même chose.",
-                 items, True, f"Mis à jour le 1er octobre 2026")
+                 items, True, f"Mis à jour le 2 octobre 2026")
         b = [sec(1, "definition", "Définition", p(
             "Le nom vient du <em>Système 1</em> de Daniel Kahneman (<em>Système 1 / Système 2</em>, 2011) : des "
             "jugements rapides et bon marché qui règlent la plupart des cas, et laissent les cas difficiles à un "
@@ -318,8 +319,9 @@ def pillar(fr: bool) -> tuple[str, list]:
                  "Liquid AI annoncent chacun dépasser Jev sur un « Decision Index », chiffres non reproduits ici.",
                  f"Une comparaison n'a de sens qu'à périmètre égal : les mêmes exemples, les mêmes options, les mêmes "
                  f"labels. C'est la règle de nos <a href=\"/fr/resultats/\">résultats</a> : sur 14{N}663 exemples réservés, "
-                 f"Jev 1.13.0 obtient 73,2{N}% et Kahn1 4B 71,0{N}%. Sur les 231 exemples publics de JevBench, Jev obtient "
-                 f"86,6{N}% dans l'exécution de JevBench, Kahn1 4B 86,1{N}% dans la nôtre (k{N}={N}3, calibré) et JevK5 v0.2 "
+                 f"Jev 1.13.0 obtient 73,2{N}% et Kahn1 4B 72,4{N}%. Sur les 231 exemples publics de JevBench, Jev obtient "
+                 f"86,6{N}% dans l'exécution de JevBench, Kahn1 4B 87,4{N}% dans la nôtre (k{N}={N}3, calibré ; écart non "
+                 f"significatif, p{N}={N}0,84) et JevK5 v0.2 "
                  f"85,3{N}% dans celle de JevBench (86,1{N}% dans celle de ses auteurs) : trois exécutions distinctes sur les "
                  f"mêmes exemples.")),
              sec(6, "limites", "Limites", ul([
@@ -337,7 +339,7 @@ def pillar(fr: bool) -> tuple[str, list]:
     h = hero("System One models",
              "A System One model answers typed questions about a text in one forward pass: it reads a probability for "
              "each allowed answer from the model's logits instead of writing text. TypeSafe's Jev made the term popular "
-             "in September 2026; open models now do the same.", items, False, "Updated October 1, 2026")
+             "in September 2026; open models now do the same.", items, False, "Updated October 2, 2026")
     b = [sec(1, "definition", "Definition", p(
         "The name comes from Daniel Kahneman's <em>System 1</em> (<em>Thinking, Fast and Slow</em>, 2011): fast, cheap "
         "judgments that settle most cases and leave the hard ones to a slower System 2 (a frontier model or a person). "
@@ -392,8 +394,9 @@ def pillar(fr: bool) -> tuple[str, list]:
              "“Decision Index”, figures not reproduced here.",
              "A comparison only means something like for like: the same items, the same options, the same labels. That "
              "is the rule of our <a href=\"/benchmarks/\">benchmarks</a>: on 14,663 held-out items, Jev 1.13.0 scores "
-             "73.2% and Kahn1 4B 71.0%. On the 231 public JevBench items, Jev scores 86.6% in JevBench's run, Kahn1 4B "
-             "86.1% in ours (k&nbsp;=&nbsp;3, calibrated) and JevK5 v0.2 85.3% in JevBench's run (86.1% in its authors' "
+             "73.2% and Kahn1 4B 72.4%. On the 231 public JevBench items, Jev scores 86.6% in JevBench's run, Kahn1 4B "
+             "87.4% in ours (k&nbsp;=&nbsp;3, calibrated; not a significant gap, p&nbsp;=&nbsp;0.84) and JevK5 v0.2 85.3% "
+             "in JevBench's run (86.1% in its authors' "
              "own run): three separate runs on the same items.")),
          sec(6, "limits", "Limits", ul([
              "They are not reasoning models: computing a date, a duration or an amount in one pass stays a weak spot.",
@@ -413,7 +416,7 @@ def landscape(fr: bool) -> str:
         h = hero("Paysage des modèles de décision",
                  "Sept familles de solutions transforment un texte en décision typée, propriétaires et ouvertes. Cette "
                  f"page les recense produit par produit, avec licence, déploiement, sortie, probabilités, prix et source : "
-                 f"{len(ROWS)} entrées, chacune liée à sa source, relevées le 1er octobre 2026.", items, True, "Mis à jour le 1er octobre 2026")
+                 f"{len(ROWS)} entrées, chacune liée à sa source, relevées le 1er octobre 2026.", items, True, "Mis à jour le 2 octobre 2026")
         intro = sec(1, "apercu", "En bref", p(
             "Seuls les modèles de décision, hébergés ou ouverts, combinent un format garanti, une probabilité par option "
             "et une seule passe sur un état partagé. Les LLM avec structured outputs garantissent le format mais pas les "
@@ -434,7 +437,7 @@ def landscape(fr: bool) -> str:
         h = hero("Decision model landscape",
                  "Seven families of tools turn a text into a typed decision, proprietary and open. This page lists them "
                  f"product by product, with licence, deployment, output, probabilities, price and source: {len(ROWS)} "
-                 "entries, each linked to its source, checked on October 1, 2026.", items, False, "Updated October 1, 2026")
+                 "entries, each linked to its source, checked on October 1, 2026.", items, False, "Updated October 2, 2026")
         intro = sec(1, "overview", "At a glance", p(
             "Only decision models, hosted or open, combine a guaranteed format, a probability per option and a single "
             "pass over a shared state. LLMs with structured outputs guarantee the format but not the probabilities; "
@@ -454,14 +457,14 @@ def landscape(fr: bool) -> str:
 FAQ_EN = [
     ("Is Jev open source?", "No. Jev is a hosted API from TypeSafe; its weights are not published. You call it at api.typesafe.ai and pay per input token ($0.042 per million, output free, per its documentation)."),
     ("Can I run Jev locally?", "Not Jev itself. Open decision models run on your own hardware: Clef and Clef-flash (Cloudflare), JevK5, Laya, Kahn1 and others, several of them under Apache 2.0."),
-    ("Which open alternative is closest to Jev?", "It depends on the task, and no open model has been measured as a drop-in replacement on every task. In JevBench's own runs on the 231 public items (v1.4), several systems with public code or weights score at or above Jev's 86.6%: NInfer Qwen3.8-Flash-Next and JevOne (89.6%), OpenJev (thinking) and swanOne (88.7%), djev (thinking, 87.4%), reflex-27b (87.0%) and SimpleJev Qwen3.8-27B (86.6%); JevK5 v0.2 scores 85.3%. Kahn1 4B scores 86.1% on the same items in our own run, which JevBench has not reproduced. On Kahn1's 14,663 held-out items, Jev 1.13.0 scores 73.2% and Kahn1 4B 71.0%."),
+    ("Which open alternative is closest to Jev?", "It depends on the task, and no open model has been measured as a drop-in replacement on every task. In JevBench's own runs on the 231 public items (v1.4), several systems with public code or weights score at or above Jev's 86.6%: NInfer Qwen3.8-Flash-Next and JevOne (89.6%), OpenJev (thinking) and swanOne (88.7%), djev (thinking, 87.4%), reflex-27b (87.0%) and SimpleJev Qwen3.8-27B (86.6%); JevK5 v0.2 scores 85.3%. Kahn1 4B scores 87.4% on the same items in our own run, which JevBench has not reproduced; paired against Jev's published outcomes the gap is not significant (exact McNemar p = 0.84). On Kahn1's 14,663 held-out items, Jev 1.13.0 scores 73.2% and Kahn1 4B 72.4%."),
     ("Which alternatives accept Jev's request format?", "Clef is announced as fully Jev-API compatible, and JevK5 and Laya (through laya-serve) serve the POST /v1/systemone request shape. Kahn1 takes the same question fields (type, instructions, criteria) under a \"schema\" key at POST /v1/evaluate/jev, so a Jev client needs a small adapter."),
     ("Is Kahn1 affiliated with TypeSafe?", "No. Kahn1 is an independent project; it takes Jev's question fields and compares itself with Jev on the same items."),
 ]
 FAQ_FR = [
     ("Jev est-il open source ?", "Non. Jev est une API hébergée par TypeSafe ; ses poids ne sont pas publiés. On l'appelle sur api.typesafe.ai et on paie les tokens d'entrée (0,042 $ par million, sortie gratuite, selon sa documentation)."),
     ("Peut-on faire tourner Jev en local ?", "Pas Jev lui-même. Des modèles de décision ouverts tournent sur votre matériel : Clef et Clef-flash (Cloudflare), JevK5, Laya, Kahn1 et d'autres, plusieurs sous Apache 2.0."),
-    ("Quelle alternative ouverte est la plus proche de Jev ?", "Cela dépend de la tâche, et aucun modèle ouvert n'a été mesuré comme remplaçant direct sur toutes les tâches. Dans les exécutions de JevBench lui-même sur les 231 exemples publics (v1.4), plusieurs systèmes à code ou poids publics atteignent ou dépassent les 86,6 % de Jev : NInfer Qwen3.8-Flash-Next et JevOne (89,6 %), OpenJev (thinking) et swanOne (88,7 %), djev (thinking, 87,4 %), reflex-27b (87,0 %) et SimpleJev Qwen3.8-27B (86,6 %) ; JevK5 v0.2 obtient 85,3 %. Kahn1 4B obtient 86,1 % sur les mêmes exemples dans notre propre exécution, que JevBench n'a pas reproduite. Sur les 14 663 exemples réservés de Kahn1, Jev 1.13.0 obtient 73,2 % et Kahn1 4B 71,0 %."),
+    ("Quelle alternative ouverte est la plus proche de Jev ?", "Cela dépend de la tâche, et aucun modèle ouvert n'a été mesuré comme remplaçant direct sur toutes les tâches. Dans les exécutions de JevBench lui-même sur les 231 exemples publics (v1.4), plusieurs systèmes à code ou poids publics atteignent ou dépassent les 86,6 % de Jev : NInfer Qwen3.8-Flash-Next et JevOne (89,6 %), OpenJev (thinking) et swanOne (88,7 %), djev (thinking, 87,4 %), reflex-27b (87,0 %) et SimpleJev Qwen3.8-27B (86,6 %) ; JevK5 v0.2 obtient 85,3 %. Kahn1 4B obtient 87,4 % sur les mêmes exemples dans notre propre exécution, que JevBench n'a pas reproduite ; apparié aux résultats publiés de Jev, l'écart n'est pas significatif (test exact de McNemar, p = 0,84). Sur les 14 663 exemples réservés de Kahn1, Jev 1.13.0 obtient 73,2 % et Kahn1 4B 72,4 %."),
     ("Quelles alternatives acceptent le format de requête de Jev ?", "Clef est annoncé entièrement compatible avec l'API Jev, et JevK5 et Laya (via laya-serve) servent des requêtes au format POST /v1/systemone. Kahn1 prend les mêmes champs de question (type, instructions, criteria) sous une clé « schema » sur POST /v1/evaluate/jev : un client Jev demande donc un petit adaptateur."),
     ("Kahn1 est-il affilié à TypeSafe ?", "Non. Kahn1 est un projet indépendant ; il prend les champs de question de Jev et se compare à Jev sur les mêmes exemples."),
 ]
@@ -475,7 +478,7 @@ def alternatives(fr: bool) -> tuple[str, list]:
                  "Oui, Jev a des alternatives ouvertes : plusieurs modèles de décision à poids ouverts répondent au même "
                  "type de questions typées sur votre propre matériel, et quatre prennent des questions au format de Jev : "
                  "Clef, JevK5 et Laya servent son format de requête, Kahn1 prend les mêmes champs de question sur sa propre "
-                 "route. Aucun n'est mesuré comme remplaçant direct sur toutes les tâches.", items, True, "Mis à jour le 1er octobre 2026")
+                 "route. Aucun n'est mesuré comme remplaçant direct sur toutes les tâches.", items, True, "Mis à jour le 2 octobre 2026")
         alt = table(["Alternative", "Éditeur", "Licence", "Tailles", "Compatible Jev", "Mesurée ici à périmètre égal"], [
             ['<a href="https://blog.cloudflare.com/clef-decision-models/" rel="noopener">Clef, Clef-flash</a>', "Cloudflare", "Apache 2.0", "27B, 9B", "Oui, annoncé (API Jev)", "Pas encore"],
             ['<a href="https://github.com/allebee/jevk5" rel="noopener">JevK5 v0.3</a>', "allebee", "Apache 2.0", "4B, 9B (+ 2B, Lite)", "Format /v1/systemone", "v0.2 sur JevBench public (exécution de ses auteurs et de JevBench)"],
@@ -484,21 +487,23 @@ def alternatives(fr: bool) -> tuple[str, list]:
             ['<a href="https://github.com/ikermoel/open-alternative-jev" rel="noopener">open-alternative-jev (so1)</a>', "ikermoel", "Apache 2.0", "N'importe quel LLM ouvert", "", "Non"],
             ['<a href="https://huggingface.co/togethercomputer/Tev1-4B-experimental" rel="noopener">Tev1-4B-experimental</a>', "Together AI", "En cours", "4B", "", "Non"]])
         mes = table(["", "Exemples", "Jev 1.13.0", "JevK5 v0.2, exécution JevBench", "JevK5 v0.2, exécution de ses auteurs", "Kahn1 4B"], [
-            ["Holdout Kahn1, Choice sur les mêmes 8 options", f"14{N}663", f"<b>73,2{N}%</b>", "", "", f"71,0{N}%"],
-            ["JevBench public, tous niveaux", "231", f"<b>86,6{N}%</b>", f"85,3{N}%", f"86,1{N}%", f"86,1{N}%"],
-            ["JevBench public, niveau difficile", "111", f"73,0{N}%", "", f"<b>73,9{N}%</b>", f"72,1{N}%"]], {1, 2, 3, 4, 5})
+            ["Holdout Kahn1, Choice sur les mêmes 8 options", f"14{N}663", f"<b>73,2{N}%</b>", "", "", f"72,4{N}%"],
+            ["JevBench public, tous niveaux", "231", f"86,6{N}%", f"85,3{N}%", f"86,1{N}%", f"<b>87,4{N}%</b>"],
+            ["JevBench public, niveau difficile", "111", f"73,0{N}%", "", f"73,9{N}%", f"<b>75,7{N}%</b>"]], {1, 2, 3, 4, 5})
         body = [sec(1, "reponse", "La réponse courte", p(
             "Si vous voulez des décisions typées avec probabilités sans envoyer vos données à une API, prenez un modèle "
             "de décision ouvert. Si vous voulez la meilleure précision mesurée sans rien héberger, Jev reste devant sur "
-            f"nos mesures : 73,2{N}% contre 71,0{N}% pour Kahn1 4B sur 14{N}663 exemples réservés.")),
+            f"notre holdout : 73,2{N}% contre 72,4{N}% pour Kahn1 4B sur 14{N}663 exemples réservés. Sur les 231 exemples "
+            f"publics de JevBench, les deux sont au même niveau (87,4{N}% contre 86,6{N}%, écart non significatif, p{N}={N}0,84).")),
                 sec(2, "alternatives", "Les alternatives ouvertes", alt + p(
                     "Le paysage complet, hébergé et ouvert, est sur la page <a href=\"/fr/comparer/paysage/\">Paysage</a>.")),
                 sec(3, "mesures", "Ce qui est mesuré", mes + p(
                     "Mêmes exemples, mêmes options, mêmes labels, mais trois exécutions distinctes : les résultats de Jev "
                     "sont ceux que publie JevBench, ceux de JevK5 viennent de l'exécution publiée par ses auteurs et de celle "
                     f"de JevBench, ceux de Kahn1 de la nôtre (k{N}={N}3 ordres d'options, calibré). Apparié à l'exécution "
-                    f"publiée par les auteurs de JevK5, Kahn1 4B et JevK5 réussissent chacun 199 exemples sur 231 (test exact "
-                    f"de McNemar, p{N}={N}1,00) ; dans l'exécution de JevBench, JevK5 v0.2 en réussit 197 (85,3{N}%). "
+                    f"publiée par les auteurs de JevK5, Kahn1 4B réussit 202 exemples sur 231 et JevK5 199 (13 contre 10 exemples "
+                    f"que seul l'un réussit, test exact de McNemar, p{N}={N}0,68) ; face aux résultats publiés de Jev (200 sur 231), "
+                    f"13 contre 11, p{N}={N}0,84 ; dans l'exécution de JevBench, JevK5 v0.2 en réussit 197 (85,3{N}%). "
                     "Détails : <a href=\"/fr/resultats/\">Résultats</a>.")),
                 sec(4, "migrer", "Passer de Jev à un modèle ouvert", p(
                     "Les trois types de question se retrouvent tels quels : choice, score et noul. Clef, JevK5 et Laya "
@@ -512,7 +517,7 @@ def alternatives(fr: bool) -> tuple[str, list]:
                     '    -d \'{"state": "Bonjour, impossible de me connecter depuis ce matin.", "schema": {"categorie": {"type": "choice",\n'
                     '         "instructions": "Catégorie du ticket", "criteria": {"bug": "Une erreur", "compte": "Connexion, accès"}}}}\'</pre>\n'),
                 sec(5, "jev", "Quand Jev reste le bon choix", ul([
-                    "Vous voulez la meilleure précision mesurée sur nos jeux, sans infrastructure à gérer.",
+                    "Vous voulez la meilleure précision mesurée sur notre holdout, sans infrastructure à gérer.",
                     "Vos textes sont longs : Jev accepte 64k tokens par requête (32k pour l'état et la plus longue question), selon sa documentation.",
                     "Vous travaillez en anglais, la langue où Jev est le plus précis selon TypeSafe.",
                     "Vous acceptez qu'un tiers traite vos données et un prix par token d'entrée."])),
@@ -525,7 +530,7 @@ def alternatives(fr: bool) -> tuple[str, list]:
              "Yes, Jev has open alternatives: several open-weight decision models answer the same kind of typed questions "
              "on your own hardware, and four take Jev-style questions: Clef, JevK5 and Laya serve its request format, and "
              "Kahn1 takes the same question fields on its own route. None has been measured as a drop-in replacement on "
-             "every task.", items, False, "Updated October 1, 2026")
+             "every task.", items, False, "Updated October 2, 2026")
     alt = table(["Alternative", "Provider", "Licence", "Sizes", "Jev-compatible", "Measured here like for like"], [
         ['<a href="https://blog.cloudflare.com/clef-decision-models/" rel="noopener">Clef, Clef-flash</a>', "Cloudflare", "Apache 2.0", "27B, 9B", "Yes, announced (Jev API)", "Not yet"],
         ['<a href="https://github.com/allebee/jevk5" rel="noopener">JevK5 v0.3</a>', "allebee", "Apache 2.0", "4B, 9B (+ 2B, Lite)", "/v1/systemone request shape", "v0.2 on public JevBench (its authors' run and JevBench's)"],
@@ -534,21 +539,23 @@ def alternatives(fr: bool) -> tuple[str, list]:
         ['<a href="https://github.com/ikermoel/open-alternative-jev" rel="noopener">open-alternative-jev (so1)</a>', "ikermoel", "Apache 2.0", "Any open LLM", "", "No"],
         ['<a href="https://huggingface.co/togethercomputer/Tev1-4B-experimental" rel="noopener">Tev1-4B-experimental</a>', "Together AI", "Being finalized", "4B", "", "No"]])
     mes = table(["", "Items", "Jev 1.13.0", "JevK5 v0.2, JevBench's run", "JevK5 v0.2, its authors' run", "Kahn1 4B"], [
-        ["Kahn1 held-out, Choice over the same 8 options", "14,663", "<b>73.2%</b>", "", "", "71.0%"],
-        ["Public JevBench, all tiers", "231", "<b>86.6%</b>", "85.3%", "86.1%", "86.1%"],
-        ["Public JevBench, hard tier", "111", "73.0%", "", "<b>73.9%</b>", "72.1%"]], {1, 2, 3, 4, 5})
+        ["Kahn1 held-out, Choice over the same 8 options", "14,663", "<b>73.2%</b>", "", "", "72.4%"],
+        ["Public JevBench, all tiers", "231", "86.6%", "85.3%", "86.1%", "<b>87.4%</b>"],
+        ["Public JevBench, hard tier", "111", "73.0%", "", "73.9%", "<b>75.7%</b>"]], {1, 2, 3, 4, 5})
     body = [sec(1, "answer", "The short answer", p(
         "If you want typed decisions with probabilities without sending your data to an API, pick an open decision "
-        "model. If you want the best measured accuracy with nothing to host, Jev is still ahead on our measurements: "
-        "73.2% against 71.0% for Kahn1 4B on 14,663 held-out items.")),
+        "model. If you want the best measured accuracy with nothing to host, Jev is still ahead on our held-out set: "
+        "73.2% against 72.4% for Kahn1 4B on 14,663 items. On the 231 public JevBench items the two are level (87.4% "
+        "against 86.6%, not a significant gap, p&nbsp;=&nbsp;0.84).")),
             sec(2, "alternatives", "The open alternatives", alt + p(
                 "The full landscape, hosted and open, is on the <a href=\"/compare/landscape/\">landscape</a> page.")),
             sec(3, "measured", "What is measured", mes + p(
                 "Same items, same options, same labels, but three separate runs: Jev's outcomes are the ones JevBench "
                 "publishes, JevK5's come from its authors' published run and from JevBench's own run, and Kahn1's from ours "
-                "(k&nbsp;=&nbsp;3 option orders, calibrated). Paired with JevK5's own published run, Kahn1 4B and JevK5 each "
-                "get 199 of 231 items right (exact McNemar test, p&nbsp;=&nbsp;1.00); in JevBench's own run, JevK5 v0.2 gets "
-                "197 (85.3%). Details: <a href=\"/benchmarks/\">benchmarks</a>.")),
+                "(k&nbsp;=&nbsp;3 option orders, calibrated). Paired with JevK5's own published run, Kahn1 4B gets 202 of 231 "
+                "items right and JevK5 199 (13 against 10 items only one gets right, exact McNemar test, p&nbsp;=&nbsp;0.68); "
+                "against Jev's published outcomes (200 of 231), 13 against 11, p&nbsp;=&nbsp;0.84; in JevBench's own run, "
+                "JevK5 v0.2 gets 197 (85.3%). Details: <a href=\"/benchmarks/\">benchmarks</a>.")),
             sec(4, "switch", "Switching from Jev", p(
                 "The three question types carry over as they are: choice, score and noul. Clef, JevK5 and Laya serve Jev's "
                 "request format, <code>POST /v1/systemone</code>. Kahn1 takes the same question fields (<code>type</code>, "
@@ -561,7 +568,7 @@ def alternatives(fr: bool) -> tuple[str, list]:
                 '    -d \'{"state": "Hello, I cannot log in to my account.", "schema": {"category": {"type": "choice",\n'
                 '         "instructions": "Support ticket category", "criteria": {"bug": "Something is broken", "account": "Login, access"}}}}\'</pre>\n'),
             sec(5, "jev", "When Jev is still the right pick", ul([
-                "You want the best measured accuracy on our test sets, with no infrastructure to run.",
+                "You want the best measured accuracy on our held-out set, with no infrastructure to run.",
                 "Your texts are long: Jev takes 64k tokens per request (32k for the state plus the longest question), per its documentation.",
                 "You work in English, where TypeSafe says Jev is most accurate.",
                 "You are fine with a third party processing your data and a price per input token."])),
@@ -637,7 +644,7 @@ def build_page(tpl: str, page: dict, fr: bool, main_html: str, extra_ld: list[di
            "publisher": {"@id": SITE + "/#author"},
            "about": {"@type": "SoftwareApplication", "@id": SITE + "/#software", "name": "Kahn1", "url": SITE + "/"},
            "isPartOf": {"@type": "WebSite", "@id": SITE + "/#website", "name": "Kahn1", "url": SITE + "/"},
-           "datePublished": TODAY, "dateModified": TODAY}
+           "datePublished": TODAY, "dateModified": MODIFIED}
     bc = {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
         {"@type": "ListItem", "position": 1, "name": "Kahn1", "item": home},
         {"@type": "ListItem", "position": 2, "name": crumb, "item": url}]}

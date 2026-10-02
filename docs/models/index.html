@@ -76,7 +76,6 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
    "name": "Kahn1 4B",
    "alternateName": "Kahn1-Qwen3.5-4B",
    "description": "The 4B size of Kahn1, a System 1 model for zero-shot text classification: Qwen3.5-4B fine-tuned with LoRA, Choice, Score and Noul answers read from option-token logits.",
-   "softwareVersion": "2 (2026-10)",
    "url": "https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B",
    "downloadUrl": "https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B",
    "fileSize": "8.4 GB",
@@ -104,7 +103,6 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
    "name": "Kahn1 3B",
    "alternateName": "Kahn1-Qwen2.5-3B",
    "description": "The 3B size of Kahn1, the same System 1 model: Qwen2.5-3B-Instruct fine-tuned with LoRA.",
-   "softwareVersion": "v3",
    "url": "https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B",
    "downloadUrl": "https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B",
    "fileSize": "6.17 GB",
@@ -133,7 +131,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
   "name": "Kahn1",
   "url": "https://kahn1.com/"
  },
- "dateModified": "2026-10-01",
+ "dateModified": "2026-10-02",
  "keywords": "System 1 model, System 1 decision engine, open-source JEV alternative, JEV alternative, TypeSafe JEV, zero-shot text classification, text classification model, LLM classification, calibrated LLM classifier, logit-based classification, structured outputs alternative, JSON mode alternative, LLM as a judge, intent classification, sentiment scoring, natural language inference, open-weight model, Qwen3.5-4B fine-tune, vLLM",
  "publisher": {
   "@id": "https://kahn1.com/#author"
@@ -218,7 +216,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
 
     <section class="sec doc" id="models" aria-labelledby="h-models">
       <h2 id="h-models">01 · The two sizes</h2>
-      <div class="tbl-wrap"><table class="tbl models"><thead><tr><th scope="col"></th><th scope="col">Kahn1 4B</th><th scope="col">Kahn1 3B</th></tr></thead><tbody><tr><th scope="row">Base model</th><td data-label="Kahn1 4B"><code>Qwen/Qwen3.5-4B</code></td><td data-label="Kahn1 3B"><code>Qwen/Qwen2.5-3B-Instruct</code></td></tr><tr><th scope="row">Merged model</th><td data-label="Kahn1 4B"><a href="https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B" rel="noopener"><code>Okura66/Kahn1-Qwen3.5-4B</code></a> · 8.4 GB</td><td data-label="Kahn1 3B"><a href="https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B" rel="noopener"><code>Okura66/Kahn1-Qwen2.5-3B</code></a> · 6.17 GB</td></tr><tr><th scope="row">LoRA adapter</th><td data-label="Kahn1 4B"><a href="https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B-LoRA" rel="noopener"><code>Okura66/Kahn1-Qwen3.5-4B-LoRA</code></a> · 57 MB</td><td data-label="Kahn1 3B"><a href="https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B-LoRA" rel="noopener"><code>Okura66/Kahn1-Qwen2.5-3B-LoRA</code></a> · 239 MB</td></tr><tr><th scope="row">Prompt format</th><td data-label="Kahn1 4B">native Qwen3 chat template, picked automatically</td><td data-label="Kahn1 3B">tag layout, picked automatically</td></tr><tr><th scope="row">Licence</th><td data-label="Kahn1 4B">Apache 2.0</td><td data-label="Kahn1 3B"><a href="https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/blob/main/LICENSE" rel="noopener">Qwen Research License</a>, a research licence: see its terms</td></tr><tr><th scope="row">Held-out, 14,663 items</th><td data-label="Kahn1 4B">71.0%</td><td data-label="Kahn1 3B">70.3%</td></tr><tr><th scope="row">JevBench, 231 public items</th><td data-label="Kahn1 4B">86.1% (hard 72.1%)</td><td data-label="Kahn1 3B">67.5% (hard 42.3%)</td></tr><tr><th scope="row">Median latency, k = 3</th><td data-label="Kahn1 4B">82.4 ms</td><td data-label="Kahn1 3B">36.4 ms</td></tr><tr><th scope="row">Calibration</th><td data-label="Kahn1 4B"><code>calibration.json</code> in the repository</td><td data-label="Kahn1 3B"><code>calibration.json</code> in the repository</td></tr></tbody></table></div>
+      <div class="tbl-wrap"><table class="tbl models"><thead><tr><th scope="col"></th><th scope="col">Kahn1 4B</th><th scope="col">Kahn1 3B</th></tr></thead><tbody><tr><th scope="row">Base model</th><td data-label="Kahn1 4B"><code>Qwen/Qwen3.5-4B</code></td><td data-label="Kahn1 3B"><code>Qwen/Qwen2.5-3B-Instruct</code></td></tr><tr><th scope="row">Merged model</th><td data-label="Kahn1 4B"><a href="https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B" rel="noopener"><code>Okura66/Kahn1-Qwen3.5-4B</code></a> · 8.4 GB</td><td data-label="Kahn1 3B"><a href="https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B" rel="noopener"><code>Okura66/Kahn1-Qwen2.5-3B</code></a> · 6.17 GB</td></tr><tr><th scope="row">LoRA adapter</th><td data-label="Kahn1 4B"><a href="https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B-LoRA" rel="noopener"><code>Okura66/Kahn1-Qwen3.5-4B-LoRA</code></a> · 57 MB</td><td data-label="Kahn1 3B"><a href="https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B-LoRA" rel="noopener"><code>Okura66/Kahn1-Qwen2.5-3B-LoRA</code></a> · 239 MB</td></tr><tr><th scope="row">Prompt format</th><td data-label="Kahn1 4B">native Qwen3 chat template, picked automatically</td><td data-label="Kahn1 3B">tag layout, picked automatically</td></tr><tr><th scope="row">Licence</th><td data-label="Kahn1 4B">Apache 2.0</td><td data-label="Kahn1 3B"><a href="https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/blob/main/LICENSE" rel="noopener">Qwen Research License</a>, a research licence: see its terms</td></tr><tr><th scope="row">Held-out, 14,663 items</th><td data-label="Kahn1 4B">72.4%</td><td data-label="Kahn1 3B">70.3%</td></tr><tr><th scope="row">JevBench, 231 public items</th><td data-label="Kahn1 4B">87.4% (hard 75.7%)</td><td data-label="Kahn1 3B">67.5% (hard 42.3%)</td></tr><tr><th scope="row">Median latency, k = 3</th><td data-label="Kahn1 4B">88.7 ms</td><td data-label="Kahn1 3B">36.4 ms</td></tr><tr><th scope="row">Calibration</th><td data-label="Kahn1 4B"><code>calibration.json</code> in the repository</td><td data-label="Kahn1 3B"><code>calibration.json</code> in the repository</td></tr></tbody></table></div>
       <p class="small faint" style="margin-top:12px">Held-out and JevBench: k&nbsp;=&nbsp;3, temperature calibration.
         Latency: vLLM on one RTX 5070 Ti. Details on the <a href="../benchmarks/">benchmarks page</a>. The code is MIT.</p>
       <p>GGUF quantizations: <a href="https://huggingface.co/mradermacher/Kahn1-Qwen2.5-3B-GGUF" rel="noopener"><code>mradermacher/Kahn1-Qwen2.5-3B-GGUF</code></a>,
@@ -229,9 +227,9 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     <section class="sec doc" id="which" aria-labelledby="h-which">
       <h2 id="h-which">02 · Which one</h2>
       <p>Both sizes run on a GPU (vLLM) and on a CPU (transformers), with the same API and the same answer format.
-        The facts: on the held-out set the 4B scores 71.0% and the 3B 70.3%; on JevBench the 4B scores 86.1% and the 3B 67.5%, and
-        72.1% against 42.3% on the hard tier. The 3B is smaller (6.17 GB against 8.4 GB) and faster (median 36.4 ms
-        against 82.4 ms). The 4B's weights are Apache 2.0, the 3B's are under the Qwen Research License.</p>
+        The facts: on the held-out set the 4B scores 72.4% and the 3B 70.3%; on JevBench the 4B scores 87.4% and the 3B 67.5%, and
+        75.7% against 42.3% on the hard tier. The 3B is smaller (6.17 GB against 8.4 GB) and faster (median 36.4 ms
+        against 88.7 ms). The 4B's weights are Apache 2.0, the 3B's are under the Qwen Research License.</p>
     </section>
 
     <section class="sec doc" id="load" aria-labelledby="h-load">

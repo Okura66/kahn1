@@ -80,7 +80,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
   "url": "https://kahn1.com/"
  },
  "datePublished": "2026-10-01",
- "dateModified": "2026-10-01"
+ "dateModified": "2026-10-02"
 }
 </script>
 <script type="application/ld+json">
@@ -220,7 +220,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     <section class="page-hero" aria-labelledby="title">
       <h1 id="title">System One models</h1>
       <p class="lead">A System One model answers typed questions about a text in one forward pass: it reads a probability for each allowed answer from the model's logits instead of writing text. TypeSafe's Jev made the term popular in September 2026; open models now do the same.</p>
-      <p class="small faint">Updated October 1, 2026</p>
+      <p class="small faint">Updated October 2, 2026</p>
       <nav class="toc" aria-label="On this page">
         <ol>
           <li><a href="#definition">Definition</a></li>
@@ -265,7 +265,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     <section class="sec doc" id="measure" aria-labelledby="h-measure">
       <h2 id="h-measure">05 · How they are measured</h2>
       <p><a href="https://github.com/fstandhartinger/jevbench" rel="noopener">JevBench</a> is the independent benchmark of the category: states and bounded rubrics, a typed answer, four axes (accuracy, calibration, speed, cost). Vendors also cite their own indices: Cloudflare and Liquid AI each report beating Jev on a “Decision Index”, figures not reproduced here.</p>
-      <p>A comparison only means something like for like: the same items, the same options, the same labels. That is the rule of our <a href="/benchmarks/">benchmarks</a>: on 14,663 held-out items, Jev 1.13.0 scores 73.2% and Kahn1 4B 71.0%. On the 231 public JevBench items, Jev scores 86.6% in JevBench's run, Kahn1 4B 86.1% in ours (k&nbsp;=&nbsp;3, calibrated) and JevK5 v0.2 85.3% in JevBench's run (86.1% in its authors' own run): three separate runs on the same items.</p>
+      <p>A comparison only means something like for like: the same items, the same options, the same labels. That is the rule of our <a href="/benchmarks/">benchmarks</a>: on 14,663 held-out items, Jev 1.13.0 scores 73.2% and Kahn1 4B 72.4%. On the 231 public JevBench items, Jev scores 86.6% in JevBench's run, Kahn1 4B 87.4% in ours (k&nbsp;=&nbsp;3, calibrated; not a significant gap, p&nbsp;=&nbsp;0.84) and JevK5 v0.2 85.3% in JevBench's run (86.1% in its authors' own run): three separate runs on the same items.</p>
     </section>
     <section class="sec doc" id="limits" aria-labelledby="h-limits">
       <h2 id="h-limits">06 · Limits</h2>

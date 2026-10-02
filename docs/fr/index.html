@@ -71,7 +71,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
         "width": 1200,
         "height": 630
       },
-      "dateModified": "2026-10-01",
+      "dateModified": "2026-10-02",
       "description": "Modèle Système 1 open source, alternative à JEV : classification de texte zero-shot, notation et vérification, réponses calibrées lues dans les logits."
     },
     {
@@ -323,7 +323,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
         <tbody>
           <tr><th scope="row">Nouvelle catégorie</th><td>Réannoter, réentraîner, redéployer</td><td>Modifier le schéma dans la requête</td></tr>
           <tr><th scope="row">Données annotées</th><td>Des centaines à des milliers par classe</td><td>Aucune pour démarrer, quelques-unes pour recalibrer</td></tr>
-          <tr><th scope="row">Latence</th><td>Moins de 1 à 10&nbsp;ms, CPU</td><td>36&nbsp;ms (3B) à 82&nbsp;ms (4B) en médiane, GPU</td></tr>
+          <tr><th scope="row">Latence</th><td>Moins de 1 à 10&nbsp;ms, CPU</td><td>36&nbsp;ms (3B) à 89&nbsp;ms (4B) en médiane, GPU</td></tr>
           <tr><th scope="row">Matériel</th><td>Petits CPU, objets embarqués</td><td>Un GPU pour le débit de production</td></tr>
           <tr><th scope="row">Explications</th><td>Importance des variables, arbres</td><td>Distributions complètes, sans attribution</td></tr>
           <tr><th scope="row">Déterminisme</th><td>Même entrée, même sortie</td><td>Mêmes poids, prompt et noyaux&nbsp;: mêmes logits&nbsp;; rien n'est échantillonné</td></tr>

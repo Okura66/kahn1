@@ -86,7 +86,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
         "width": 1200,
         "height": 630
       },
-      "dateModified": "2026-10-01",
+      "dateModified": "2026-10-02",
       "description": "Open-source System 1 model and JEV alternative: zero-shot text classification, scoring and verification, with calibrated answers read from logits."
     },
     {
@@ -358,7 +358,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
         <tbody>
           <tr><th scope="row">New category</th><td>Relabel, retrain, redeploy</td><td>Edit the schema in the request</td></tr>
           <tr><th scope="row">Labelled data</th><td>Hundreds to thousands per class</td><td>None to start; some to recalibrate</td></tr>
-          <tr><th scope="row">Latency</th><td>Under 1 to 10 ms, CPU</td><td>36 ms (3B) to 82 ms (4B) median, GPU</td></tr>
+          <tr><th scope="row">Latency</th><td>Under 1 to 10 ms, CPU</td><td>36 ms (3B) to 89 ms (4B) median, GPU</td></tr>
           <tr><th scope="row">Hardware</th><td>Small CPUs, edge devices</td><td>A GPU for production throughput</td></tr>
           <tr><th scope="row">Explanations</th><td>Feature importances, tree splits</td><td>Full distributions, no feature attribution</td></tr>
           <tr><th scope="row">Determinism</th><td>Same input, same output</td><td>Same weights, prompt and kernels give the same logits; nothing is sampled</td></tr>

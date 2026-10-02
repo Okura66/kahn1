@@ -80,7 +80,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
   "url": "https://kahn1.com/"
  },
  "datePublished": "2026-10-01",
- "dateModified": "2026-10-01"
+ "dateModified": "2026-10-02"
 }
 </script>
 <script type="application/ld+json">
@@ -220,7 +220,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     <section class="page-hero" aria-labelledby="title">
       <h1 id="title">Modèles System One</h1>
       <p class="lead">Un modèle System One répond à des questions typées sur un texte en une seule passe : il lit une probabilité pour chaque réponse permise dans les logits du modèle, au lieu d'écrire du texte. Jev, de TypeSafe, a popularisé le terme en septembre 2026 ; des modèles ouverts font aujourd'hui la même chose.</p>
-      <p class="small faint">Mis à jour le 1er octobre 2026</p>
+      <p class="small faint">Mis à jour le 2 octobre 2026</p>
       <nav class="toc" aria-label="Sur cette page">
         <ol>
           <li><a href="#definition">Définition</a></li>
@@ -265,7 +265,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     <section class="sec doc" id="mesurer" aria-labelledby="h-mesurer">
       <h2 id="h-mesurer">05 · Comment on les mesure</h2>
       <p><a href="https://github.com/fstandhartinger/jevbench" rel="noopener">JevBench</a> est le benchmark indépendant de la catégorie : des états et des grilles bornées, une réponse typée, quatre axes (précision, calibration, vitesse, coût). Les éditeurs citent aussi leurs propres indices : Cloudflare et Liquid AI annoncent chacun dépasser Jev sur un « Decision Index », chiffres non reproduits ici.</p>
-      <p>Une comparaison n'a de sens qu'à périmètre égal : les mêmes exemples, les mêmes options, les mêmes labels. C'est la règle de nos <a href="/fr/resultats/">résultats</a> : sur 14&nbsp;663 exemples réservés, Jev 1.13.0 obtient 73,2&nbsp;% et Kahn1 4B 71,0&nbsp;%. Sur les 231 exemples publics de JevBench, Jev obtient 86,6&nbsp;% dans l'exécution de JevBench, Kahn1 4B 86,1&nbsp;% dans la nôtre (k&nbsp;=&nbsp;3, calibré) et JevK5 v0.2 85,3&nbsp;% dans celle de JevBench (86,1&nbsp;% dans celle de ses auteurs) : trois exécutions distinctes sur les mêmes exemples.</p>
+      <p>Une comparaison n'a de sens qu'à périmètre égal : les mêmes exemples, les mêmes options, les mêmes labels. C'est la règle de nos <a href="/fr/resultats/">résultats</a> : sur 14&nbsp;663 exemples réservés, Jev 1.13.0 obtient 73,2&nbsp;% et Kahn1 4B 72,4&nbsp;%. Sur les 231 exemples publics de JevBench, Jev obtient 86,6&nbsp;% dans l'exécution de JevBench, Kahn1 4B 87,4&nbsp;% dans la nôtre (k&nbsp;=&nbsp;3, calibré ; écart non significatif, p&nbsp;=&nbsp;0,84) et JevK5 v0.2 85,3&nbsp;% dans celle de JevBench (86,1&nbsp;% dans celle de ses auteurs) : trois exécutions distinctes sur les mêmes exemples.</p>
     </section>
     <section class="sec doc" id="limites" aria-labelledby="h-limites">
       <h2 id="h-limites">06 · Limites</h2>

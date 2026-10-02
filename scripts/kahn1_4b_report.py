@@ -6,11 +6,8 @@
 - Choice over every intent (77 / 60): the 1,184 items the 3B answered through
   evaluate_two_stage, the 4B on the same items, JEV's run with every intent.
 - JevBench, 231 public items: Kahn1 predictions (k = 3, calibrated), Jev's per-task outcomes
-  published by JevBench, JevK5's own public run; exact McNemar test against JevK5.
+  published by JevBench, JevK5's authors' own public run; exact McNemar test against that run.
 - Hard teacher dev split (data/dev_teacher.jsonl, k = 1): base Qwen3.5-4B and the 4B.
-
-The 4B is version 2 (internal v6); version 1 (internal v5, Hugging Face tag v1-2026-09) is shown
-next to it wherever the two were scored on the same items.
 
     python scripts/kahn1_4b_report.py      # reports/KAHN1_4B_REPORT.md + .json
 """
@@ -30,7 +27,7 @@ for _p in (_ROOT, _ROOT / "src"):
         sys.path.insert(0, str(_p))
 
 R, D = _ROOT / "reports", _ROOT / "data"
-CUR, PREV = "v6", "v5"   # internal run names of Kahn1 4B version 2 and version 1
+CUR = "v6"   # internal run name of the published Kahn1 4B
 JEV_PER_TASK = ("https://raw.githubusercontent.com/fstandhartinger/jevbench/main/results/v1.2/"
                 "jevbench-v1.2-per-task.json")
 
@@ -57,7 +54,6 @@ def main() -> None:
     items = [json.loads(l) for l in (D / "eval.jsonl").open(encoding="utf-8")]
     k3 = json.loads((R / "eval_v3_temponly_preds.json").read_text(encoding="utf-8"))
     k4 = json.loads((R / f"eval_{CUR}_preds.json").read_text(encoding="utf-8"))
-    k4p = json.loads((R / f"eval_{PREV}_preds.json").read_text(encoding="utf-8"))
     jev_full, jev8, jev_sup = jl(D / "jev_eval_preds.jsonl"), jl(D / "jev_eval_preds_choice8.jsonl"), \
         jl(D / "jev_eval_preds_noul_supported.jsonl")
 
@@ -78,7 +74,6 @@ def main() -> None:
         j = [jev_like(i) for i in ids]
         held[g] = {"n": len(ids),
                    "k4b": sum(k4["corrects"][i] for i in ids) / len(ids),
-                   "k4p": sum(k4p["corrects"][i] for i in ids) / len(ids),
                    "k3b": sum(k3["corrects"][i] for i in ids) / len(ids),
                    "jev": sum(x[0] for x in j) / len(ids),
                    "k4b_ece": ece([k4["confidences"][i] for i in ids], [k4["corrects"][i] for i in ids]),
@@ -98,23 +93,21 @@ def main() -> None:
     jb = [json.loads(l) for l in (D / "jevbench_eval.jsonl").open(encoding="utf-8")]
     jb3 = json.loads((R / "jevbench_v3_preds.json").read_text(encoding="utf-8"))["corrects"]
     jb4 = json.loads((R / f"jevbench_{CUR}_preds.json").read_text(encoding="utf-8"))["corrects"]
-    jb4p = json.loads((R / f"jevbench_{PREV}_preds.json").read_text(encoding="utf-8"))["corrects"]
     per_task = json.loads(urllib.request.urlopen(JEV_PER_TASK, timeout=120).read())["systems"]["jev-1.13.0"][
         "public_tasks"]
     k5 = {r["task_id"]: bool(r["correct"]) for r in map(json.loads, (D / "jevk5" / "jevk5-v0.2.jsonl").open(
         encoding="utf-8"))}
     tiers = defaultdict(lambda: defaultdict(int))
-    for it, a, b, bp in zip(jb, jb3, jb4, jb4p):
+    for it, a, b in zip(jb, jb3, jb4):
         for t in (it["source"].removeprefix("jevbench-"), "all"):
             c = tiers[t]
-            c["n"] += 1; c["k3b"] += a; c["k4b"] += b; c["k4p"] += bp
+            c["n"] += 1; c["k3b"] += a; c["k4b"] += b
             c["jev"] += per_task[it["id"]][0] == "c"; c["jevk5"] += k5[it["id"]]
     jbt = {t: {k: (v / c["n"] if k != "n" else v) for k, v in c.items()} for t, c in tiers.items()}
     x, y, p = mcnemar(jb4, [k5[it["id"]] for it in jb])
 
     dev = {}
-    for name, f in (("base", R / "v4" / "devteacher_base.json"), ("k4p", R / PREV / "k1_final.json"),
-                    ("k4b", R / CUR / "k1_final.json")):
+    for name, f in (("base", R / "v4" / "devteacher_base.json"), ("k4b", R / CUR / "k1_final.json")):
         if f.exists():
             h = json.loads(f.read_text(encoding="utf-8"))["heldout_sample"]
             dev[name] = {k: v["acc"] for k, v in h.items() if isinstance(v, dict)} | {"balanced": h["balanced_acc"]}
@@ -129,40 +122,37 @@ def main() -> None:
 
     order = ["banking77", "massive", "rte_eval", "scitail_eval", "sst5_eval", "app_reviews_eval",
              "kind:choice", "kind:score", "kind:noul", "all"]
-    K3, K4 = ("k4b", "k4p", "k3b", "jev"), ("k4b", "k4p", "k3b", "jevk5", "jev")
+    K3, K4 = ("k4b", "k3b", "jev"), ("k4b", "k3b", "jevk5", "jev")
     rows = "\n".join(f"| {g.replace('kind:', 'all ').replace('_eval', '')} | {held[g]['n']:,} | {B(held[g], 'k4b', K3)} | "
-                     f"{B(held[g], 'k4p', K3)} | "
                      f"{B(held[g], 'k3b', K3)} | {B(held[g], 'jev', K3)} | {held[g]['k4b_ece']:.3f} | "
                      f"{held[g]['k3b_ece']:.3f} | {held[g]['jev_ece']:.3f} |" for g in order if g in held)
-    jrows = "\n".join(f"| {t} | {c['n']} | {B(c, 'k4b', K4)} | {B(c, 'k4p', K4)} | {B(c, 'k3b', K4)} | {B(c, 'jevk5', K4)} | "
+    jrows = "\n".join(f"| {t} | {c['n']} | {B(c, 'k4b', K4)} | {B(c, 'k3b', K4)} | {B(c, 'jevk5', K4)} | "
                       f"{B(c, 'jev', K4)} |"
                       for t, c in sorted(jbt.items(), key=lambda kv: ["easy", "original", "hard", "all"].index(kv[0])))
     KF = ("k4b", "k3b", "jev")
     fl = (f"| every intent (77 / 60), {full['n']:,} items | {B(full, 'k4b', KF)} | {B(full, 'k3b', KF)} | "
           f"{B(full, 'jev', KF)} |" if both else "| every intent | not run | | |")
-    drows = "\n".join(f"| {k.replace('kind:', '').replace('lang:', 'lang ')} | {P(dev['base'][k])} | {P(dev['k4p'][k])} | "
-                      f"{P(dev['k4b'][k])} |"
+    drows = "\n".join(f"| {k.replace('kind:', '').replace('lang:', 'lang ')} | {P(dev['base'][k])} | {P(dev['k4b'][k])} |"
                       for k in ("kind:choice", "kind:score", "kind:noul", "lang:en", "lang:fr", "all", "balanced")
-                      if all(m in dev and k in dev[m] for m in ("base", "k4p", "k4b")))
+                      if all(m in dev and k in dev[m] for m in ("base", "k4b")))
     (R / "KAHN1_4B_REPORT.md").write_text(f"""# Kahn1 4B (Qwen3.5-4B + LoRA): evaluation
 
-Kahn1 4B (version 2, internal {CUR}): Qwen3.5-4B, LoRA r = 16 on the attention and linear-attention
+Kahn1 4B (internal {CUR}): Qwen3.5-4B, LoRA r = 16 on the attention and linear-attention
 projections, native chat template (thinking off), trained for two epochs on data/train_4b_v2.jsonl
 (22,406 rows): the 3B mixture's NLI, topic, intent and sentiment sources (sentiment scales whole),
 DocNLI, ShARC and WANLI (halved), QuALITY, BoolQ, more CLINC150, a replay of ARC, CommonsenseQA and
 the MMLU-Pro validation questions (never MMLU-Pro test), and hard decision questions written by
 Claude Opus, English and French (402 round-1 questions x 5, 600 round-2 questions x 4; 19.7 % of the
 rows). Loss: cross-entropy restricted to the candidate tokens + squared EMD on Score questions.
-Checkpoint chosen on dev accuracy on two dev splits, never on a benchmark. Kahn1 4B v1 (internal
-{PREV}): the first 4B, trained on data/train_v5.jsonl. Kahn1 3B: Qwen2.5-3B (v3).
+Checkpoint chosen on dev accuracy on two dev splits, never on a benchmark. Kahn1 3B: Qwen2.5-3B (v3).
 
 ## Held-out 14,663 items, like for like
 
 Choice over the same 8 options for every system (the gold one and 7 seeded distractors); JEV's
 Noul asked whether the text supports the statement. k = 3 and temperature calibration for Kahn1.
 
-| Dataset | Items | Kahn1 4B | Kahn1 4B v1 | Kahn1 3B | JEV 1.13.0 | 4B ECE | 3B ECE | JEV ECE |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Dataset | Items | Kahn1 4B | Kahn1 3B | JEV 1.13.0 | 4B ECE | 3B ECE | JEV ECE |
+|---|---:|---:|---:|---:|---:|---:|---:|
 {rows}
 
 ## Choice over every intent
@@ -173,21 +163,23 @@ Noul asked whether the text supports the statement. k = 3 and temperature calibr
 
 ## JevBench, 231 public items
 
-Kahn1: k = 3, calibrated. Jev: JevBench's own per-task outcomes. JevK5: its public v0.2 run.
+Kahn1: k = 3, calibrated (our run). Jev: JevBench's own per-task outcomes. JevK5: its authors' own
+public v0.2 run; JevBench's own run of JevK5 v0.2 scores 85.3 % on the same 231 items
+(results/v1.4/measurement-aggregates.json). Three different runners on the same items.
 
-| Tier | Items | Kahn1 4B | Kahn1 4B v1 | Kahn1 3B | JevK5 v0.2 | Jev 1.13.0 |
-|---|---:|---:|---:|---:|---:|---:|
+| Tier | Items | Kahn1 4B | Kahn1 3B | JevK5 v0.2 | Jev 1.13.0 |
+|---|---:|---:|---:|---:|---:|
 {jrows}
 
-Kahn1 4B vs JevK5, paired: {x} items only Kahn1 4B gets right, {y} only JevK5; exact McNemar p = {p:.2f}.
+Kahn1 4B vs JevK5's own run, paired: {x} items only Kahn1 4B gets right, {y} only JevK5; exact McNemar p = {p:.2f}.
 
 ## Hard decision dev split (317 items, k = 1)
 
 Questions written by Claude Opus and checked by two blind solvers; never trained on, but used to
 choose the checkpoint: a dev score, not a benchmark.
 
-| Group | Qwen3.5-4B base | Kahn1 4B v1 | Kahn1 4B |
-|---|---:|---:|---:|
+| Group | Qwen3.5-4B base | Kahn1 4B |
+|---|---:|---:|
 {drows}
 """, encoding="utf-8")
     print((R / "KAHN1_4B_REPORT.md").read_text(encoding="utf-8"))

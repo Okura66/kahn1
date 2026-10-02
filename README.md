@@ -37,10 +37,10 @@ Kahn1 3B weights under the [Qwen Research License](https://huggingface.co/Qwen/Q
 👉 **[Okura66/Kahn1-Qwen3.5-4B](https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B)** (8.4 GB merged) ·
 **[Okura66/Kahn1-Qwen3.5-4B-LoRA](https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B-LoRA)** (57 MB adapter on `Qwen/Qwen3.5-4B`)
 
-Qwen3.5-4B fine-tuned with LoRA, native chat template. Version 2 (2026-10): 71.0 % on the held-out set
+Qwen3.5-4B fine-tuned with LoRA, native chat template: 71.0 % on the held-out set
 (3B: 70.3 %), 86.1 % on JevBench (3B: 67.5 %; hard tier 72.1 % vs 42.3 %), on par with JevK5's own published
 run (86.1 %; JevBench's own run of JevK5 v0.2: 85.3 %);
-p50 82.4 ms at k = 3 on one RTX 5070 Ti. Version 1 (2026-09) stays on the Hub under the tag
+p50 82.4 ms at k = 3 on one RTX 5070 Ti. The previous release stays on the Hub under the tag
 [`v1-2026-09`](https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B/tree/v1-2026-09).
 
 ```bash
@@ -326,7 +326,7 @@ curl -X POST http://127.0.0.1:8000/v1/evaluate/jev \
 
 The codebase is **model-agnostic** via `EngineConfig.model` / `--model` / `SYSONE_MODEL`.
 
-- **Kahn1 4B**: `Qwen/Qwen3.5-4B` + LoRA (r = 16 on the attention and linear-attention projections, version 2), served with the model's native chat template (thinking off): [`Okura66/Kahn1-Qwen3.5-4B`](https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B).
+- **Kahn1 4B**: `Qwen/Qwen3.5-4B` + LoRA (r = 16 on the attention and linear-attention projections), served with the model's native chat template (thinking off): [`Okura66/Kahn1-Qwen3.5-4B`](https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B).
 - **Kahn1 3B**: `Qwen/Qwen2.5-3B-Instruct` + LoRA (v3), tag prompt layout: [`Okura66/Kahn1-Qwen2.5-3B`](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B). The browser demos run a 4-bit GGUF of its v1 checkpoint.
 - **Default Backbone**: `EngineConfig.model` defaults to `Qwen/Qwen2.5-3B-Instruct` (the server uses `checkpoints/qwen_merged` when present); point `SYSONE_MODEL` / `EngineConfig.model` at a Kahn1 checkpoint. `EngineConfig.prompt_format` defaults to `"auto"`: the native chat template for Qwen3 / Qwen3.5 checkpoints (Kahn1 4B), the tag layout for everything else (Kahn1 3B). Set it to `"tags"`, `"chatml"` or `"qwen3"` to force one.
 - **Also Supported**: `meta-llama/Llama-3.2-3B-Instruct`.
@@ -337,29 +337,27 @@ The codebase is **model-agnostic** via `EngineConfig.model` / `--model` / `SYSON
 (banking77, MASSIVE), 5-level scales (SST-5, app reviews), entailment (RTE, SciTail). Every system
 answers Choice over the same 8 options (the right one and 7 distractors seeded from the state);
 JEV's Noul items ask whether the text supports the statement. Kahn1: k = 3, temperature
-calibration, one RTX 5070 Ti with vLLM. ECE: 15 bins on p_max. Kahn1 4B is version 2 (2026-10);
-version 1 (2026-09) is shown for comparison.
+calibration, one RTX 5070 Ti with vLLM. ECE: 15 bins on p_max.
 
-| Primitive | Items | Kahn1 4B | Kahn1 4B v1 | Kahn1 3B | JEV 1.13.0 |
-|---|---:|---:|---:|---:|---:|
-| Choice | 6,050 | 92.3 % | 91.9 % | 90.9 % | **94.5 %** |
-| Score | 6,210 | 50.6 % | 48.6 % | 51.4 % | **52.0 %** |
-| Noul | 2,403 | 70.0 % | 72.2 % | 67.0 % | **74.4 %** |
-| All | 14,663 | 71.0 % | 70.3 % | 70.3 % | **73.2 %** |
-| ECE, all | | 0.077 | **0.064** | 0.082 | 0.113 |
-
-| Source | Kahn1 4B | Kahn1 4B v1 | Kahn1 3B | JEV 1.13.0 |
+| Primitive | Items | Kahn1 4B | Kahn1 3B | JEV 1.13.0 |
 |---|---:|---:|---:|---:|
-| banking77 | 91.5 % | 91.5 % | 91.1 % | **94.8 %** |
-| MASSIVE | 93.1 % | 92.4 % | 90.8 % | **94.1 %** |
-| RTE | 84.1 % | 86.6 % | 82.7 % | **89.9 %** |
-| SciTail | 68.2 % | 70.4 % | 65.0 % | **72.4 %** |
-| SST-5 | 50.2 % | 49.2 % | 52.4 % | **57.7 %** |
-| App reviews | **50.9 %** | 48.2 % | **50.9 %** | 48.9 % |
+| Choice | 6,050 | 92.3 % | 90.9 % | **94.5 %** |
+| Score | 6,210 | 50.6 % | 51.4 % | **52.0 %** |
+| Noul | 2,403 | 70.0 % | 67.0 % | **74.4 %** |
+| All | 14,663 | 71.0 % | 70.3 % | **73.2 %** |
+| ECE, all | | **0.077** | 0.082 | 0.113 |
 
-Ordinal scores, Kahn1 4B (version 1 in brackets): SST-5 50.2 % exact (49.2), 94.4 % within one
-level (93.6), Spearman ρ 0.837 (0.823); app reviews 50.9 % exact (48.2), 86.2 % within one level
-(81.5), Spearman ρ 0.789 (0.768). RTE and SciTail went down from version 1.
+| Source | Kahn1 4B | Kahn1 3B | JEV 1.13.0 |
+|---|---:|---:|---:|
+| banking77 | 91.5 % | 91.1 % | **94.8 %** |
+| MASSIVE | 93.1 % | 90.8 % | **94.1 %** |
+| RTE | 84.1 % | 82.7 % | **89.9 %** |
+| SciTail | 68.2 % | 65.0 % | **72.4 %** |
+| SST-5 | 50.2 % | 52.4 % | **57.7 %** |
+| App reviews | **50.9 %** | **50.9 %** | 48.9 % |
+
+Ordinal scores, Kahn1 4B: SST-5 50.2 % exact, 94.4 % within one level, Spearman ρ 0.837;
+app reviews 50.9 % exact, 86.2 % within one level, Spearman ρ 0.789.
 
 Choice over every intent (77 / 60 options), same 1,184 items: Kahn1 4B 70.4 %, Kahn1 3B
 68.4 %, JEV **79.1 %** (Kahn1 through its two-stage router).
@@ -367,12 +365,12 @@ Choice over every intent (77 / 60 options), same 1,184 items: Kahn1 4B 70.4 %, K
 **JevBench, 231 public items.** Kahn1: k = 3, calibrated. Jev: the outcomes JevBench publishes.
 JevK5 v0.2 ([allebee/jevk5](https://github.com/allebee/jevk5), another open Qwen3.5-4B model): its authors' own public run.
 
-| Tier | Items | Kahn1 4B | Kahn1 4B v1 | Kahn1 3B | JevK5 v0.2 | Jev 1.13.0 |
-|---|---:|---:|---:|---:|---:|---:|
-| Easy | 48 | **100.0 %** | **100.0 %** | **100.0 %** | **100.0 %** | **100.0 %** |
-| Standard | 72 | **98.6 %** | 91.7 % | 84.7 % | 95.8 % | **98.6 %** |
-| Hard | 111 | 72.1 % | 70.3 % | 42.3 % | **73.9 %** | 73.0 % |
-| All | 231 | 86.1 % | 83.1 % | 67.5 % | 86.1 % | **86.6 %** |
+| Tier | Items | Kahn1 4B | Kahn1 3B | JevK5 v0.2 | Jev 1.13.0 |
+|---|---:|---:|---:|---:|---:|
+| Easy | 48 | **100.0 %** | **100.0 %** | **100.0 %** | **100.0 %** |
+| Standard | 72 | **98.6 %** | 84.7 % | 95.8 % | **98.6 %** |
+| Hard | 111 | 72.1 % | 42.3 % | **73.9 %** | 73.0 % |
+| All | 231 | 86.1 % | 67.5 % | 86.1 % | **86.6 %** |
 
 Kahn1 4B is on par with JevK5's own published run: 199 of 231 each; item by item, 12 items only
 Kahn1 4B gets right and 12 only JevK5 (exact McNemar p = 1.00). JevBench's own run of JevK5 v0.2 scores
@@ -383,7 +381,7 @@ authors' and JevBench's.
 **Hard decision dev split.** 317 questions written by Claude Opus on long, realistic documents,
 English and French, checked by two blind Opus solvers, never trained on (used to choose the
 checkpoint, so a dev score, not a benchmark), k = 1, balanced over primitives: base Qwen3.5-4B
-48.8 %, Kahn1 4B v1 62.2 %, Kahn1 4B 65.0 %.
+48.8 %, Kahn1 4B 65.0 %.
 
 **Latency** (one RTX 5070 Ti, vLLM, k = 3, during the held-out run): Kahn1 4B p50 82.4 ms, p95 287.9 ms, 8.0 q/s;
 Kahn1 3B p50 36.4 ms. JEV: p50 248 ms round trip over the network.
@@ -392,8 +390,8 @@ Kahn1 3B p50 36.4 ms. JEV: p50 248 ms round trip over the network.
 JevBench, Kahn1 4B is 0.5 points behind Jev (0.9 on the hard tier) and on par with JevK5's own run.
 Kahn1's case is that it is open, runs locally, is better calibrated and costs nothing per call.
 Where the 4B is weak: dates, durations and amounts computed in a single forward pass (7 of 15
-on JevBench's hard temporal items); Score, its weakest primitive; Noul on the held-out set,
-which went down from version 1 (70.0 % vs 72.2 %); calibration fitted on the training
+on JevBench's hard temporal items); Score, its weakest primitive; Noul on the held-out set
+(70.0 %, JEV 74.4 %); calibration fitted on the training
 distribution (recalibrate on your domain).
 An earlier comparison asked Choice over 8 options for Kahn1 and over every intent for JEV, which
 made Kahn1 look ahead; it was unequal and has been corrected
@@ -444,7 +442,7 @@ kahn1/
 - **Single-batch** `llm.generate()` for all questions × permutations. Looping one call per question is forbidden.
 - **Averaging in probability space**, not logit space (averaging logits is not an average of beliefs).
 - **Evaluation on disjoint, held-out datasets**, never seen during training.
-- **Choose checkpoints on dev splits, never on a benchmark.** Log validation NLL and dev accuracy: for Kahn1 4B v2 the NLL bottomed out at step 250 of 1,400 while dev accuracy kept rising, so the final step was kept.
+- **Choose checkpoints on dev splits, never on a benchmark.** Log validation NLL and dev accuracy: for the current Kahn1 4B the NLL bottomed out at step 250 of 1,400 while dev accuracy kept rising, so the final step was kept.
 - **No RL.** Log-loss on the target answer token is already a strictly proper scoring rule: supervised fine-tuning directly optimizes calibration. **Do not attempt to "fix" the absence of RL.**
 
 ## Key Formulas

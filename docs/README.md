@@ -44,7 +44,7 @@ from `reports/kahn1_4b_report.json` (`scripts/kahn1_4b_report.py`): held-out lik
 (Choice over the same 8 options on every side, see `reports/CHOICE_FAIRNESS.md`), JevBench,
 the hard decision dev split. `reports/jev_vs_kahn1.json` (`scripts/jev_holdout.py`) is the
 first JEV run, which gave JEV every intent on Choice: do not quote its totals as a
-comparison. The browser demos still run the 3B (a v1 GGUF). Licences, as the pages state
+comparison. The browser demos still run an older GGUF build of the 3B. Licences, as the pages state
 them: code MIT, Kahn1 4B weights Apache 2.0, Kahn1 3B weights under the Qwen Research License
 (inherited from Qwen2.5-3B-Instruct; the pages say "research licence, see its terms" and link it).
 
@@ -58,8 +58,9 @@ Two backends, toggled from the page:
 - **webgpu** — model in the browser tab, no server. [wllama](https://github.com/ngxson/wllama)
   (llama.cpp → WASM + WebGPU) loads `mradermacher/Kahn1-Qwen2.5-3B-GGUF` from the Hub
   (Q4_K_M / IQ4_XS / Q3_K_M; Q2_K outputs noise). Weights are cached per site in the
-  browser; the CLEAR button in the page deletes them. That GGUF is **v1**, whose Noul
-  answers are inverted: `GGUF.noulInverted` flips them — set it to `false` for a v3 GGUF.
+  browser; the CLEAR button in the page deletes them. That GGUF is an older build of the 3B
+  that answers Noul inverted, so `GGUF.noulInverted` flips it: set it to `false` for a GGUF
+  built from the published 3B weights.
   Without a usable WebGPU adapter it runs on the WASM CPU backend; if WebGPU fails to
   load the model, the page retries with `n_gpu_layers: 0` and the chip reads `wasm cpu (fallback)`.
 

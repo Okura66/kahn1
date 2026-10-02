@@ -27,9 +27,10 @@ BASE = {k: json.loads((R / "base_eval" / f"heldout_full_{k}.json").read_text(enc
         for k in ("qwen35_4b", "qwen35_9b_fp8", "kahn1_4b") if (R / "base_eval" / f"heldout_full_{k}.json").exists()}
 
 # report keys -> display names
-H = {"k1": "Kahn1 4B", "jev": "JEV 1.13.0", "clef": "clef-flash", "laya": "laya"}
-J = {"k1": "Kahn1 4B", "jev": "Jev 1.13.0", "k5": "JevK5 v0.2", "clef": "clef-flash", "laya": "laya", "layal": "laya-long"}
-NAME = {"k1": "Kahn1 4B", "jev": "JEV 1.13.0", "k5": "JevK5 v0.2", "clef": "Clef-flash", "laya": "Laya",
+H = {"k1": "Kahn1 4B", "jev": "JEV 1.13.0", "clef": "clef-flash", "laya": "laya", "tev": "tev1"}
+J = {"k1": "Kahn1 4B", "jev": "Jev 1.13.0", "k5": "JevK5 v0.2", "clef": "clef-flash", "laya": "laya", "layal": "laya-long",
+     "tev": "tev1"}
+NAME = {"k1": "Kahn1 4B", "jev": "JEV 1.13.0", "k5": "JevK5 v0.2", "clef": "Clef-flash", "laya": "Laya", "tev": "Tev1 4B",
         "layal": "Laya, multilingual, 8k"}
 SRC = ["banking77", "massive", "sst5_eval", "app_reviews_eval", "scitail_eval", "rte_eval"]
 SRC_NAME = {"banking77": "BANKING77", "massive": "MASSIVE", "sst5_eval": "SST-5", "app_reviews_eval": "App reviews",
@@ -141,18 +142,19 @@ def write_csvs(docs: Path) -> None:
     j8, jf, js = jl(D / "jev_eval_preds_choice8.jsonl"), jl(D / "jev_eval_preds.jsonl"), \
         jl(D / "jev_eval_preds_noul_supported.jsonl")
     sysp = {s: (load_preds(preds_path(s, "heldout")), load_preds(preds_path(s, "heldout", "supported")))
-            for s in ("clef-flash", "laya")}
+            for s in ("clef-flash", "tev1", "laya")}
     buf = io.StringIO()
     w = csv.writer(buf, lineterminator="\n")
     w.writerow(["item", "source", "kind", "kahn1_4b_correct", "kahn1_4b_confidence", "jev_correct", "jev_confidence",
-                "clef_flash_correct", "clef_flash_confidence", "laya_correct", "laya_confidence"])
+                "clef_flash_correct", "clef_flash_confidence", "tev1_correct", "tev1_confidence", "laya_correct",
+                "laya_confidence"])
     for i, it in enumerate(items):
         view = eight(it) if it["kind"] == "choice" else it
         ja = j8[i]["answer"] if it["kind"] == "choice" else js[i]["answer"] if it["kind"] == "noul" else jf[i]["answer"]
         row = [i, it["source"], it["kind"], k1["corrects"][i], round(k1["confidences"][i], 4)]
         c, p = jev_outcome(view, ja)[:2]
         row += [c, round(p, 4)]
-        for s in ("clef-flash", "laya"):
+        for s in ("clef-flash", "tev1", "laya"):
             base, sup = sysp[s]
             a = sup[i] if it["kind"] == "noul" and i in sup else base[i]
             c, p = jev_outcome(view, a)[:2]
@@ -164,20 +166,21 @@ def write_csvs(docs: Path) -> None:
     tasks = jevbench_tasks()
     k1j = json.loads((R / "jevbench_v7_preds.json").read_text(encoding="utf-8"))["corrects"]
     clef, laya = load_preds(preds_path("clef-flash", "jevbench")), load_preds(preds_path("laya", "jevbench"))
+    tev = load_preds(preds_path("tev1", "jevbench"))
     buf = io.StringIO()
     w = csv.writer(buf, lineterminator="\n")
-    w.writerow(["task_id", "tier", "kind", "kahn1_4b_correct", "clef_flash_correct", "laya_correct"])
+    w.writerow(["task_id", "tier", "kind", "kahn1_4b_correct", "clef_flash_correct", "tev1_correct", "laya_correct"])
     for i, it in enumerate(jbi):
         t = tasks[it["id"]]
         w.writerow([it["id"], it["source"].removeprefix("jevbench-"), it["kind"], k1j[i],
-                    jevbench_outcome(t, clef[i])[0], jevbench_outcome(t, laya[i])[0]])
+                    jevbench_outcome(t, clef[i])[0], jevbench_outcome(t, tev[i])[0], jevbench_outcome(t, laya[i])[0]])
     (docs / "data" / "open_models_jevbench.csv").write_bytes(buf.getvalue().encode("utf-8"))
 
 
 # ---------------------------------------------------------------------------------------------
 # probe and base-model check
 # ---------------------------------------------------------------------------------------------
-PROBE_SYS = [("k1", "Kahn1 4B"), ("clef", "clef-flash"), ("laya", "laya")]
+PROBE_SYS = [("k1", "Kahn1 4B"), ("clef", "clef-flash"), ("tev", "tev1"), ("laya", "laya")]
 PROBE_SRC = ["banking77", "massive", "sst5_eval", "scitail_eval", "rte_eval"]
 
 
@@ -215,6 +218,7 @@ def base_table(fr: bool) -> str:
         return ""
     cols = [("qwen35_4b", "Qwen3.5-4B" + (" (base)" if not fr else " (base)")),
             ("kahn1_4b", "Kahn1 4B, k" + N + "=" + N + "1"),
+            ("tev", "Tev1 4B"),
             ("qwen35_9b_fp8", "Qwen3.5-9B (base, fp8)"),
             ("clef", "Clef-flash")]
     head = ["Groupe" if fr else "Group"] + [c for _, c in cols]
@@ -223,9 +227,9 @@ def base_table(fr: bool) -> str:
         label = KIND_NAME["fr" if fr else "en"].get(g) or SRC_NAME[g]
         vals = []
         for k, _ in cols:
-            vals.append(held("clef", g) if k == "clef" else b.get(k, {}).get(g))
+            vals.append(held(k, g) if k in ("clef", "tev") else b.get(k, {}).get(g))
         rows.append([label] + [pct(v, fr) for v in vals])
-    return table(head, rows, {1, 2, 3, 4})
+    return table(head, rows, {1, 2, 3, 4, 5})
 
 
 # ---------------------------------------------------------------------------------------------
@@ -245,26 +249,29 @@ def probe_reading(fr: bool) -> str:
 
     cb, cm = cut(b["qwen35_9b_fp8"]["banking77"], held("clef", "banking77")), cut(b["qwen35_9b_fp8"]["massive"], held("clef", "massive"))
     kb_, km = cut(b["qwen35_4b"]["banking77"], b["kahn1_4b"]["banking77"]), cut(b["qwen35_4b"]["massive"], b["kahn1_4b"]["massive"])
+    tb, tm = cut(b["qwen35_4b"]["banking77"], held("tev", "banking77")), cut(b["qwen35_4b"]["massive"], held("tev", "massive"))
     e = lambda x: pct(err(x), fr)
     q = lambda x: f"{100 * x:.0f}".replace(".", ",") + (f"{N}%" if fr else "%")
     if fr:
         return (f"Sur BANKING77, Clef-flash supprime {q(cb)} des erreurs de son modèle de base (de {e(b['qwen35_9b_fp8']['banking77'])} "
                 f"à {e(held('clef', 'banking77'))} d'erreurs), et {q(cm)} sur MASSIVE ; Kahn1 4B en supprime {q(kb_)} et {q(km)} "
-                "(Kahn1 n'a vu aucun des deux). Un gain aussi fort sur les intentions est ce que donne un entraînement sur des "
+                f"(Kahn1 n'a vu aucun des deux), et Tev1, qui a vu BANKING77 mais pas MASSIVE, {q(tb)} et {q(tm)}. Un gain aussi fort sur les intentions est ce que donne un entraînement sur des "
                 "données d'intention, qu'il s'agisse de ces datasets ou de datasets proches, et ces deux tests ne permettent pas "
                 "de trancher. Lecture honnête : l'avance de Clef-flash en Choice est réelle sur ces exemples, mais on ne peut pas "
                 "affirmer qu'elle est zero-shot. Les modèles de base sont lus avec le format de prompt de Kahn1, en fp8 pour le 9B.")
     return (f"On BANKING77, Clef-flash removes {q(cb)} of its base model's errors (from {e(b['qwen35_9b_fp8']['banking77'])} to "
             f"{e(held('clef', 'banking77'))} errors), and {q(cm)} on MASSIVE; Kahn1 4B removes {q(kb_)} and {q(km)} (Kahn1 saw "
-            "neither). A gain that large on intents is what training on intent data gives, whether these datasets or close "
+            f"neither), and Tev1, which saw BANKING77 but not MASSIVE, {q(tb)} and {q(tm)}. A gain that large on intents is what training on intent data gives, whether these datasets or close "
             "ones, and these two tests cannot tell which. The honest reading: Clef-flash's lead on Choice is real on these "
             "items, but we cannot claim it is zero-shot. The base models are read with Kahn1's prompt format, the 9B in fp8.")
 
 
 def open_models(fr: bool) -> tuple[str, list]:
     from scripts.build_kb_pages import hero, p, sec, table, ul
-    K = ["k1", "clef", "jev", "laya"]
-    KJ = ["k1", "jev", "k5", "clef", "laya"]
+    K = ["k1", "clef", "jev", "tev", "laya"]
+    KJ = ["k1", "jev", "k5", "clef", "tev", "laya"]
+    tx, ty, tp = mc_held("tev")
+    vx, vy, vp = mc_jb("tev")
     cx, cy, cp = mc_held("clef")
     lx, ly, lp = mc_held("laya")
     jx, jy, jp = mc_held("jev")
@@ -277,31 +284,35 @@ def open_models(fr: bool) -> tuple[str, list]:
                  ("methode", "Comment chaque système a tourné"), ("biais", "Biais connus et limites"),
                  ("exposition", "Un système a-t-il vu les sources du test ?"), ("donnees", "Données et reproduction")]
         h = hero("Modèles de décision ouverts, mesurés à périmètre égal",
-                 f"Kahn1 4B, Clef-flash, Laya et JEV sur les mêmes 14{N}663 exemples réservés et les 231 exemples publics "
+                 f"Kahn1 4B, Clef-flash, Tev1, Laya et JEV sur les mêmes 14{N}663 exemples réservés et les 231 exemples publics "
                  "de JevBench, sur un seul GPU : les chiffres, la méthode de test, et les biais que l'on connaît, "
                  "y compris les nôtres.", items, True, "Mis à jour le 2 octobre 2026")
         hd, rw = heldout_table(K, True, ["all", "kind:choice", "kind:score", "kind:noul"])
         s1 = sec(1, "apercu", "En bref", p(
             f"Clef-flash, un modèle de 9B, est le plus précis sur notre holdout ({pct(held('clef', 'all'), True)}), devant "
-            f"JEV ({pct(held('jev', 'all'), True)}) et Kahn1 4B ({pct(held('k1', 'all'), True)}), grâce à Choice. Kahn1 4B "
-            "est devant en Noul et le mieux calibré. Sur JevBench, Kahn1 4B, Jev, JevK5 et Clef-flash tiennent en 4 points, "
-            "et aucun écart entre Kahn1 4B et l'un d'eux n'est significatif. Laya, un encodeur de 421M, est loin derrière "
-            "sur les deux, alors que ses données d'entraînement couvrent les six sources du holdout.") +
-            table(hd, rw, {1, 2, 3, 4, 5}) +
+            f"JEV ({pct(held('jev', 'all'), True)}) et Kahn1 4B ({pct(held('k1', 'all'), True)}), grâce à Choice. Sur JevBench, Kahn1 4B, Jev, JevK5 et Clef-flash tiennent en 4 points, "
+            "et aucun écart entre Kahn1 4B et l'un d'eux n'est significatif. Tev1 (Together AI, 4B, la même base que Kahn1) "
+            f"est au niveau de Kahn1 4B sur le holdout ({pct(held('tev', 'all'), True)}, écart non significatif), le meilleur "
+            f"en Noul ({pct(held('tev', 'kind:noul'), True)}) et le mieux calibré (ECE {num(held_ece('tev'), True)}), mais loin "
+            f"derrière sur JevBench ({pct(jb('tev', 'all'), True)}, niveau difficile {pct(jb('tev', 'hard'), True)}). Laya, un "
+            "encodeur de 421M, est loin derrière sur les deux, alors que ses données d'entraînement couvrent les six sources "
+            "du holdout.") +
+            table(hd, rw, {1, 2, 3, 4, 5, 6}) +
             p(f"ECE (0 est parfait) : Kahn1 4B {num(held_ece('k1'), True)}, Clef-flash {num(held_ece('clef'), True)}, "
-              f"JEV {num(held_ece('jev'), True)}, Laya {num(held_ece('laya'), True)}. Chaque système est mesuré tel qu'il est "
-              "livré : Kahn1 avec sa calibration par température, Laya avec la sienne, Clef-flash en softmax brute, JEV tel que "
-              "l'API répond."))
+              f"JEV {num(held_ece('jev'), True)}, Tev1 {num(held_ece('tev'), True)}, Laya {num(held_ece('laya'), True)}. Chaque système est mesuré tel qu'il est "
+              "livré : Kahn1 avec sa calibration par température, Laya avec la sienne, Clef-flash en softmax brute, Tev1 par "
+              "les probabilités de ses lettres d'option (qu'il ne présente pas comme une confiance), JEV tel que l'API répond."))
         hd, rw = heldout_table(K, True)
         s2 = sec(2, "holdout", "Holdout Kahn1, par dataset", p(
             f"14{N}663 exemples issus des splits de test de six datasets publics : intentions (BANKING77, MASSIVE), échelles "
             "à 5 niveaux (SST-5, avis d'applications), implication (RTE, SciTail). Une question par requête, mêmes options "
             "pour tous : chaque question Choice liste la bonne intention et 7 distracteurs tirés de l'état, 8 options en tout.") +
-            table(hd, rw, {1, 2, 3, 4, 5}) +
+            table(hd, rw, {1, 2, 3, 4, 5, 6}) +
             p(f"Apparié à Kahn1 4B, exemple par exemple (test exact de McNemar) : Clef-flash réussit {intf(cy, True)} exemples "
               f"que Kahn1 rate, Kahn1 {intf(cx, True)} que Clef-flash rate (p{N}={N}{pval(cp, True)}) ; JEV {intf(jy, True)} "
               f"contre {intf(jx, True)} (p{N}={N}{pval(jp, True)}) ; Laya {intf(ly, True)} contre {intf(lx, True)} "
-              f"(p{N}={N}{pval(lp, True)}). Clef-flash et JEV sont donc significativement devant Kahn1 4B sur ce holdout.",
+              f"(p{N}={N}{pval(lp, True)}) ; Tev1 {intf(ty, True)} contre {intf(tx, True)} (p{N}={N}{pval(tp, True)}). "
+              "Clef-flash et JEV sont donc significativement devant Kahn1 4B sur ce holdout.",
               "La formulation de Noul change beaucoup les résultats. Posée comme la phrase brute (la forme native de Jev), "
               f"la question devient « est-ce vrai en général ? » : JEV tombe à {pct(nb['JEV 1.13.0']['acc'], True)}, "
               f"Clef-flash à {pct(nb['clef-flash']['acc'], True)}, Laya à {pct(nb['laya']['acc'], True)}. "
@@ -310,12 +321,12 @@ def open_models(fr: bool) -> tuple[str, list]:
         hd, rw = jevbench_table(KJ, True)
         s3 = sec(3, "jevbench", "JevBench, par niveau", p(
             "<a href=\"https://github.com/fstandhartinger/jevbench\" rel=\"noopener\">JevBench</a> est un benchmark public "
-            "indépendant pour les modèles de classe Jev, avec des rubriques longues et des décisions difficiles. Clef-flash "
-            "et Laya ont reçu les questions et les états JevBench natifs, descriptions des critères comprises, comme le "
-            "runner de JevBench les envoie à Jev.") + table(hd, rw, {1, 2, 3, 4, 5, 6}) +
+            "indépendant pour les modèles de classe Jev, avec des rubriques longues et des décisions difficiles. Clef-flash, "
+            "Tev1 et Laya ont reçu les questions et les états JevBench natifs, descriptions des critères comprises, comme le "
+            "runner de JevBench les envoie à Jev.") + table(hd, rw, {1, 2, 3, 4, 5, 6, 7}) +
             p(f"Apparié à Kahn1 4B : Clef-flash {by} contre {bx} (p{N}={N}{pval(bp, True)}, non significatif), Laya {ay} contre "
-              f"{ax} (p{N}={N}{pval(ap, True)}), Jev 11 contre 13 (p{N}={N}0,84), JevK5 10 contre 13 (p{N}={N}0,68). "
-              "Trois exécutions sur les mêmes exemples : la nôtre pour Kahn1, Clef-flash et Laya, celle de JevBench pour Jev, "
+              f"{ax} (p{N}={N}{pval(ap, True)}), Tev1 {vy} contre {vx} (p{N}={N}{pval(vp, True)}), Jev 11 contre 13 (p{N}={N}0,84), JevK5 10 contre 13 (p{N}={N}0,68). "
+              "Trois exécutions sur les mêmes exemples : la nôtre pour Kahn1, Clef-flash, Tev1 et Laya, celle de JevBench pour Jev, "
               "celle des auteurs de JevK5 pour JevK5 (l'exécution de JevBench donne 85,3 % à JevK5 v0.2)."))
         s4 = sec(4, "methode", "Comment chaque système a tourné", ul([
             "<b>Mêmes exemples, mêmes options, mêmes labels.</b> Choice sur les 8 mêmes options que Kahn1, Score sur les "
@@ -326,12 +337,16 @@ def open_models(fr: bool) -> tuple[str, list]:
             "<b>Clef-flash</b> : <code>Cloudflare/clef-flash</code> avec son code de publication "
             "(<code>joint_schema_model.py</code>), transformers, softmax par question. Poids en <b>int8</b> "
             f"(bitsandbytes) : en bf16, ses 18,8{N}Go ne tiennent pas dans les 16{N}Go de notre carte. Texte seul.",
+            "<b>Tev1</b> : <code>togethercomputer/Tev1-4B-experimental</code>, vLLM, bf16, son prompt système recommandé "
+            "et sa décision JSON (état, question, options étiquetées par lettres), thinking désactivé. Sa réponse est la "
+            "lettre la plus probable au premier token, celle qu'il génère en greedy ; les probabilités des lettres servent "
+            "de confiance. Score passe par ses options, dans l'ordre des niveaux ; Noul par deux options, oui et non.",
             "<b>Laya</b> : <code>convaiinnovations/laya</code> 0.3.23, son <code>Router</code> recommandé (il choisit le "
             "checkpoint anglais ou multilingue), sa calibration livrée.",
             "<b>JEV 1.13.0</b> : l'API TypeSafe, appelée par nous avec les mêmes exemples (holdout) ; sur JevBench, les "
             "résultats publiés par JevBench.",
             f"<b>Matériel</b> : une RTX 5070 Ti (16{N}Go), WSL2. <b>Statistiques</b> : test exact de McNemar apparié, ECE "
-            "sur 15 tranches de p<sub>max</sub>. Une seule exécution par système : les quatre sont déterministes à "
+            "sur 15 tranches de p<sub>max</sub>. Une seule exécution par système : tous sont déterministes à "
             "l'inférence."]))
         s5 = sec(5, "biais", "Biais connus et limites", ul([
             "<b>Le holdout est le nôtre.</b> Nous avons choisi ses six sources et sa forme (8 options en Choice). Elles "
@@ -341,11 +356,15 @@ def open_models(fr: bool) -> tuple[str, list]:
             "app_reviews, selon sa fiche) : ses chiffres de holdout sont in-distribution, pas zero-shot, et pourtant derrière.",
             "<b>Les données d'entraînement de Clef-flash ne sont pas publiées</b> (« internal synthetic datasets »). "
             "BANKING77 figure dans les benchmarks de son éditeur. Voir la section suivante.",
+            "<b>Tev1 a été entraîné sur BANKING77 et SST-5</b> (et MultiNLI, BoolQ, AG News, plus des règles synthétiques, "
+            "selon son <code>DATA_SOURCES.md</code>) : ses chiffres sur ces deux sources sont in-distribution. Pas sur JevBench, "
+            "qu'il déclare n'avoir pas utilisé. Sa licence de poids est encore « en cours de finalisation ».",
             "<b>Clef-flash a tourné en int8</b>, pas en bf16 comme publié : ses chiffres peuvent bouger un peu en bf16.",
             f"<b>Laya lit 512 tokens</b> avec son checkpoint anglais : {tr_jb} des 231 états JevBench sont tronqués. Lu en "
             f"entier par son checkpoint multilingue (8{N}192 tokens), il fait moins bien ({pct(jb('layal', 'all'), True)}) : "
             "la troncature n'explique pas son score.",
-            "<b>Réglages livrés</b> : Kahn1 moyenne 3 ordres d'options et se calibre, les autres répondent en une passe. "
+            "<b>Réglages livrés</b> : Kahn1 moyenne 3 ordres d'options et se calibre, les autres répondent en une passe, "
+            "Tev1 avec les options dans l'ordre donné. "
             "L'ECE compare donc des systèmes tels que livrés, pas après une recalibration commune.",
             "<b>Trois runners sur JevBench</b> ; seule la moitié publique de JevBench a pu être testée ici."]))
         s6 = sec(6, "exposition", "Un système a-t-il vu les sources du test ?", p(
@@ -353,7 +372,8 @@ def open_models(fr: bool) -> tuple[str, list]:
             "exactement comme le holdout. Un modèle qui a mémorisé ces exemples fait mieux sur train que sur test ; un "
             "modèle qui n'a jamais vu la source fait pareil sur les deux. Kahn1, qui n'a vu aucune de ces sources, sert de "
             "témoin ; Noul y est posé comme la phrase brute pour Clef-flash et Laya, des deux côtés.") + probe_table(True) +
-            p("Aucun système ne montre d'écart au-delà de celui du témoin, Laya compris, qui déclare pourtant avoir été entraîné sur ces sources. "
+            p("Aucun système ne montre d'écart au-delà de celui du témoin, ni Laya ni Tev1, qui déclarent pourtant avoir été "
+              "entraînés sur ces sources (toutes pour Laya, BANKING77 et SST-5 pour Tev1). "
               "La sonde détecte la mémorisation, pas l'exposition : un modèle entraîné sur un split train sans "
               "sur-apprentissage fait aussi bien sur le test. Elle ne prouve donc pas qu'un système n'a pas vu ces données.",
               f"Ensuite, le gain par rapport au modèle de base, à k{N}={N}1 sans calibration : ce que le "
@@ -375,29 +395,35 @@ def open_models(fr: bool) -> tuple[str, list]:
              ("method", "How each system was run"), ("biases", "Known biases and limits"),
              ("exposure", "Did a system see the test sources?"), ("data", "Data and reproduction")]
     h = hero("Open decision models, measured like for like",
-             "Kahn1 4B, Clef-flash, Laya and JEV on the same 14,663 held-out items and the 231 public JevBench items, on "
+             "Kahn1 4B, Clef-flash, Tev1, Laya and JEV on the same 14,663 held-out items and the 231 public JevBench items, on "
              "one GPU: the numbers, the test method, and the biases we know of, ours included.", items, False,
              "Updated October 2, 2026")
     hd, rw = heldout_table(K, False, ["all", "kind:choice", "kind:score", "kind:noul"])
     s1 = sec(1, "overview", "At a glance", p(
         f"Clef-flash, a 9B model, is the most accurate system on our held-out set ({pct(held('clef', 'all'), False)}), ahead "
         f"of JEV ({pct(held('jev', 'all'), False)}) and Kahn1 4B ({pct(held('k1', 'all'), False)}), on the strength of Choice. "
-        "Kahn1 4B is ahead on Noul and the best calibrated. On JevBench, Kahn1 4B, Jev, JevK5 and Clef-flash are within "
-        "4 points, and no gap between Kahn1 4B and any of them is significant. Laya, a 421M encoder, is far behind on "
-        "both, although its training data covers the six sources of the held-out set.") + table(hd, rw, {1, 2, 3, 4, 5}) +
+        "On JevBench, Kahn1 4B, Jev, JevK5 and Clef-flash are within "
+        "4 points, and no gap between Kahn1 4B and any of them is significant. Tev1 (Together AI, 4B, the same base as "
+        f"Kahn1) is level with Kahn1 4B on the held-out set ({pct(held('tev', 'all'), False)}, not a significant gap), the "
+        f"best on Noul ({pct(held('tev', 'kind:noul'), False)}) and the best calibrated (ECE {num(held_ece('tev'), False)}), "
+        f"but far behind on JevBench ({pct(jb('tev', 'all'), False)}, hard tier {pct(jb('tev', 'hard'), False)}). "
+        "Laya, a 421M encoder, is far behind on both, although its training data covers the six sources of the held-out "
+        "set.") + table(hd, rw, {1, 2, 3, 4, 5, 6}) +
         p(f"ECE (0 is perfect): Kahn1 4B {num(held_ece('k1'), False)}, Clef-flash {num(held_ece('clef'), False)}, "
-          f"JEV {num(held_ece('jev'), False)}, Laya {num(held_ece('laya'), False)}. Each system is measured as shipped: "
-          "Kahn1 with its temperature calibration, Laya with its own, Clef-flash as a raw softmax, JEV as its API answers."))
+          f"JEV {num(held_ece('jev'), False)}, Tev1 {num(held_ece('tev'), False)}, Laya {num(held_ece('laya'), False)}. Each system is measured as shipped: "
+          "Kahn1 with its temperature calibration, Laya with its own, Clef-flash as a raw softmax, Tev1 through the "
+          "probabilities of its option letters (which it does not present as a confidence), JEV as its API answers."))
     hd, rw = heldout_table(K, False)
     s2 = sec(2, "holdout", "Kahn1 held-out set, per dataset", p(
         "14,663 items from the test splits of six public datasets: intents (BANKING77, MASSIVE), 5-level scales (SST-5, "
         "app reviews), entailment (RTE, SciTail). One question per request, the same options for everyone: each Choice "
         "question lists the right intent and 7 distractors seeded from the state, 8 options in all.") +
-        table(hd, rw, {1, 2, 3, 4, 5}) +
+        table(hd, rw, {1, 2, 3, 4, 5, 6}) +
         p(f"Paired with Kahn1 4B item by item (exact McNemar test): Clef-flash gets {intf(cy, False)} items right that Kahn1 "
           f"misses, Kahn1 {intf(cx, False)} that Clef-flash misses (p&nbsp;=&nbsp;{pval(cp, False)}); JEV {intf(jy, False)} "
           f"against {intf(jx, False)} (p&nbsp;=&nbsp;{pval(jp, False)}); Laya {intf(ly, False)} against {intf(lx, False)} "
-          f"(p&nbsp;=&nbsp;{pval(lp, False)}). Clef-flash and JEV are significantly ahead of Kahn1 4B on this held-out set.",
+          f"(p&nbsp;=&nbsp;{pval(lp, False)}); Tev1 {intf(ty, False)} against {intf(tx, False)} (p&nbsp;=&nbsp;{pval(tp, False)}). "
+          "Clef-flash and JEV are significantly ahead of Kahn1 4B on this held-out set.",
           "How Noul is worded matters a lot. Asked as the bare statement (Jev's native form), the question turns into "
           f"\"is this true in general?\": JEV drops to {pct(nb['JEV 1.13.0']['acc'], False)}, Clef-flash to "
           f"{pct(nb['clef-flash']['acc'], False)}, Laya to {pct(nb['laya']['acc'], False)}. The tables "
@@ -406,12 +432,12 @@ def open_models(fr: bool) -> tuple[str, list]:
     hd, rw = jevbench_table(KJ, False)
     s3 = sec(3, "jevbench", "JevBench, per tier", p(
         "<a href=\"https://github.com/fstandhartinger/jevbench\" rel=\"noopener\">JevBench</a> is an independent public "
-        "benchmark for Jev-class models, with long rubrics and hard judgment calls. Clef-flash and Laya got the native "
+        "benchmark for Jev-class models, with long rubrics and hard judgment calls. Clef-flash, Tev1 and Laya got the native "
         "JevBench questions and states, criteria descriptions included, as JevBench's runner sends them to Jev.") +
-        table(hd, rw, {1, 2, 3, 4, 5, 6}) +
+        table(hd, rw, {1, 2, 3, 4, 5, 6, 7}) +
         p(f"Paired with Kahn1 4B: Clef-flash {by} against {bx} (p&nbsp;=&nbsp;{pval(bp, False)}, not significant), Laya {ay} "
-          f"against {ax} (p&nbsp;=&nbsp;{pval(ap, False)}), Jev 11 against 13 (p&nbsp;=&nbsp;0.84), JevK5 10 against 13 "
-          "(p&nbsp;=&nbsp;0.68). Three runs on the same items: ours for Kahn1, Clef-flash and Laya, JevBench's for Jev, "
+          f"against {ax} (p&nbsp;=&nbsp;{pval(ap, False)}), Tev1 {vy} against {vx} (p&nbsp;=&nbsp;{pval(vp, False)}), Jev 11 against 13 (p&nbsp;=&nbsp;0.84), JevK5 10 against 13 "
+          "(p&nbsp;=&nbsp;0.68). Three runs on the same items: ours for Kahn1, Clef-flash, Tev1 and Laya, JevBench's for Jev, "
           "JevK5's authors' for JevK5 (JevBench's own run gives JevK5 v0.2 85.3%)."))
     s4 = sec(4, "method", "How each system was run", ul([
         "<b>Same items, same options, same labels.</b> Choice over the same 8 options as Kahn1, Score over the same levels, "
@@ -422,12 +448,16 @@ def open_models(fr: bool) -> tuple[str, list]:
         "<b>Clef-flash</b>: <code>Cloudflare/clef-flash</code> through its release code (<code>joint_schema_model.py</code>), "
         "transformers, a softmax per question. Weights in <b>int8</b> (bitsandbytes): in bf16 its 18.8&nbsp;GB do not fit "
         "in our card's 16&nbsp;GB. Text only.",
+        "<b>Tev1</b>: <code>togethercomputer/Tev1-4B-experimental</code>, vLLM, bf16, its recommended system prompt and "
+        "JSON decision (state, question, letter-labelled options), thinking off. Its answer is the most likely letter at "
+        "the first token, the one it generates greedily; the letters' probabilities serve as its confidence. Score goes "
+        "through its options, in level order; Noul through two options, yes and no.",
         "<b>Laya</b>: <code>convaiinnovations/laya</code> 0.3.23, its recommended <code>Router</code> (which picks the "
         "English or the multilingual checkpoint), its shipped calibration.",
         "<b>JEV 1.13.0</b>: TypeSafe's API, called by us with the same items (held-out set); on JevBench, the outcomes "
         "JevBench publishes.",
         "<b>Hardware</b>: one RTX 5070 Ti (16&nbsp;GB), WSL2. <b>Statistics</b>: paired exact McNemar test, ECE over 15 "
-        "bins of p<sub>max</sub>. One run per system: all four are deterministic at inference."]))
+        "bins of p<sub>max</sub>. One run per system: all are deterministic at inference."]))
     s5 = sec(5, "biases", "Known biases and limits", ul([
         "<b>The held-out set is ours.</b> We chose its six sources and its shape (8 options on Choice). They were kept out "
         "of Kahn1's training, but Kahn1 was trained on neighbouring tasks: intents (CLINC150, which has banking intents), "
@@ -436,11 +466,15 @@ def open_models(fr: bool) -> tuple[str, list]:
         "app_reviews, per its model card): its held-out figures are in-distribution, not zero-shot, and still behind.",
         "<b>Clef-flash's training data is not published</b> (\"internal synthetic datasets\"). BANKING77 is among its "
         "provider's benchmarks. See the next section.",
+        "<b>Tev1 was trained on BANKING77 and SST-5</b> (and MultiNLI, BoolQ, AG News, plus synthetic rules, per its "
+        "<code>DATA_SOURCES.md</code>): its figures on those two sources are in-distribution. Not on JevBench, which it says "
+        "it did not use. Its weights licence is still \"being finalized\".",
         "<b>Clef-flash ran in int8</b>, not in bf16 as released: its figures may move a little in bf16.",
         f"<b>Laya reads 512 tokens</b> with its English checkpoint: {tr_jb} of the 231 JevBench states are truncated. Read in "
         f"full by its multilingual checkpoint (8,192 tokens), it scores lower ({pct(jb('layal', 'all'), False)}): truncation "
         "does not explain its score.",
-        "<b>Shipped settings</b>: Kahn1 averages 3 option orders and calibrates, the others answer in one pass. ECE "
+        "<b>Shipped settings</b>: Kahn1 averages 3 option orders and calibrates, the others answer in one pass, Tev1 with "
+        "the options in the order given. ECE "
         "therefore compares systems as shipped, not after a common recalibration.",
         "<b>Three runners on JevBench</b>; only JevBench's public half could be tested here."]))
     s6 = sec(6, "exposure", "Did a system see the test sources?", p(
@@ -448,7 +482,8 @@ def open_models(fr: bool) -> tuple[str, list]:
         "held-out set. A model that memorised those items scores higher on train than on test; a model that never saw "
         "the source scores the same on both. Kahn1, which saw none of these sources, is the control; Noul is asked as the "
         "bare statement for Clef-flash and Laya, on both splits.") + probe_table(False) +
-        p("No system shows a gap beyond the control's, Laya included, which says it was trained on these sources. The probe detects "
+        p("No system shows a gap beyond the control's, neither Laya nor Tev1, which say they were trained on these sources "
+          "(all of them for Laya, BANKING77 and SST-5 for Tev1). The probe detects "
           "memorisation, not exposure: a model trained on a train split without overfitting does as well on the test "
           "split. It does not prove that a system never saw this data.",
           "Then, the gain over the base model, at k&nbsp;=&nbsp;1 without calibration: what fine-tuning adds to the raw "

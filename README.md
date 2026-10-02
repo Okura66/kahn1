@@ -71,14 +71,14 @@ No GPU? See [Running on CPU](#running-on-cpu-no-gpu-required). The full guide, w
 
 Like for like: on the held-out set every system answers the same questions over the same options (Choice over the
 same 8 options); JevBench is the 231 public items of an external benchmark. Kahn1: k = 3, temperature calibration.
-Clef-flash and Laya: run by us on the same GPU, each through its own release code, in its shipped setting.
+Clef-flash, Tev1 and Laya: run by us on the same GPU, each through its own release code, in its shipped setting.
 
-| | Kahn1 4B | Kahn1 3B | JEV 1.13.0 | JevK5 v0.2 | Clef-flash (int8) | Laya |
-|---|---:|---:|---:|---:|---:|---:|
-| Held-out, 14,663 items | 72.4 % | 70.3 % | 73.2 % | not run | **74.8 %** | 59.1 % |
-| Held-out ECE, lower is better | **0.072** | 0.082 | 0.113 | not run | 0.101 | 0.184 |
-| JevBench, 231 public items | **87.4 %** | 67.5 % | 86.6 % | 86.1 % | 83.5 % | 57.6 % |
-| JevBench, hard tier (111 items) | **75.7 %** | 42.3 % | 73.0 % | 73.9 % | 67.6 % | 32.4 % |
+| | Kahn1 4B | Kahn1 3B | JEV 1.13.0 | JevK5 v0.2 | Clef-flash (int8) | Tev1 4B | Laya |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Held-out, 14,663 items | 72.4 % | 70.3 % | 73.2 % | not run | **74.8 %** | 72.0 % | 59.1 % |
+| Held-out ECE, lower is better | 0.072 | 0.082 | 0.113 | not run | 0.101 | **0.060** | 0.184 |
+| JevBench, 231 public items | **87.4 %** | 67.5 % | 86.6 % | 86.1 % | 83.5 % | 76.2 % | 57.6 % |
+| JevBench, hard tier (111 items) | **75.7 %** | 42.3 % | 73.0 % | 73.9 % | 67.6 % | 52.3 % | 32.4 % |
 
 - JEV is ahead on the held-out set overall and on Choice (94.5 % vs 92.3 %, 79.1 % vs 71.6 % over every intent);
   the two are level on Score and Kahn1 4B is ahead on Noul (75.5 % vs 74.4 %).
@@ -88,8 +88,10 @@ Clef-flash and Laya: run by us on the same GPU, each through its own release cod
 - Cloudflare's [Clef-flash](https://huggingface.co/Cloudflare/clef-flash) (9B; int8 here, its 18.8 GB of bf16 weights
   do not fit in 16 GB) is the most accurate on the held-out set, significantly ahead of Kahn1 4B (p = 6e-15), on the
   strength of Choice (98.6 % vs 92.3 %); Kahn1 4B is ahead on Noul and better calibrated, and the two are level on
-  JevBench (p = 0.16). [Laya](https://huggingface.co/convaiinnovations/laya) (421M encoder) is far behind on both,
-  although it was trained on the six held-out sources. Method, biases and a train-split probe:
+  JevBench (p = 0.16). Together's [Tev1-4B-experimental](https://huggingface.co/togethercomputer/Tev1-4B-experimental),
+  on the same base as Kahn1 4B, is level with it on the held-out set (p = 0.15), better calibrated and ahead on Noul, but
+  far behind on JevBench (p = 4e-5); it was trained on BANKING77 and SST-5. [Laya](https://huggingface.co/convaiinnovations/laya)
+  (421M encoder) is far behind on both, although it was trained on the six held-out sources. Method, biases and a train-split probe:
   [kahn1.com/benchmarks/open-models](https://kahn1.com/benchmarks/open-models/),
   [`reports/OPEN_DECISION_MODELS.md`](reports/OPEN_DECISION_MODELS.md).
 
@@ -464,25 +466,28 @@ authors' and JevBench's.
 
 **Other open decision models, same items, same GPU.** Clef-flash (Cloudflare, Qwen3.5-9B with a joint
 schema head, Apache 2.0) through its release code, weights in int8 (bitsandbytes); Laya (Convai
-Innovations, ModernBERT-large encoder, Apache 2.0) through its Router. Both take Jev's question fields;
+Innovations, ModernBERT-large encoder, Apache 2.0) through its Router; Tev1-4B-experimental (Together AI,
+Qwen3.5-4B fine-tune, weights licence being finalized) through vLLM with its recommended prompt, its answer
+read as the most likely option letter. Both take Jev's question fields;
 Noul is asked as "The text supports this statement: ...", as for JEV above; on JevBench they get the
 native JevBench questions and states.
 
-| | Items | Kahn1 4B | Clef-flash (int8) | Laya |
-|---|---:|---:|---:|---:|
-| Held-out, all | 14,663 | 72.4 % | **74.8 %** | 59.1 % |
-| Choice (8 options) | 6,050 | 92.3 % | **98.6 %** | 83.2 % |
-| Score | 6,210 | 51.9 % | **53.7 %** | 29.5 % |
-| Noul | 2,403 | **75.5 %** | 69.7 % | 74.8 % |
-| Held-out ECE | 14,663 | **0.072** | 0.101 | 0.184 |
-| JevBench, all | 231 | **87.4 %** | 83.5 % | 57.6 % |
-| JevBench, hard | 111 | **75.7 %** | 67.6 % | 32.4 % |
+| | Items | Kahn1 4B | Clef-flash (int8) | Tev1 4B | Laya |
+|---|---:|---:|---:|---:|---:|
+| Held-out, all | 14,663 | 72.4 % | **74.8 %** | 72.0 % | 59.1 % |
+| Choice (8 options) | 6,050 | 92.3 % | **98.6 %** | 93.0 % | 83.2 % |
+| Score | 6,210 | 51.9 % | **53.7 %** | 48.4 % | 29.5 % |
+| Noul | 2,403 | 75.5 % | 69.7 % | **80.5 %** | 74.8 % |
+| Held-out ECE | 14,663 | 0.072 | 0.101 | **0.060** | 0.184 |
+| JevBench, all | 231 | **87.4 %** | 83.5 % | 76.2 % | 57.6 % |
+| JevBench, hard | 111 | **75.7 %** | 67.6 % | 52.3 % | 32.4 % |
 
 Paired with Kahn1 4B: Clef-flash 1,187 against 836 items on the held-out set (p = 6e-15), 12 against 21
-on JevBench (p = 0.16, not significant). Laya was trained on the six held-out sources (its model card),
+on JevBench (p = 0.16, not significant); Tev1 802 against 861 (p = 0.15) and 7 against 33 (p = 4e-5). Tev1 was
+trained on BANKING77 and SST-5 and Laya on the six held-out sources (their own documentation),
 so its held-out figures are in-distribution; Clef-flash's training data is not published. A probe on the
-train splits of five held-out sources finds no memorisation for any system, which does not rule out
-exposure; against their own base models, Clef-flash removes 92 % of Qwen3.5-9B's errors on BANKING77 and
+train splits of five held-out sources finds no memorisation for any system, Tev1 and Laya included, so it
+cannot rule out exposure; against their own base models, Clef-flash removes 92 % of Qwen3.5-9B's errors on BANKING77 and
 Kahn1 4B 27 % of Qwen3.5-4B's, so Clef-flash's Choice lead may not be zero-shot
 ([`reports/CONTAMINATION_PROBE.md`](reports/CONTAMINATION_PROBE.md)). Everything, with the
 method and the known biases: [`reports/OPEN_DECISION_MODELS.md`](reports/OPEN_DECISION_MODELS.md) and

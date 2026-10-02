@@ -100,6 +100,7 @@ def main() -> None:
     ap.add_argument("--format", default="tags", choices=["tags", "chatml", "qwen3", "letters"])
     ap.add_argument("--multimodal", action="store_true", help="checkpoint has a vision tower: load text only")
     ap.add_argument("--max-model-len", type=int, default=6144)
+    ap.add_argument("--quantization", default=None, help="vLLM quantization, e.g. fp8 for a 9B on 16 GB")
     ap.add_argument("--per-kind", type=int, default=400)
     ap.add_argument("--gpu-memory-utilization", type=float, default=0.88)
     ap.add_argument("--sample-file", default=None,
@@ -112,6 +113,7 @@ def main() -> None:
 
     extra = {"language_model_only": True} if args.multimodal else {}
     engine = Engine(EngineConfig(model=args.model, prompt_format=args.format, max_model_len=args.max_model_len,
+                                 quantization=args.quantization,
                                  gpu_memory_utilization=args.gpu_memory_utilization, extra_llm_kwargs=extra))
     engine._ensure_loaded()
     if args.sample_file:
@@ -119,7 +121,7 @@ def main() -> None:
     else:
         sample = stratified_sample(_ROOT / "data" / "eval.jsonl", args.per_kind)
     held, t1 = score(engine, sample, cap=True)
-    res = {"model": args.model, "format": args.format, "k": 1, "calibration": None,
+    res = {"model": args.model, "format": args.format, "quantization": args.quantization, "k": 1, "calibration": None,
            "sample": args.sample_file or "stratified data/eval.jsonl", "heldout_sample": summarize(held),
            "seconds": {"heldout": round(t1, 1)}}
     if not args.no_jevbench:

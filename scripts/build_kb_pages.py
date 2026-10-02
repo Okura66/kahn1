@@ -233,7 +233,7 @@ def ul(items: list[str]) -> str:
 
 
 TERMS_EN = [
-    ("System One model", "A model that answers typed questions about a text in one forward pass, reading a probability for each allowed answer instead of generating text. Also called a decision model or a Jev-class model."),
+    ("System One model", "A model that answers typed questions about a text in one forward pass, with a probability for each allowed answer. Also called a decision model or a Jev-class model."),
     ("Choice", "A question with a fixed list of options; the answer is one option and a probability for each."),
     ("Score", "A question on ordered levels (low, medium, high); the answer is a level and an expected value over the levels."),
     ("Noul", "Jev's name for a yes / no question: does the text support this statement? Kahn1 uses the same name."),
@@ -244,7 +244,7 @@ TERMS_EN = [
     ("Prefix caching", "Reusing the computation of a shared prompt prefix (the state) across the questions asked about it, when the engine can: vLLM caches Kahn1 4B's prefix in 528-token blocks, so only states longer than a block benefit."),
 ]
 TERMS_FR = [
-    ("Modèle System One", "Un modèle qui répond à des questions typées sur un texte en une seule passe, en lisant une probabilité pour chaque réponse permise au lieu de générer du texte. On dit aussi modèle de décision ou modèle de classe Jev."),
+    ("Modèle System One", "Un modèle qui répond à des questions typées sur un texte en une seule passe, avec une probabilité pour chaque réponse permise. On dit aussi modèle de décision ou modèle de classe Jev."),
     ("Choice", "Une question à liste d'options fixe ; la réponse est une option et une probabilité pour chacune."),
     ("Score", "Une question sur des niveaux ordonnés (faible, moyen, élevé) ; la réponse est un niveau et une espérance sur les niveaux."),
     ("Noul", "Le nom donné par Jev à une question oui / non : le texte appuie-t-il cette affirmation ? Kahn1 reprend ce nom."),
@@ -262,8 +262,8 @@ def pillar(fr: bool) -> tuple[str, list]:
                  ("choisir", "Comment choisir"), ("mesurer", "Comment on les mesure"), ("limites", "Limites"),
                  ("termes", "Termes clés")]
         h = hero("Modèles System One",
-                 "Un modèle System One répond à des questions typées sur un texte en une seule passe : il lit une "
-                 "probabilité pour chaque réponse permise dans les logits du modèle, au lieu d'écrire du texte. Jev, de "
+                 "Un modèle System One répond à des questions typées sur un texte en une seule passe, et renvoie "
+                 "chaque réponse avec une probabilité pour chaque option permise. Jev, de "
                  "TypeSafe, a popularisé le terme en septembre 2026 ; des modèles ouverts font aujourd'hui la même chose.",
                  items, True, f"Mis à jour le 2 octobre 2026")
         b = [sec(1, "definition", "Définition", p(
@@ -290,7 +290,7 @@ def pillar(fr: bool) -> tuple[str, list]:
                  "d'une question à l'autre ; sur un état court, le moteur le recalcule pour chaque question, et la "
                  "latence croît avec le nombre de questions.") +
                  table(["", "Modèle System One", "LLM qui génère du JSON"], [
-                     ["Sortie", "Une valeur typée lue dans les logits", "Du texte à valider et parser"],
+                     ["Sortie", "Une valeur typée avec sa distribution", "Du texte à valider et parser"],
                      ["Erreur de format", "Impossible par construction", "Rare avec structured outputs, possible sinon"],
                      ["Probabilités", "Une par option, toujours", "Logprobs selon le fournisseur, souvent aucune"],
                      ["Ce qui fait la latence", "Une passe par question, sur l'état", "La longueur de la réponse générée"],
@@ -340,8 +340,8 @@ def pillar(fr: bool) -> tuple[str, list]:
              ("choose", "How to choose"), ("measure", "How they are measured"), ("limits", "Limits"),
              ("terms", "Key terms")]
     h = hero("System One models",
-             "A System One model answers typed questions about a text in one forward pass: it reads a probability for "
-             "each allowed answer from the model's logits instead of writing text. TypeSafe's Jev made the term popular "
+             "A System One model answers typed questions about a text in one forward pass, and returns each answer "
+             "with a probability for every allowed option. TypeSafe's Jev made the term popular "
              "in September 2026; open models now do the same.", items, False, "Updated October 2, 2026")
     b = [sec(1, "definition", "Definition", p(
         "The name comes from Daniel Kahneman's <em>System 1</em> (<em>Thinking, Fast and Slow</em>, 2011): fast, cheap "
@@ -366,7 +366,7 @@ def pillar(fr: bool) -> tuple[str, list]:
              "caching</strong> also reuses the state's computation from one question to the next; on a short state the "
              "engine recomputes it for each question, and latency grows with the number of questions.") +
              table(["", "System One model", "LLM generating JSON"], [
-                 ["Output", "A typed value read from the logits", "Text to validate and parse"],
+                 ["Output", "A typed value with its distribution", "Text to validate and parse"],
                  ["Format errors", "Impossible by construction", "Rare with structured outputs, possible otherwise"],
                  ["Probabilities", "One per option, always", "Logprobs depending on the provider, often none"],
                  ["What drives latency", "One pass per question, over the state", "The length of the generated answer"],

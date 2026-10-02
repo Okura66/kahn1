@@ -203,7 +203,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
 
     <section class="sec cv" id="vitesse" data-n="07" data-nav="Vitesse" aria-labelledby="h-vitesse">
       <h2 id="h-vitesse">La vitesse vient de l'ingénierie.</h2>
-      <p>Une seule position de sortie et aucun texte généré expliquent la latence, pas une architecture
+      <p>Une seule position de sortie par question explique la latence, pas une architecture
         nouvelle. Elle augmente quand même à chaque question, presque linéairement sur un état court, que vLLM ne
         peut pas réutiliser pour Kahn1 4B&nbsp;; les états longs sont mis en cache. Sur CPU, comptez des secondes par
         question&nbsp;; dans un navigateur sans WebGPU, des minutes.</p>

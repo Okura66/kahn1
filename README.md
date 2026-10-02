@@ -12,7 +12,7 @@
 
 <p align="center">
   <b>Kahn1</b> is an open-source System One model: ask typed questions about a text (Choice, Score, Noul) and get typed
-  answers with their full distribution, read from the option-token logits of one forward pass, without generating text.
+  answers, each with its full distribution and a calibrated confidence, from a model you run yourself.
 </p>
 
 <p align="center">
@@ -29,8 +29,8 @@
     <td width="50%" valign="top"><img src="docs/assets/readme/kahn1-snake.gif" width="100%" alt="Kahn1 4B playing Snake, one Choice per tick" /></td>
   </tr>
   <tr>
-    <td valign="top"><b>Playground.</b> Any text and a JEV schema in, typed answers with their distribution out.</td>
-    <td valign="top"><b>Snake.</b> One Choice per tick, read from the option logits: zero tokens generated.</td>
+    <td valign="top"><b>Playground.</b> Paste any text, write a JEV schema, get each answer with its distribution.</td>
+    <td valign="top"><b>Snake.</b> Kahn1 picks every move: about 130 ms a move at k = 3 in this recording.</td>
   </tr>
 </table>
 
@@ -148,9 +148,9 @@ book, next to a slow System 2. `sysone` is the Python framework behind it.
 
 - Takes a **state** (arbitrary text context) and a **list of typed questions** (Choice / Score / Noul).
 - Returns **strictly typed values + calibrated probability distributions**.
-- **Generates zero tokens** — directly inspects logits on option tokens.
+- Handles **few options or many**: above 26 options, a two-stage router narrows the list before the Choice.
 - Evaluates all questions in a **single batch**; vLLM's prefix caching reuses the state's computation across them when the state is long enough (it caches Kahn1 4B's prefix in 528-token blocks, so short states are recomputed for each question).
-- Schema/type errors are **guaranteed zero by construction** (Pydantic + option tokens, zero text parsing).
+- Schema/type errors are **guaranteed zero by construction** (Pydantic types, no text parsing).
 
 ## What Kahn1 does not do (honestly)
 
@@ -158,7 +158,7 @@ book, next to a slow System 2. `sysone` is the Python framework behind it.
 - **Is not more accurate than JEV**: asked the same questions over the same options, JEV 1.13.0 is ahead on the held-out set overall and on Choice, level on Score (see [Benchmark results](#benchmark-results)).
 - **Does not use TypeSafe's proprietary sampler or architecture**.
 - **Calibration is valid only for the training distribution** — hence the `sysone calibrate` command to recalibrate on your domain.
-- **Latency comes from single-token output with no generated text**, helped by prefix caching on long states only, not from an exotic architectural innovation. It grows with the number of questions per request.
+- **Latency comes from answering at a single position per question**, helped by prefix caching on long states only, not from an exotic architectural innovation. It grows with the number of questions per request.
 
 ---
 
@@ -171,7 +171,7 @@ book, next to a slow System 2. `sysone` is the Python framework behind it.
 
 1. **High-Throughput Inbound Triage & Routing (median 36 ms for the 3B, 89 ms for the 4B per request on one GPU)**:
    - Categorizing thousands of incoming support tickets, emails, or insurance claims per minute.
-   - Extracting structured attributes (intent, priority, sentiment, refund requests) simultaneously in one batch pass without generating text.
+   - Extracting structured attributes (intent, priority, sentiment, refund requests) simultaneously in one batch pass.
 2. **Deterministic Agentic Guardrails & Workflow Gating**:
    - Real-time safety validation: checking whether an autonomous agent's proposed action violates policy, leaks confidential data, or meets user approval criteria before tool execution.
 3. **Document Ingestion & Metadata Scoring**:
@@ -520,7 +520,7 @@ kahn1/
 
 ## Design Principles
 
-- **No text generation** in the inference path. Read logits directly on option tokens (indirection via letters A, B, ...).
+- **Single-token answers** in the inference path, options addressed through letters (A, B, ...).
 - **No regex** in the inference path.
 - **Single-batch** `llm.generate()` for all questions × permutations. Looping one call per question is forbidden.
 - **Averaging in probability space**, not logit space (averaging logits is not an average of beliefs).

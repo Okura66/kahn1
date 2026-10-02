@@ -36,11 +36,11 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
 <meta property="og:locale:alternate" content="en_US">
 <meta property="og:url" content="https://kahn1.com/fr/">
 <meta property="og:title" content="Kahn1 — modèle Système 1 open source de classification">
-<meta property="og:description" content="Kahn1 classe, note et vérifie n'importe quel texte en zero-shot avec un modèle ouvert 4B ou 3B qui lit des réponses calibrées dans les logits. Une alternative open source à JEV.">
+<meta property="og:description" content="Kahn1 classe, note et vérifie n'importe quel texte en zero-shot avec un modèle ouvert 4B ou 3B, chaque réponse avec une distribution calibrée. Une alternative open source à JEV.">
 <meta property="og:image" content="https://kahn1.com/assets/og-fr.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Kahn1 : n'importe quel texte en entrée, des réponses typées en sortie. Choice, Score, Noul lus dans les logits.">
+<meta property="og:image:alt" content="Kahn1 : n'importe quel texte en entrée, des réponses typées en sortie. Choice, Score, Noul, chacun avec une distribution calibrée.">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231c1b19'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='20' font-weight='700' fill='%23d9542b' text-anchor='middle'%3E1%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -72,7 +72,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
         "height": 630
       },
       "dateModified": "2026-10-02",
-      "description": "Modèle Système 1 open source, alternative à JEV : classification de texte zero-shot, notation et vérification, réponses calibrées lues dans les logits."
+      "description": "Modèle Système 1 open source, alternative à JEV : classification de texte zero-shot, notation et vérification, réponses calibrées."
     },
     {
       "@type": "SoftwareApplication",
@@ -80,7 +80,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
       "name": "Kahn1",
       "alternateName": "sysone",
       "url": "https://kahn1.com/",
-      "description": "Moteur de décision « Système 1 » open source, alternative ouverte à JEV : il répond à des questions typées (Choice, Score, Noul) sur n'importe quel texte en lisant des distributions de probabilité calibrées dans les logits des tokens d'option, sans générer de texte.",
+      "description": "Moteur de décision « Système 1 » open source, alternative ouverte à JEV : il répond à des questions typées (Choice, Score, Noul) sur n'importe quel texte chacune avec une distribution de probabilité calibrée, sur votre propre matériel.",
       "applicationCategory": "DeveloperApplication",
       "applicationSubCategory": "Zero-shot text classification",
       "operatingSystem": "Linux, Windows, macOS, navigateur web (WebGPU)",
@@ -113,7 +113,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
         "Score: ordinal levels with a continuous expected value",
         "Noul: does the text support a statement (true / false)",
         "Calibrated probability distribution for every answer",
-        "Zero generated tokens, no schema or parsing errors",
+        "No schema or parsing errors",
         "Takes JEV's per-question fields under a schema key (POST /v1/evaluate/jev); not a drop-in for JEV's /v1/systemone clients",
         "GPU (vLLM) and CPU (transformers) backends"
       ],

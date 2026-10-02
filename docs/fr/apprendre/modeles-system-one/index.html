@@ -113,7 +113,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
   {
    "@type": "DefinedTerm",
    "name": "Modèle System One",
-   "description": "Un modèle qui répond à des questions typées sur un texte en une seule passe, en lisant une probabilité pour chaque réponse permise au lieu de générer du texte. On dit aussi modèle de décision ou modèle de classe Jev.",
+   "description": "Un modèle qui répond à des questions typées sur un texte en une seule passe, avec une probabilité pour chaque réponse permise. On dit aussi modèle de décision ou modèle de classe Jev.",
    "inDefinedTermSet": "https://kahn1.com/fr/apprendre/modeles-system-one/#terms"
   },
   {
@@ -219,7 +219,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
   <main id="main" class="page">
     <section class="page-hero" aria-labelledby="title">
       <h1 id="title">Modèles System One</h1>
-      <p class="lead">Un modèle System One répond à des questions typées sur un texte en une seule passe&nbsp;: il lit une probabilité pour chaque réponse permise dans les logits du modèle, au lieu d'écrire du texte. Jev, de TypeSafe, a popularisé le terme en septembre 2026&nbsp;; des modèles ouverts font aujourd'hui la même chose.</p>
+      <p class="lead">Un modèle System One répond à des questions typées sur un texte en une seule passe, et renvoie chaque réponse avec une probabilité pour chaque option permise. Jev, de TypeSafe, a popularisé le terme en septembre 2026&nbsp;; des modèles ouverts font aujourd'hui la même chose.</p>
       <p class="small faint">Mis à jour le 2 octobre 2026</p>
       <nav class="toc" aria-label="Sur cette page">
         <ol>
@@ -243,7 +243,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
       <h2 id="h-fonctionnement">02 · Fonctionnement</h2>
       <p>Le prompt contient l'état, la question et les options, chacune repérée par une lettre. Le modèle fait une passe&nbsp;; à la position de la réponse, on ne garde que les logits des tokens d'option (A, B, C… ou oui / non), et le softmax les transforme en probabilités. Pour un Score, l'espérance Σ i · p<sub>i</sub> donne une valeur continue.</p>
       <p>Deux réglages rendent ces probabilités utilisables. Le <strong>débiaisage par permutation</strong> pose la question avec les options dans k ordres et moyenne les résultats. La <strong>calibration</strong> (une température par type de question) aligne la confiance sur la précision&nbsp;; on la mesure par l'ECE. Enfin, sur un état long, le <strong>cache de préfixe</strong> réutilise le calcul de l'état d'une question à l'autre&nbsp;; sur un état court, le moteur le recalcule pour chaque question, et la latence croît avec le nombre de questions.</p>
-      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col"></th><th scope="col">Modèle System One</th><th scope="col">LLM qui génère du JSON</th></tr></thead><tbody><tr><td>Sortie</td><td>Une valeur typée lue dans les logits</td><td>Du texte à valider et parser</td></tr><tr><td>Erreur de format</td><td>Impossible par construction</td><td>Rare avec structured outputs, possible sinon</td></tr><tr><td>Probabilités</td><td>Une par option, toujours</td><td>Logprobs selon le fournisseur, souvent aucune</td></tr><tr><td>Ce qui fait la latence</td><td>Une passe par question, sur l'état</td><td>La longueur de la réponse générée</td></tr><tr><td>Ce qui fait le coût</td><td>Les tokens d'entrée</td><td>Les tokens d'entrée et de sortie</td></tr></tbody></table></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col"></th><th scope="col">Modèle System One</th><th scope="col">LLM qui génère du JSON</th></tr></thead><tbody><tr><td>Sortie</td><td>Une valeur typée avec sa distribution</td><td>Du texte à valider et parser</td></tr><tr><td>Erreur de format</td><td>Impossible par construction</td><td>Rare avec structured outputs, possible sinon</td></tr><tr><td>Probabilités</td><td>Une par option, toujours</td><td>Logprobs selon le fournisseur, souvent aucune</td></tr><tr><td>Ce qui fait la latence</td><td>Une passe par question, sur l'état</td><td>La longueur de la réponse générée</td></tr><tr><td>Ce qui fait le coût</td><td>Les tokens d'entrée</td><td>Les tokens d'entrée et de sortie</td></tr></tbody></table></div>
     </section>
     <section class="sec doc" id="familles" aria-labelledby="h-familles">
       <h2 id="h-familles">03 · Les familles</h2>
@@ -280,7 +280,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     <section class="sec doc" id="termes" aria-labelledby="h-termes">
       <h2 id="h-termes">07 · Termes clés</h2>
       <ul class="plain">
-        <li><b>Modèle System One.</b> Un modèle qui répond à des questions typées sur un texte en une seule passe, en lisant une probabilité pour chaque réponse permise au lieu de générer du texte. On dit aussi modèle de décision ou modèle de classe Jev.</li>
+        <li><b>Modèle System One.</b> Un modèle qui répond à des questions typées sur un texte en une seule passe, avec une probabilité pour chaque réponse permise. On dit aussi modèle de décision ou modèle de classe Jev.</li>
         <li><b>Choice.</b> Une question à liste d'options fixe&nbsp;; la réponse est une option et une probabilité pour chacune.</li>
         <li><b>Score.</b> Une question sur des niveaux ordonnés (faible, moyen, élevé)&nbsp;; la réponse est un niveau et une espérance sur les niveaux.</li>
         <li><b>Noul.</b> Le nom donné par Jev à une question oui / non&nbsp;: le texte appuie-t-il cette affirmation&nbsp;? Kahn1 reprend ce nom.</li>

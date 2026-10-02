@@ -113,7 +113,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
   {
    "@type": "DefinedTerm",
    "name": "System One model",
-   "description": "A model that answers typed questions about a text in one forward pass, reading a probability for each allowed answer instead of generating text. Also called a decision model or a Jev-class model.",
+   "description": "A model that answers typed questions about a text in one forward pass, with a probability for each allowed answer. Also called a decision model or a Jev-class model.",
    "inDefinedTermSet": "https://kahn1.com/learn/system-one-models/#terms"
   },
   {
@@ -219,7 +219,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
   <main id="main" class="page">
     <section class="page-hero" aria-labelledby="title">
       <h1 id="title">System One models</h1>
-      <p class="lead">A System One model answers typed questions about a text in one forward pass: it reads a probability for each allowed answer from the model's logits instead of writing text. TypeSafe's Jev made the term popular in September 2026; open models now do the same.</p>
+      <p class="lead">A System One model answers typed questions about a text in one forward pass, and returns each answer with a probability for every allowed option. TypeSafe's Jev made the term popular in September 2026; open models now do the same.</p>
       <p class="small faint">Updated October 2, 2026</p>
       <nav class="toc" aria-label="On this page">
         <ol>
@@ -243,7 +243,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
       <h2 id="h-how">02 · How it works</h2>
       <p>The prompt holds the state, the question and the options, each tagged with a letter. The model runs one forward pass; at the answer position, only the logits of the option tokens (A, B, C… or yes / no) are kept, and the softmax turns them into probabilities. For a Score, the expected value Σ i · p<sub>i</sub> gives a continuous value.</p>
       <p>Two settings make those probabilities usable. <strong>Permutation debiasing</strong> asks the question with the options in k orders and averages the results. <strong>Calibration</strong> (one temperature per question type) aligns confidence with accuracy, measured by the ECE. On a long state, <strong>prefix caching</strong> also reuses the state's computation from one question to the next; on a short state the engine recomputes it for each question, and latency grows with the number of questions.</p>
-      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col"></th><th scope="col">System One model</th><th scope="col">LLM generating JSON</th></tr></thead><tbody><tr><td>Output</td><td>A typed value read from the logits</td><td>Text to validate and parse</td></tr><tr><td>Format errors</td><td>Impossible by construction</td><td>Rare with structured outputs, possible otherwise</td></tr><tr><td>Probabilities</td><td>One per option, always</td><td>Logprobs depending on the provider, often none</td></tr><tr><td>What drives latency</td><td>One pass per question, over the state</td><td>The length of the generated answer</td></tr><tr><td>What drives cost</td><td>Input tokens</td><td>Input and output tokens</td></tr></tbody></table></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col"></th><th scope="col">System One model</th><th scope="col">LLM generating JSON</th></tr></thead><tbody><tr><td>Output</td><td>A typed value with its distribution</td><td>Text to validate and parse</td></tr><tr><td>Format errors</td><td>Impossible by construction</td><td>Rare with structured outputs, possible otherwise</td></tr><tr><td>Probabilities</td><td>One per option, always</td><td>Logprobs depending on the provider, often none</td></tr><tr><td>What drives latency</td><td>One pass per question, over the state</td><td>The length of the generated answer</td></tr><tr><td>What drives cost</td><td>Input tokens</td><td>Input and output tokens</td></tr></tbody></table></div>
     </section>
     <section class="sec doc" id="families" aria-labelledby="h-families">
       <h2 id="h-families">03 · The families</h2>
@@ -280,7 +280,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     <section class="sec doc" id="terms" aria-labelledby="h-terms">
       <h2 id="h-terms">07 · Key terms</h2>
       <ul class="plain">
-        <li><b>System One model.</b> A model that answers typed questions about a text in one forward pass, reading a probability for each allowed answer instead of generating text. Also called a decision model or a Jev-class model.</li>
+        <li><b>System One model.</b> A model that answers typed questions about a text in one forward pass, with a probability for each allowed answer. Also called a decision model or a Jev-class model.</li>
         <li><b>Choice.</b> A question with a fixed list of options; the answer is one option and a probability for each.</li>
         <li><b>Score.</b> A question on ordered levels (low, medium, high); the answer is a level and an expected value over the levels.</li>
         <li><b>Noul.</b> Jev's name for a yes / no question: does the text support this statement? Kahn1 uses the same name.</li>

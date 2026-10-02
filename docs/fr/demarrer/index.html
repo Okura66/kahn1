@@ -326,7 +326,7 @@ Règles : avance étape par étape et montre chaque commande avant de la lancer.
 
     <section class="sec doc" id="reponse" aria-labelledby="h-reponse">
       <h2 id="h-reponse">05 · Lire la réponse</h2>
-      <p>La réponse à la requête ci-dessus, enregistrée depuis le checkpoint v3 du 3B sur CPU (d'où la latence&nbsp;: sur GPU avec vLLM, comptez une médiane d'environ 36&nbsp;ms pour le 3B et 89&nbsp;ms pour le 4B à k&nbsp;=&nbsp;3).</p>
+      <p>La réponse à la requête ci-dessus, enregistrée depuis le 3B publié sur CPU (d'où la latence&nbsp;: sur GPU avec vLLM, comptez une médiane d'environ 36&nbsp;ms pour le 3B et 89&nbsp;ms pour le 4B à k&nbsp;=&nbsp;3).</p>
       <pre class="term">{
   "answers": {
     "intent": {
@@ -442,7 +442,7 @@ print(resp.answers["urgency"].expected_score, resp.answers["churn_risk"].noul)</
         1,6 à 1,9&nbsp;Go) avec <a href="https://github.com/ngxson/wllama" rel="noopener">wllama</a>, llama.cpp compilé en
         WebAssembly et WebGPU. Le même code de prompt et de réponse tourne en JavaScript. Chrome ou Edge avec WebGPU&nbsp;:
         quelques secondes par question après le téléchargement. Sans WebGPU, le repli CPU prend des minutes. Ces
-        quantifications GGUF sont celles du checkpoint v1 du 3B, ni du v3 ni du 4B.</p>
+        quantifications GGUF sont un build plus léger du 3B, plus ancien que les poids publiés du 3B, et pas du 4B.</p>
     </section>
 
     <section class="sec doc" id="aller-plus-loin" aria-labelledby="h-aller-plus-loin">

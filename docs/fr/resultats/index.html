@@ -247,7 +247,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
         lesquelles Kahn1 a été entraîné&nbsp;: intentions (banking77, MASSIVE), échelles à 5 niveaux (SST-5, avis
         d'applications) et implication (RTE, SciTail). Une question par requête, et les mêmes options pour chaque
         système&nbsp;: chaque question Choice présente la bonne intention et 7 leurres tirés à partir de l'état, soit
-        8 options. Kahn1 4B et Kahn1 3B (v3)&nbsp;: k&nbsp;=&nbsp;3, calibration par température. JEV&nbsp;: jev-1.13.0,
+        8 options. Kahn1 4B et Kahn1 3B&nbsp;: k&nbsp;=&nbsp;3, calibration par température. JEV&nbsp;: jev-1.13.0,
         a répondu aux 14&nbsp;663 sans erreur. ECE&nbsp;: 15 classes sur p<sub>max</sub>, 0 = parfait.</p>
       <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col">Dataset</th><th scope="col" class="r">Exemples</th><th scope="col" class="r">Kahn1 4B</th><th scope="col" class="r">Kahn1 3B</th><th scope="col" class="r">JEV</th><th scope="col" class="r">ECE 4B</th><th scope="col" class="r">ECE 3B</th><th scope="col" class="r">ECE JEV</th></tr></thead><tbody><tr><td>banking77</td><td class="r">3 076</td><td class="r">91,8&nbsp;%</td><td class="r">91,1&nbsp;%</td><td class="r"><b>94,8&nbsp;%</b></td><td class="r">0,018</td><td class="r">0,026</td><td class="r">0,024</td></tr><tr><td>MASSIVE</td><td class="r">2 974</td><td class="r">92,9&nbsp;%</td><td class="r">90,8&nbsp;%</td><td class="r"><b>94,1&nbsp;%</b></td><td class="r">0,013</td><td class="r">0,011</td><td class="r">0,017</td></tr><tr><td>RTE</td><td class="r">277</td><td class="r">85,9&nbsp;%</td><td class="r">82,7&nbsp;%</td><td class="r"><b>89,9&nbsp;%</b></td><td class="r">0,048</td><td class="r">0,105</td><td class="r">0,034</td></tr><tr><td>SciTail</td><td class="r">2 126</td><td class="r"><b>74,1&nbsp;%</b></td><td class="r">65,0&nbsp;%</td><td class="r">72,4&nbsp;%</td><td class="r">0,141</td><td class="r">0,248</td><td class="r">0,077</td></tr><tr><td>SST-5</td><td class="r">2 210</td><td class="r">55,0&nbsp;%</td><td class="r">52,4&nbsp;%</td><td class="r"><b>57,7&nbsp;%</b></td><td class="r">0,052</td><td class="r">0,098</td><td class="r">0,178</td></tr><tr><td>Avis d'applications</td><td class="r">4 000</td><td class="r">50,2&nbsp;%</td><td class="r"><b>50,9&nbsp;%</b></td><td class="r">48,9&nbsp;%</td><td class="r">0,146</td><td class="r">0,096</td><td class="r">0,252</td></tr><tr style="border-top:1px solid var(--ink)"><td>Choice</td><td class="r">6 050</td><td class="r">92,3&nbsp;%</td><td class="r">90,9&nbsp;%</td><td class="r"><b>94,5&nbsp;%</b></td><td class="r">0,015</td><td class="r">0,017</td><td class="r">0,019</td></tr><tr><td>Score</td><td class="r">6 210</td><td class="r">51,9&nbsp;%</td><td class="r">51,4&nbsp;%</td><td class="r"><b>52,0&nbsp;%</b></td><td class="r">0,112</td><td class="r">0,097</td><td class="r">0,226</td></tr><tr><td>Noul</td><td class="r">2 403</td><td class="r"><b>75,5&nbsp;%</b></td><td class="r">67,0&nbsp;%</td><td class="r">74,4&nbsp;%</td><td class="r">0,127</td><td class="r">0,232</td><td class="r">0,071</td></tr><tr><td>Total</td><td class="r">14 663</td><td class="r">72,4&nbsp;%</td><td class="r">70,3&nbsp;%</td><td class="r"><b>73,2&nbsp;%</b></td><td class="r">0,072</td><td class="r">0,082</td><td class="r">0,113</td></tr></tbody></table></div>
       <p class="small faint" style="margin-top:12px">JEV est devant en Choice, en Score et au global&nbsp;; Kahn1 4B est
@@ -307,7 +307,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
       <p class="intro">Kahn1 4B, sur des données réservées jamais vues à l'entraînement, avec k&nbsp;=&nbsp;3
         permutations d'options et calibration par température, sur une seule RTX 5070 Ti (16&nbsp;Go) avec vLLM. Les
         chiffres de Kahn1 3B restent dans le tableau du holdout ci-dessus&nbsp;; les tableaux par primitive et des
-        scores ordinaux ci-dessous sont ceux du 3B (v3).</p>
+        scores ordinaux ci-dessous sont ceux du 3B.</p>
 
 
       <h3 class="sub">Précision par dataset, Kahn1 4B</h3>
@@ -384,8 +384,8 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
         <a href="https://github.com/Okura66/kahn1/blob/main/reports/KAHN1_4B_REPORT.md" rel="noopener">Kahn1 4B</a> ·
         <a href="https://github.com/Okura66/kahn1/blob/main/reports/CHOICE_FAIRNESS.md" rel="noopener">Choice sur les mêmes options</a> ·
         <a href="https://github.com/Okura66/kahn1/blob/main/reports/JEVK5_VS_KAHN1.md" rel="noopener">Kahn1 face à JevK5</a> ·
-        <a href="https://github.com/Okura66/kahn1/blob/main/reports/QWEN_FULL_EVAL_v3_temponly.md" rel="noopener">holdout 3B (v3)</a> ·
-        <a href="https://github.com/Okura66/kahn1/blob/main/reports/JEVBENCH_v3.md" rel="noopener">JevBench 3B (v3)</a> ·
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/QWEN_FULL_EVAL_v3_temponly.md" rel="noopener">holdout 3B</a> ·
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/JEVBENCH_v3.md" rel="noopener">JevBench 3B</a> ·
         <a href="https://github.com/Okura66/kahn1/blob/main/reports/LATENCY_BATCH.md" rel="noopener">latence en batch</a> ·
         <a href="https://github.com/Okura66/kahn1/blob/main/scripts/snake.py" rel="noopener">benchmark Snake</a></p>
 
@@ -420,7 +420,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
         <a href="https://github.com/Okura66/kahn1/blob/main/reports/CHOICE_FAIRNESS.md" rel="noopener">Choice sur les mêmes options</a> ·
         <a href="https://github.com/Okura66/kahn1/blob/main/reports/JEVBENCH_VS_JEV.md" rel="noopener">JevBench</a> ·
         <a href="https://github.com/Okura66/kahn1/blob/main/reports/JEVK5_VS_KAHN1.md" rel="noopener">Kahn1 face à JevK5</a> ·
-        <a href="https://github.com/Okura66/kahn1/blob/main/reports/QWEN_FULL_EVAL_v3_temponly.md" rel="noopener">holdout Kahn1 3B (v3)</a> ·
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/QWEN_FULL_EVAL_v3_temponly.md" rel="noopener">holdout Kahn1 3B</a> ·
         <a href="https://github.com/Okura66/kahn1/blob/main/reports/LATENCY_BATCH.md" rel="noopener">latence en batch</a>.
         <a href="https://github.com/Okura66/kahn1/blob/main/reports/JEV_VS_KAHN1.md" rel="noopener">JEV_VS_KAHN1.md</a> est le premier passage, qui donnait à JEV
         toutes les intentions en Choice.</p>

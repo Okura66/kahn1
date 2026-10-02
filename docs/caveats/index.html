@@ -208,9 +208,10 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
 
     <section class="sec cv" id="demos" data-n="08" data-nav="Browser demos" aria-labelledby="h-demos">
       <h2 id="h-demos">The browser demos run an older checkpoint.</h2>
-      <p>The <a href="../playground/">playground</a> and <a href="../snake/">Snake</a> load a v1 GGUF of the 3B
-        quantized to 4 bits (thanks to mradermacher); the page flips its Noul answers, which v1 learned inverted.
-        The <a href="../benchmarks/">benchmarks</a> are the unquantized Kahn1 4B and Kahn1 3B (v3) on vLLM.</p>
+      <p>The <a href="../playground/">playground</a> and <a href="../snake/">Snake</a> load a smaller 4-bit GGUF
+        build of the 3B (thanks to mradermacher), older than the published 3B weights; the page flips its Noul
+        answers, which that build learned inverted. The <a href="../benchmarks/">benchmarks</a> are the unquantized
+        Kahn1 4B and Kahn1 3B on vLLM.</p>
     </section>
   </main>
 

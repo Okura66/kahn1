@@ -326,7 +326,7 @@ Rules: work step by step and show each command before you run it. Ask me before 
 
     <section class="sec doc" id="response" aria-labelledby="h-response">
       <h2 id="h-response">05 · Read the response</h2>
-      <p>The answer to the request above, recorded from the 3B v3 checkpoint on a CPU (hence the latency: on a
+      <p>The answer to the request above, recorded from the published 3B on a CPU (hence the latency: on a
         GPU with vLLM, expect a median of ~36 ms for the 3B and ~89 ms for the 4B at k&nbsp;=&nbsp;3).</p>
       <pre class="term">{
   "answers": {
@@ -441,7 +441,7 @@ print(resp.answers["urgency"].expected_score, resp.answers["churn_risk"].noul)</
         1.6 to 1.9 GB) with <a href="https://github.com/ngxson/wllama" rel="noopener">wllama</a>, llama.cpp compiled to
         WebAssembly and WebGPU. The same prompt and answer code runs in JavaScript. Chrome or Edge with WebGPU: a few
         seconds per question after the download. Without WebGPU, the CPU fallback takes minutes. Those GGUF
-        quantizations are of the 3B's v1 checkpoint, not v3, and not of the 4B.</p>
+        quantizations are a smaller build of the 3B, older than the published 3B weights, and not of the 4B.</p>
     </section>
 
     <section class="sec doc" id="adapt" aria-labelledby="h-adapt">

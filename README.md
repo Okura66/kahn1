@@ -55,7 +55,8 @@ SYSONE_MODEL=Okura66/Kahn1-Qwen3.5-4B uv run sysone serve --port 8000
 **[Okura66/Kahn1-Qwen2.5-3B-LoRA](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B-LoRA)** (239 MB adapter on `Qwen/Qwen2.5-3B-Instruct`)
 
 Qwen2.5-3B fine-tuned with LoRA, tag prompt layout. Smaller and faster: p50 36.4 ms at k = 3 on the
-same GPU. The browser demos (playground, Snake) run a 4-bit GGUF of its v1 checkpoint.
+same GPU. The browser demos (playground, Snake) run a smaller 4-bit GGUF build of the 3B, older than the
+published 3B weights.
 
 ```bash
 vllm serve Okura66/Kahn1-Qwen2.5-3B --enable-prefix-caching --dtype bfloat16
@@ -326,7 +327,7 @@ curl -X POST http://127.0.0.1:8000/v1/evaluate/jev \
 The codebase is **model-agnostic** via `EngineConfig.model` / `--model` / `SYSONE_MODEL`.
 
 - **Kahn1 4B**: `Qwen/Qwen3.5-4B` + LoRA (r = 16 on the attention and linear-attention projections), served with the model's native chat template (thinking off): [`Okura66/Kahn1-Qwen3.5-4B`](https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B).
-- **Kahn1 3B**: `Qwen/Qwen2.5-3B-Instruct` + LoRA (v3), tag prompt layout: [`Okura66/Kahn1-Qwen2.5-3B`](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B). The browser demos run a 4-bit GGUF of its v1 checkpoint.
+- **Kahn1 3B**: `Qwen/Qwen2.5-3B-Instruct` + LoRA, tag prompt layout: [`Okura66/Kahn1-Qwen2.5-3B`](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B). The browser demos run a smaller 4-bit GGUF build of it, older than the published 3B weights.
 - **Default Backbone**: `EngineConfig.model` defaults to `Qwen/Qwen2.5-3B-Instruct` (the server uses `checkpoints/qwen_merged` when present); point `SYSONE_MODEL` / `EngineConfig.model` at a Kahn1 checkpoint. `EngineConfig.prompt_format` defaults to `"auto"`: the native chat template for Qwen3 / Qwen3.5 checkpoints (Kahn1 4B), the tag layout for everything else (Kahn1 3B). Set it to `"tags"`, `"chatml"` or `"qwen3"` to force one.
 - **Also Supported**: `meta-llama/Llama-3.2-3B-Instruct`.
 
@@ -404,14 +405,14 @@ Reports: 👉 [`reports/KAHN1_4B_REPORT.md`](reports/KAHN1_4B_REPORT.md) ·
 [`reports/JEVBENCH_VS_JEV.md`](reports/JEVBENCH_VS_JEV.md) ·
 [`reports/QWEN35_V7_FULL_EVAL.md`](reports/QWEN35_V7_FULL_EVAL.md) (4B) ·
 [`reports/JEVBENCH_v7.md`](reports/JEVBENCH_v7.md) (4B, JevBench) ·
-[`reports/QWEN_FULL_EVAL_v3_temponly.md`](reports/QWEN_FULL_EVAL_v3_temponly.md) (3B v3) ·
+[`reports/QWEN_FULL_EVAL_v3_temponly.md`](reports/QWEN_FULL_EVAL_v3_temponly.md) (3B) ·
 [kahn1.com/benchmarks](https://kahn1.com/benchmarks/).
 
 ### Understanding Ordinal Scoring & Human Agreement (SST-5)
 
-On fine-grained ordinal scales like SST-5 (5 sentiment degrees from *Very Negative* to *Very Positive*), discrete exact-match accuracy is **52.35 %** for Kahn1 3B (v3) and **55.0 %** for Kahn1 4B; JEV reaches 57.7 % on the same items, so this is not a ceiling. What the 3B does well:
+On fine-grained ordinal scales like SST-5 (5 sentiment degrees from *Very Negative* to *Very Positive*), discrete exact-match accuracy is **52.35 %** for Kahn1 3B and **55.0 %** for Kahn1 4B; JEV reaches 57.7 % on the same items, so this is not a ceiling. What the 3B does well:
 1. **Human Inter-Annotator Agreement**: Human agreement on 5-way SST-5 is only **~55% - 60%** due to the natural subjectivity of nuances (e.g. distinguishing *Positive* from *Very Positive*).
-2. **Zero Catastrophic Inversion**: With **95.16 % off-by-one accuracy** (3B v3), the model's prediction is either exact or immediately adjacent in 95% of cases. It virtually never confuses opposite polarities.
+2. **Zero Catastrophic Inversion**: With **95.16 % off-by-one accuracy** (3B), the model's prediction is either exact or immediately adjacent in 95% of cases. It virtually never confuses opposite polarities.
 3. **Monotonic Ranking ($\rho = 0.834$)**: The high Spearman correlation shows strong ordering fidelity across continuous latent sentiment.
 4. **Continuous Expectation**: In production, `sysone` consumes ordinal answers via expected value:
    $$\mathbb{E}[\text{Score}] = \sum_{i=0}^{K-1} i \cdot p_i$$

@@ -51,7 +51,7 @@ Kahn1 4B vs Jev's published per-task outcomes, paired: 13 items only Kahn1 4B ge
 exact McNemar p = 0.84.
 
 Hard tier by family (the family is the third field of the item id, hard-<author>-<family>-<nn>;
-Kahn1 4B from reports/jevbench_v7_preds.json). Items right:
+Kahn1 4B: k = 3, calibrated). Items right:
 
 | Family | Items | Kahn1 4B | JevK5 v0.2 | Jev 1.13.0 |
 |---|---:|---:|---:|---:|

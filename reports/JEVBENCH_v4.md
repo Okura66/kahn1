@@ -1,6 +1,6 @@
 # Comprehensive Evaluation Report — 231 Holdout Instances
 
-Evaluated Model: `/home/amontzamir/k1merged/best`
+Evaluated Model: `<merged model>`
 Timestamp: 2026-09-25 09:52:41
 Mode: Full Pipeline (Merged LoRA + debiasing $k=3$ + post-hoc calibration)
 

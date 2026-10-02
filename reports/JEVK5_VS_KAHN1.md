@@ -11,7 +11,7 @@ per-task outcomes JevBench publishes. Kahn1 4B: our run. Three runners on the sa
 | Tier | Items | Kahn1 4B | JevK5 v0.2 | Jev 1.13.0 |
 |---|---:|---:|---:|---:|
 | easy | 48 | **100.0 %** | **100.0 %** | **100.0 %** |
-| original | 72 | 97.2 % | 95.8 % | **98.6 %** |
+| standard | 72 | 97.2 % | 95.8 % | **98.6 %** |
 | hard | 111 | **75.7 %** | 73.9 % | 73.0 % |
 | all | 231 | **87.4 %** | 86.1 % | 86.6 % |
 
@@ -21,11 +21,12 @@ JevK5 33.1 %, Jev 36.7 %. Kahn1 cannot run the sealed items.
 
 ## BANKING77, choosing among all 77 intents
 
-Every system picks one of the 77 intents, each with its own runner and prompt; only the items all
-three answered are compared.
+Same task for all three: pick one of the 77 intents, on the same items (only those all three
+answered). Each system runs its own method, stated in the first row; no other figure sits in the table.
 
 | | Kahn1 4B | JevK5 v0.2 | JEV 1.13.0 |
 |---|---:|---:|---:|
+| Method | two-stage router, k = 1 | knockout, 6 passes | API, every intent as an option |
 | Accuracy, 269 paired items | 69.1 % | 66.2 % | **77.7 %** |
 | ECE (15 bins, p_max) | 0.146 | 0.081 | 0.101 |
 

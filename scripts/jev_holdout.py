@@ -210,7 +210,7 @@ def report() -> None:
     lat = sorted(r["latency_ms"] for r in jev_recs.values())
     summary = {
         "jev_models": models,
-        "kahn1": "Kahn1 3B, k = 3, temperature calibration (reports/QWEN_FULL_EVAL_v3_temponly.md)",
+        "kahn1": "Kahn1 3B, k = 3, temperature calibration (reports/KAHN1_3B_HELDOUT.md)",
         "items": len(items), "jev_answered": len(jev_recs),
         "jev_latency_ms": {"p50": lat[len(lat) // 2], "p95": lat[int(0.95 * (len(lat) - 1))]} if lat else None,
         "groups": table,
@@ -231,12 +231,14 @@ def report() -> None:
                         f"{pct(base)} | **{pct(s['jev_acc'])}** | {s['jev_ece']:.4f} |")
     lat_line = (f"JEV round trip over the internet: p50 {summary['jev_latency_ms']['p50']:.0f} ms, "
                 f"p95 {summary['jev_latency_ms']['p95']:.0f} ms." if lat else "")
-    REPORT_MD.write_text(f"""# Kahn1 vs JEV — paired, on the Kahn1 held-out set
+    REPORT_MD.write_text(f"""> **Superseded.** This first run gave JEV every intent on Choice while Kahn1 answered over 8 options, so its totals are not a like-for-like comparison. See [CHOICE_FAIRNESS.md](CHOICE_FAIRNESS.md) and [KAHN1_4B_REPORT.md](KAHN1_4B_REPORT.md).\n\n# Kahn1 vs JEV — paired, on the Kahn1 held-out set
 
 - Items: {len(items)} held-out items of `data/eval.jsonl`; JEV answered {len(jev_recs)}.
 - JEV: TypeSafe API, model {", ".join(models) or "?"}, one question per request, run with `scripts/jev_holdout.py`.
 - Kahn1: {summary['kahn1']}.
-- Same state, prompt and options on both sides, scored against the same labels. ECE: 15 bins on p_max.
+- Same items, state and labels on both sides, but not the same Choice options: Kahn1 answered over 8
+  options (the gold one and 7 distractors), JEV over every intent (77 for banking77, 60 for MASSIVE).
+  The Choice rows are therefore not like for like; Score and Noul are. ECE: 15 bins on p_max.
 - {lat_line}
 
 | Dataset | Paired items | Kahn1 | JEV | Kahn1 ECE | JEV ECE | Only Kahn1 right | Only JEV right |

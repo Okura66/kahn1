@@ -217,7 +217,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
       <p class="callout"><b>Correction.</b> An earlier version of this page asked Choice over 8 options for Kahn1 but
         over every intent for JEV, which made Kahn1 look ahead on Choice and overall. That comparison was unequal and
         has been corrected: over the same options, JEV is ahead on Choice and overall.
-        <a href="https://github.com/Okura66/kahn1/blob/main/reports/CHOICE_FAIRNESS.md" rel="noopener">Both conditions, side by side</a>.</p>
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/CHOICE_FAIRNESS.md" rel="noopener">Both conditions, side by side (3B)</a>.</p>
       <figure class="vchart" role="group" aria-label="Accuracy of Kahn1 4B, Kahn1 3B and JEV, grouped by primitive on the Kahn1 held-out set and by tier on JevBench.">
         <div class="vc-legend"><span><i></i>Kahn1 4B</span><span><i class="k3"></i>Kahn1 3B</span><span><i class="jev"></i>JEV 1.13.0 · TypeSafe API</span></div>
         <div class="vc-sets">
@@ -380,10 +380,13 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
 
       <p class="small" style="margin-top:28px">Full reports:
         <a href="https://github.com/Okura66/kahn1/blob/main/reports/KAHN1_4B_REPORT.md" rel="noopener">Kahn1 4B</a> ·
-        <a href="https://github.com/Okura66/kahn1/blob/main/reports/CHOICE_FAIRNESS.md" rel="noopener">Choice over the same options</a> ·
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/KAHN1_4B_HELDOUT.md" rel="noopener">held-out 4B</a> ·
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/KAHN1_4B_JEVBENCH.md" rel="noopener">JevBench 4B</a> ·
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/LATENCY_PREFIX.md" rel="noopener">prefix caching</a> ·
         <a href="https://github.com/Okura66/kahn1/blob/main/reports/JEVK5_VS_KAHN1.md" rel="noopener">Kahn1 vs JevK5</a> ·
-        <a href="https://github.com/Okura66/kahn1/blob/main/reports/QWEN_FULL_EVAL_v3_temponly.md" rel="noopener">held-out 3B</a> ·
-        <a href="https://github.com/Okura66/kahn1/blob/main/reports/JEVBENCH_v3.md" rel="noopener">JevBench 3B</a> ·
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/CHOICE_FAIRNESS.md" rel="noopener">Choice over the same options (3B)</a> ·
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/KAHN1_3B_HELDOUT.md" rel="noopener">held-out 3B</a> ·
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/KAHN1_3B_JEVBENCH.md" rel="noopener">JevBench 3B</a> ·
         <a href="https://github.com/Okura66/kahn1/blob/main/scripts/snake.py" rel="noopener">Snake benchmark</a></p>
 
     </section>
@@ -414,10 +417,12 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
       <p>JEV needs <code>JEV_API_KEY</code>. Build the held-out split first with
         <code>python training/build_dataset.py --eval-only --eval-out data/eval.jsonl</code>. Reports:
         <a href="https://github.com/Okura66/kahn1/blob/main/reports/KAHN1_4B_REPORT.md" rel="noopener">Kahn1 4B vs 3B, JEV and JevK5</a> ·
-        <a href="https://github.com/Okura66/kahn1/blob/main/reports/CHOICE_FAIRNESS.md" rel="noopener">Choice over the same options</a> ·
-        <a href="https://github.com/Okura66/kahn1/blob/main/reports/JEVBENCH_VS_JEV.md" rel="noopener">JevBench</a> ·
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/KAHN1_4B_HELDOUT.md" rel="noopener">Kahn1 4B held-out</a> ·
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/KAHN1_4B_JEVBENCH.md" rel="noopener">Kahn1 4B JevBench</a> ·
         <a href="https://github.com/Okura66/kahn1/blob/main/reports/JEVK5_VS_KAHN1.md" rel="noopener">Kahn1 vs JevK5</a> ·
-        <a href="https://github.com/Okura66/kahn1/blob/main/reports/QWEN_FULL_EVAL_v3_temponly.md" rel="noopener">Kahn1 3B held-out</a>.
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/CHOICE_FAIRNESS.md" rel="noopener">Choice over the same options (3B)</a> ·
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/JEVBENCH_VS_JEV.md" rel="noopener">JevBench, Kahn1 3B vs Jev</a> ·
+        <a href="https://github.com/Okura66/kahn1/blob/main/reports/KAHN1_3B_HELDOUT.md" rel="noopener">Kahn1 3B held-out</a>.
         <a href="https://github.com/Okura66/kahn1/blob/main/reports/JEV_VS_KAHN1.md" rel="noopener">JEV_VS_KAHN1.md</a> is the first run, which gave JEV every intent on
         Choice.</p>
     </section>

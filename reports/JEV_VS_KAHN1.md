@@ -4,8 +4,10 @@
 
 - Items: 14663 held-out items of `data/eval.jsonl`; JEV answered 14663.
 - JEV: TypeSafe API, model jev-1.13.0, one question per request, run with `scripts/jev_holdout.py`.
-- Kahn1: Kahn1 3B, k = 3, temperature calibration (reports/QWEN_FULL_EVAL_v3_temponly.md).
-- Same state, prompt and options on both sides, scored against the same labels. ECE: 15 bins on p_max.
+- Kahn1: Kahn1 3B, k = 3, temperature calibration (reports/KAHN1_3B_HELDOUT.md).
+- Same items, state and labels on both sides, but not the same Choice options: Kahn1 answered over 8
+  options (the gold one and 7 distractors), JEV over every intent (77 for banking77, 60 for MASSIVE).
+  The Choice rows are therefore not like for like; Score and Noul are. ECE: 15 bins on p_max.
 - JEV round trip over the internet: p50 248 ms, p95 308 ms.
 
 | Dataset | Paired items | Kahn1 | JEV | Kahn1 ECE | JEV ECE | Only Kahn1 right | Only JEV right |

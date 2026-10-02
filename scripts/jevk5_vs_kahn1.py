@@ -162,7 +162,7 @@ def report(_args) -> None:
         top = max(v["kahn1"], v["jevk5"], v["jev"])
         return f"**{P(v[key])}**" if v[key] == top else P(v[key])
 
-    tiers = "\n".join(f"| {k} | {v['n']} | {best(v, 'kahn1')} | {best(v, 'jevk5')} | {best(v, 'jev')} |"
+    tiers = "\n".join(f"| {k.replace('original', 'standard')} | {v['n']} | {best(v, 'kahn1')} | {best(v, 'jevk5')} | {best(v, 'jev')} |"
                       for k, v in sorted(jb["tiers"].items(), key=lambda kv: ["easy", "original", "hard", "all"].index(kv[0])))
     o = jb["jevbench_v14"]
     OUT_MD.write_text(f"""# Kahn1 vs JevK5 (and JEV)
@@ -185,11 +185,12 @@ JevK5 {P(o["jevk5-v02"]["sealed"])}, Jev {P(o["jev-1.13.0"]["sealed"])}. Kahn1 c
 
 ## BANKING77, choosing among all 77 intents
 
-Every system picks one of the 77 intents, each with its own runner and prompt; only the items all
-three answered are compared.
+Same task for all three: pick one of the 77 intents, on the same items (only those all three
+answered). Each system runs its own method, stated in the first row; no other figure sits in the table.
 
 | | Kahn1 4B | JevK5 v0.2 | JEV 1.13.0 |
 |---|---:|---:|---:|
+| Method | two-stage router, k = 1 | knockout, 6 passes | API, every intent as an option |
 | Accuracy, {bk["paired"]} paired items | {B(bk, "kahn1_acc")} | {B(bk, "jevk5_acc")} | {B(bk, "jev_acc")} |
 | ECE (15 bins, p_max) | {bk["kahn1_ece"]:.3f} | {bk["jevk5_ece"]:.3f} | {bk["jev_ece"]:.3f} |
 

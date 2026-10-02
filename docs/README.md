@@ -50,9 +50,9 @@ The distributions in the home pages' "three primitives" section are illustrative
 not recorded outputs. The benchmark charts show Kahn1 4B
 (`Okura66/Kahn1-Qwen3.5-4B`), Kahn1 3B and JEV side by side; the tables add JevK5. The numbers come
 from `reports/KAHN1_4B_REPORT.md` (`scripts/kahn1_4b_report.py`): held-out like for like
-(Choice over the same 8 options on every side, see `reports/CHOICE_FAIRNESS.md`), JevBench,
+(Choice over the same 8 options on every side; `reports/CHOICE_FAIRNESS.md` is the 3B run that set the rule), JevBench,
 the hard decision dev split; latency and the per-primitive figures from
-`reports/QWEN35_V7_FULL_EVAL.md` and `reports/JEVBENCH_v7.md`. `reports/JEV_VS_KAHN1.md`
+`reports/KAHN1_4B_HELDOUT.md` and `reports/KAHN1_4B_JEVBENCH.md`, prefix caching from `reports/LATENCY_PREFIX.md`. `reports/JEV_VS_KAHN1.md`
 (`scripts/jev_holdout.py`) is the first JEV run, which gave JEV every intent on Choice: do not
 quote its totals as a comparison. The browser demos still run an older GGUF build of the 3B. Licences, as the pages state
 them: code MIT, Kahn1 4B weights Apache 2.0, Kahn1 3B weights under the Qwen Research License

@@ -43,7 +43,7 @@ Qwen3.5-4B fine-tuned with LoRA, native chat template: 72.4 % on the held-out se
 85.3 %); p50 88.7 ms at k = 3 on one RTX 5070 Ti.
 
 ```bash
-# Serve directly with vLLM (prefix caching on; it pays off on long states):
+# Serve directly with vLLM (prefix caching on; it pays off on long states, see reports/LATENCY_PREFIX.md):
 vllm serve Okura66/Kahn1-Qwen3.5-4B --enable-prefix-caching --dtype bfloat16 --max-model-len 4096
 
 # Or through sysone, which reads the answers from the logits (prompt format picked automatically):
@@ -174,7 +174,7 @@ from sysone.calibrate import CalibratedEngine, TemperatureConfig
 from sysone.cpu import CPUEngine
 
 engine = CPUEngine("Okura66/Kahn1-Qwen3.5-4B", dtype="float32", num_threads=16)  # or "Okura66/Kahn1-Qwen2.5-3B"
-engine = CalibratedEngine(engine, TemperatureConfig.load("calibration.json"))
+engine = CalibratedEngine(engine, TemperatureConfig.load("calibration.json"))  # shipped with each model on the Hub
 response = engine.evaluate(query, n_permutations=3)
 ```
 
@@ -387,7 +387,8 @@ checkpoint, so a dev score, not a benchmark), k = 1, balanced over primitives: b
 48.8 %, Kahn1 4B 66.8 %.
 
 **Latency** (one RTX 5070 Ti, vLLM, k = 3, during the held-out run): Kahn1 4B p50 88.7 ms, p95 279.3 ms, 8.5 q/s;
-Kahn1 3B p50 36.4 ms. JEV: p50 248 ms round trip over the network.
+Kahn1 3B p50 36.4 ms. Latency grows with the number of questions per request, less on long states
+([`reports/LATENCY_PREFIX.md`](reports/LATENCY_PREFIX.md)). JEV: p50 248 ms round trip over the network.
 
 **The honest reading.** JEV is ahead on the held-out set by 0.8 points overall and on Choice (94.5 % vs
 92.3 %, and 79.1 % vs 71.6 % over every intent); the two are level on Score (52.0 % vs 51.9 %), and
@@ -403,12 +404,13 @@ made Kahn1 look ahead; it was unequal and has been corrected
 ([`reports/CHOICE_FAIRNESS.md`](reports/CHOICE_FAIRNESS.md)).
 
 Reports: 👉 [`reports/KAHN1_4B_REPORT.md`](reports/KAHN1_4B_REPORT.md) ·
-[`reports/CHOICE_FAIRNESS.md`](reports/CHOICE_FAIRNESS.md) ·
-[`reports/JEVK5_VS_KAHN1.md`](reports/JEVK5_VS_KAHN1.md) ·
-[`reports/JEVBENCH_VS_JEV.md`](reports/JEVBENCH_VS_JEV.md) ·
-[`reports/QWEN35_V7_FULL_EVAL.md`](reports/QWEN35_V7_FULL_EVAL.md) (4B) ·
-[`reports/JEVBENCH_v7.md`](reports/JEVBENCH_v7.md) (4B, JevBench) ·
-[`reports/QWEN_FULL_EVAL_v3_temponly.md`](reports/QWEN_FULL_EVAL_v3_temponly.md) (3B) ·
+[`reports/KAHN1_4B_HELDOUT.md`](reports/KAHN1_4B_HELDOUT.md) (4B) ·
+[`reports/KAHN1_4B_JEVBENCH.md`](reports/KAHN1_4B_JEVBENCH.md) (4B, JevBench) ·
+[`reports/LATENCY_PREFIX.md`](reports/LATENCY_PREFIX.md) (4B, prefix caching) ·
+[`reports/JEVK5_VS_KAHN1.md`](reports/JEVK5_VS_KAHN1.md) (4B vs JevK5 and JEV) ·
+[`reports/CHOICE_FAIRNESS.md`](reports/CHOICE_FAIRNESS.md) (3B, the Choice correction) ·
+[`reports/JEVBENCH_VS_JEV.md`](reports/JEVBENCH_VS_JEV.md) (3B vs Jev) ·
+[`reports/KAHN1_3B_HELDOUT.md`](reports/KAHN1_3B_HELDOUT.md) (3B) ·
 [kahn1.com/benchmarks](https://kahn1.com/benchmarks/).
 
 ### Understanding Ordinal Scoring & Human Agreement (SST-5)

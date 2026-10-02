@@ -226,7 +226,7 @@ curl -X POST http://127.0.0.1:8000/v1/evaluate/jev \
 ## 8. Troubleshooting & GPU Memory Optimization
 
 - **WSL2 OOM / Segmentation Faults**: Set `export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:False` to prevent virtual memory mapping collisions (`cuMemMap`) under WSL2.
-- **FP8 weights**: on recent NVIDIA GPUs (RTX 40xx/50xx, L40, H100), `EngineConfig(quantization="fp8")` quantizes the weights to FP8, which leaves more memory for the KV cache. The published Kahn1 figures are bf16.
+- **FP8 weights**: on recent NVIDIA GPUs (RTX 40xx/50xx, L40, H100), `EngineConfig(quantization="fp8")` quantizes the weights to FP8, which leaves more memory for the KV cache. It is not the serving setup: the published Kahn1 figures are bf16.
 - **CUDA graphs**: `EngineConfig` runs vLLM in eager mode by default; `enforce_eager=False` turns CUDA graphs on.
-- **Permutation Latency Trade-off**: `n_permutations=3` cancels position bias at the cost of more prompts per question (median 88.7 ms for Kahn1 4B, 36.4 ms for the 3B, on one RTX 5070 Ti). `n_permutations=1` is the fastest.
-- **Prefix caching**: it helps only when the state is long. vLLM caches Kahn1 4B's prefix (a hybrid Gated DeltaNet + attention model) in 528-token blocks: on a 212-token state 10 questions take 319 ms against 45.5 ms for one, on a 1,064-token state 143 ms against 49.3 ms.
+- **Permutation Latency Trade-off**: `n_permutations=3` cancels position bias at the cost of more prompts per question (Kahn1 4B: p50 88.7 ms, p95 279.3 ms; Kahn1 3B: p50 36.4 ms; one RTX 5070 Ti, see `reports/KAHN1_4B_HELDOUT.md`). `n_permutations=1` is the fastest.
+- **Prefix caching**: it helps only when the state is long. vLLM caches Kahn1 4B's prefix (a hybrid Gated DeltaNet + attention model) in 528-token blocks: on a 212-token state 10 questions take 319 ms against 45.5 ms for one, on a 1,064-token state 143 ms against 49.3 ms (`reports/LATENCY_PREFIX.md`).

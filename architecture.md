@@ -1,3 +1,5 @@
+> **Scope.** Written for Kahn1 3B (Qwen2.5-3B-Instruct, tag layout). Kahn1 4B (Qwen3.5-4B, native chat template) uses the same engine and readout; its figures are in [README.md](README.md) and [reports/KAHN1_4B_REPORT.md](reports/KAHN1_4B_REPORT.md).
+
 # System Architecture: `sysone` (Kahn1)
 
 This document specifies the technical architecture, internal component design, data flows, and model runtime of the `sysone` repository and the **`Kahn1-Qwen2.5-3B`** model.
@@ -145,7 +147,7 @@ The backbone model is **`Kahn1-Qwen2.5-3B`**, specialized for deterministic Syst
 
 - **Base Model**: `Qwen/Qwen2.5-3B-Instruct` (3.09B parameters, 28 layers, 16 attention heads, hidden size 2048).
 - **Precision**: Native `bfloat16` safetensors (~6.17 GB on disk).
-- **Memory Footprint**: ~1.26 GB VRAM during vLLM runtime, leaving $>14.5$ GB for KV Cache on a 16 GB GPU.
+- **Memory Footprint**: the bfloat16 weights take about 6.2 GB of VRAM; vLLM gives the KV cache what is left of its `gpu_memory_utilization` budget (about 7 GB at 0.88 on a 16 GB GPU).
 - **LoRA Adaptation**: Trained with rank $r=16, \alpha=32$ targeting all linear projection layers (`q_proj`, `k_proj`, `v_proj`, `o_proj`, `gate_proj`, `up_proj`, `down_proj`).
 - **Standalone Fusion**: Merged via `peft.merge_and_unload()` into unified safetensors, eliminating dynamic adapter runtime overhead.
 
@@ -220,7 +222,7 @@ flowchart TD
         QN --> Fwd
     end
     
-    Fwd --> Answers["Simultaneous Decision Extraction\n(Sub-60 ms total latency for N questions)"]
+    Fwd --> Answers["Simultaneous Decision Extraction\n(one batched pass for N questions)"]
 ```
 
 ---

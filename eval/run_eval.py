@@ -228,7 +228,7 @@ Model: `{model}`
 
 ## Limitations and Empirical Considerations
 
-- Backbone parameter capacity: A 3B/8B model does not match frontier model reasoning depth on subtle ambiguous edge cases.
+- Backbone parameter capacity: A 3B or 4B model does not match frontier model reasoning depth on subtle ambiguous edge cases.
 - Post-hoc temperature calibration validity is tied to the calibration distribution; domain shifts require re-calibration via `sysone calibrate --data new_samples.jsonl`.
 - Latency gains originate from single-token logit decoding and KV prefix reuse rather than novel architectural layers.
 - Evaluation is executed on entirely held-out domain datasets.

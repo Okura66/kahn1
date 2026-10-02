@@ -1,3 +1,5 @@
+> **Earlier checkpoint.** This report measures a development checkpoint, not the published Kahn1 4B or Kahn1 3B. Kept for the record; current figures: [KAHN1_4B_REPORT.md](KAHN1_4B_REPORT.md). Choice is asked over 8 options (the gold intent and 7 distractors), not over every intent.
+
 # Rapport d'Évaluation Exhaustif — 8 260 Exemples Holdout
 
 Modèle évalué : `checkpoints/qwen_merged`
@@ -28,8 +30,8 @@ Mode : Système Complet (LoRA fusionné + debiasing $k=3$ + calibration post-hoc
 
 | Dataset | Type de Tâche | Nb Exemples | Accuracy | ECE | Brier |
 |---|---|:---:|:---:|:---:|:---:|
-| **banking77** | Choice (77 classes) | 3076 | **91.48 %** | 0.0147 | 0.1298 |
-| **massive** | Choice (60 classes) | 2974 | **91.49 %** | 0.0157 | 0.1253 |
+| **banking77** | Choice (8 options sur 77 classes) | 3076 | **91.48 %** | 0.0147 | 0.1298 |
+| **massive** | Choice (8 options sur 60 classes) | 2974 | **91.49 %** | 0.0157 | 0.1253 |
 | **sst5_eval** | Score (5 niveaux) | 2210 | **49.00 %** | 0.0613 | 0.6130 |
 
 ---

@@ -215,7 +215,9 @@ Mode: Full Pipeline (Merged LoRA + debiasing $k={n_permutations}$ + post-hoc cal
 def ex_type(ex: dict) -> str:
     k = ex.get("kind", "")
     if k == "choice":
-        return f"Choice ({len(ex.get('options', []))} options)"
+        # The model is asked over at most 8 of them (eval/baselines.py:_prepare_choice_options).
+        n = len(ex.get("options", []))
+        return f"Choice (8 of {n} options)" if n > 8 else f"Choice ({n} options)"
     elif k == "score":
         return f"Score ({len(ex.get('levels', []))} levels)"
     elif k == "noul":

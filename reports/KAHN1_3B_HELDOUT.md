@@ -29,8 +29,8 @@ Mode: Full Pipeline (Merged LoRA + debiasing $k=3$ + post-hoc calibration)
 | Dataset | Primitive Type | Instances | Accuracy | ECE | Brier |
 |---|---|:---:|:---:|:---:|:---:|
 | **app_reviews_eval** | Score (5 levels) | 4000 | **50.95 %** | 0.0961 | 0.6096 |
-| **banking77** | Choice (77 options) | 3076 | **91.09 %** | 0.0256 | 0.1371 |
-| **massive** | Choice (60 options) | 2974 | **90.79 %** | 0.0112 | 0.1386 |
+| **banking77** | Choice (8 of 77 options) | 3076 | **91.09 %** | 0.0256 | 0.1371 |
+| **massive** | Choice (8 of 60 options) | 2974 | **90.79 %** | 0.0112 | 0.1386 |
 | **sst5_eval** | Score (5 levels) | 2210 | **52.35 %** | 0.0979 | 0.5936 |
 | **scitail_eval** | Noul (binary) | 2126 | **65.00 %** | 0.2481 | 0.5578 |
 | **rte_eval** | Noul (binary) | 277 | **82.67 %** | 0.1046 | 0.2723 |

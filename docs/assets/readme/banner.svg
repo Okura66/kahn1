@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="240" viewBox="0 0 960 240" role="img" aria-labelledby="t d">
+  <title id="t">Kahn1</title>
+  <desc id="d">Kahn1: typed decisions from one forward pass</desc>
+  <style>
+    .m { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", "DejaVu Sans Mono", monospace; }
+    .word { font-size: 76px; font-weight: 700; letter-spacing: 20px; }
+    .tag { font-size: 22px; fill: #3d3a35; }
+    .lab { font-size: 13px; letter-spacing: 3px; fill: #8f897f; }
+    .opt { font-size: 15px; fill: #3d3a35; }
+    .pct { font-size: 15px; fill: #5f5a52; }
+  </style>
+  <rect x="1" y="1" width="958" height="238" rx="14" fill="#faf8f5" stroke="#e4dfd6" stroke-width="2"/>
+  <text class="m lab" x="64" y="66">SYSTEM ONE · OPEN SOURCE</text>
+  <text class="m word" x="60" y="146" fill="#1c1b19">KAHN<tspan fill="#d9542b">1</tspan></text>
+  <text class="m tag" x="64" y="190">Typed decisions from one forward pass</text>
+
+  <g transform="translate(600 52)">
+    <rect x="0" y="0" width="300" height="136" fill="#ffffff" fill-opacity="0.55" stroke="#e4dfd6" stroke-width="1.5"/>
+    <text class="m lab" x="20" y="28">CHOICE · INTENT</text>
+    <g class="m">
+      <text class="opt" x="20" y="62">refund</text>
+      <rect x="100" y="52" width="130" height="8" fill="#f1ede6"/>
+      <rect x="100" y="52" width="118" height="8" fill="#d9542b"/>
+      <text class="pct" x="280" y="62" text-anchor="end">91%</text>
+      <text class="opt" x="20" y="90">cancel</text>
+      <rect x="100" y="80" width="130" height="8" fill="#f1ede6"/>
+      <rect x="100" y="80" width="8" height="8" fill="#bdb6ab"/>
+      <text class="pct" x="280" y="90" text-anchor="end">6%</text>
+      <text class="opt" x="20" y="118">other</text>
+      <rect x="100" y="108" width="130" height="8" fill="#f1ede6"/>
+      <rect x="100" y="108" width="4" height="8" fill="#bdb6ab"/>
+      <text class="pct" x="280" y="118" text-anchor="end">3%</text>
+    </g>
+  </g>
+</svg>

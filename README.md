@@ -1,68 +1,122 @@
-# Kahn1 — High-Throughput "System 1" Typed Decision Engine
-
-<p align="left">
-  <a href="https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Model-Kahn1--Qwen3.5--4B-ffcc00.svg" alt="Hugging Face Model: Kahn1 4B" /></a>
-  <a href="https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B-LoRA"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20LoRA-Kahn1--Qwen3.5--4B--LoRA-orange.svg" alt="Hugging Face LoRA: Kahn1 4B" /></a>
-  <a href="https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Model-Kahn1--Qwen2.5--3B-ffcc00.svg" alt="Hugging Face Model: Kahn1 3B" /></a>
-  <a href="https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B-LoRA"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20LoRA-Kahn1--Qwen2.5--3B--LoRA-orange.svg" alt="Hugging Face LoRA: Kahn1 3B" /></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/Code-MIT-yellow.svg" alt="Code: MIT" /></a>
-  <img src="https://img.shields.io/badge/Weights%204B-Apache%202.0-yellow.svg" alt="Kahn1 4B weights: Apache 2.0" />
-  <a href="https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/blob/main/LICENSE"><img src="https://img.shields.io/badge/Weights%203B-Qwen%20Research%20License-lightgrey.svg" alt="Kahn1 3B weights: Qwen Research License" /></a>
-  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/Python-3.11%2B-blue.svg" alt="Python 3.11+" /></a>
-  <a href="tests/"><img src="https://img.shields.io/badge/Tests-150%20passed-success.svg" alt="Tests: 150 passed" /></a>
-  <a href="https://docs.vllm.ai/"><img src="https://img.shields.io/badge/Engine-vLLM-purple.svg" alt="Engine: vLLM" /></a>
-  <img src="https://img.shields.io/badge/Latency%20p50-36%20ms%20(3B)%20%C2%B7%2089%20ms%20(4B)-brightgreen.svg" alt="Median latency: 36 ms (3B), 89 ms (4B)" />
+<p align="center">
+  <a href="https://kahn1.com/"><img src="docs/assets/readme/banner.svg" width="720" alt="Kahn1: typed decisions from one forward pass" /></a>
 </p>
 
-> [!NOTE]
-> **Website: [kahn1.com](https://kahn1.com/)** ([français](https://kahn1.com/fr/)) — try the [playground](https://kahn1.com/playground/) or watch [Kahn1 play Snake](https://kahn1.com/snake/), both in your browser.
+<p align="center">
+  <a href="https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Kahn1--Qwen3.5--4B-ffcc00.svg" alt="Hugging Face: Kahn1 4B" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/code-MIT-1c1b19.svg" alt="Code: MIT" /></a>
+  <a href="#models"><img src="https://img.shields.io/badge/weights-Apache%202.0%20(4B)%20%C2%B7%20Qwen%20Research%20(3B)-1c1b19.svg" alt="Weights: Apache 2.0 (4B), Qwen Research License (3B)" /></a>
+  <a href="https://kahn1.com/"><img src="https://img.shields.io/badge/site-kahn1.com-d9542b.svg" alt="Website: kahn1.com" /></a>
+  <a href="tests/"><img src="https://img.shields.io/badge/tests-150%20passed-2e7d32.svg" alt="Tests: 150 passed" /></a>
+</p>
 
-> [!TIP]
-> **Official Model Weights on Hugging Face** (4B: Apache 2.0; 3B: [Qwen Research License](https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/blob/main/LICENSE), a research licence, see its terms; the code is MIT):
-> - **Kahn1 4B** (Qwen3.5-4B + LoRA): merged (8.4 GB) [`Okura66/Kahn1-Qwen3.5-4B`](https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B), LoRA adapter (57 MB) [`Okura66/Kahn1-Qwen3.5-4B-LoRA`](https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B-LoRA)
-> - **Kahn1 3B** (Qwen2.5-3B-Instruct + LoRA): merged (6.17 GB) [`Okura66/Kahn1-Qwen2.5-3B`](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B), LoRA adapter (239 MB) [`Okura66/Kahn1-Qwen2.5-3B-LoRA`](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B-LoRA)
+<p align="center">
+  <b>Kahn1</b> is an open-source System One model: ask typed questions about a text (Choice, Score, Noul) and get typed
+  answers with their full distribution, read from the option-token logits of one forward pass, without generating text.
+</p>
 
-**Kahn1** (powered by the `sysone` Python framework) is an open-source, deterministic System 1 decision engine for structured classification, continuous ordinal scoring, and binary verification. Named in homage to Daniel Kahneman (*Thinking, Fast and Slow*), Kahn1 eliminates autoregressive text generation and JSON schema parsing by extracting strictly typed decisions and calibrated probability distributions directly from model logits at the single-token level.
+<p align="center">
+  <a href="https://kahn1.com/playground/">Playground</a> ·
+  <a href="https://kahn1.com/snake/">Kahn1 plays Snake</a> ·
+  <a href="https://kahn1.com/benchmarks/">Benchmarks</a> ·
+  <a href="https://kahn1.com/get-started/">Get started</a> ·
+  <a href="https://kahn1.com/fr/">Français</a>
+</p>
 
----
+<table>
+  <tr>
+    <td width="50%" valign="top"><img src="docs/assets/readme/kahn1-playground.gif" width="100%" alt="The Kahn1 playground: a text and a JEV schema in, typed answers with their distribution out" /></td>
+    <td width="50%" valign="top"><img src="docs/assets/readme/kahn1-snake.gif" width="100%" alt="Kahn1 4B playing Snake, one Choice per tick" /></td>
+  </tr>
+  <tr>
+    <td valign="top"><b>Playground.</b> Any text and a JEV schema in, typed answers with their distribution out.</td>
+    <td valign="top"><b>Snake.</b> One Choice per tick, read from the option logits: zero tokens generated.</td>
+  </tr>
+</table>
 
-## 📦 Model Weights & Hugging Face Releases
+<sub>Both recorded with Kahn1 4B (<code>Okura66/Kahn1-Qwen3.5-4B</code>) served locally with vLLM, k = 3 for Snake. The
+in-browser versions on kahn1.com run a 4-bit GGUF of the 3B instead.</sub>
 
-Both sizes side by side, with sizes, licences and loading snippets: 👉 **[kahn1.com/models](https://kahn1.com/models/)**.
+## Why Kahn1
 
-Kahn1 comes in two sizes, each as a merged checkpoint and as a LoRA adapter; both run on a GPU (vLLM) and on a CPU (transformers). Code MIT; Kahn1 4B weights Apache 2.0;
-Kahn1 3B weights under the [Qwen Research License](https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/blob/main/LICENSE) inherited from Qwen2.5-3B-Instruct (a research licence: see its terms).
+- **Typed by construction.** Each answer is read from the probabilities of the option tokens, so there is no text
+  to parse and no schema error; you get the whole distribution, not just the top answer.
+- **Calibrated confidence you can threshold.** Kahn1 4B's ECE on the 14,663-item held-out set is 0.072 overall,
+  0.015 on Choice: automate the confident cases, escalate the rest.
+- **Open and local.** Code MIT, Kahn1 4B weights Apache 2.0. One GPU serves it (median 88.7 ms per request at
+  k = 3 on an RTX 5070 Ti), a CPU runs it at seconds per question, and nothing is billed per call.
+- **Speaks JEV's schema.** `POST /v1/evaluate/jev` takes JEV's question fields (`type`, `instructions`,
+  `criteria`); JEV clients that call `/v1/systemone` need a small adapter.
 
-### Kahn1 4B
-👉 **[Okura66/Kahn1-Qwen3.5-4B](https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B)** (8.4 GB merged) ·
-**[Okura66/Kahn1-Qwen3.5-4B-LoRA](https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B-LoRA)** (57 MB adapter on `Qwen/Qwen3.5-4B`)
+## Quickstart
 
-Qwen3.5-4B fine-tuned with LoRA, native chat template: 72.4 % on the held-out set
-(3B: 70.3 %; JEV 73.2 %), 87.4 % on JevBench (3B: 67.5 %; hard tier 75.7 % vs 42.3 %), on par with Jev
-(86.6 %, p = 0.84) and with JevK5's own published run (86.1 %, p = 0.68; JevBench's own run of JevK5 v0.2:
-85.3 %); p50 88.7 ms at k = 3 on one RTX 5070 Ti.
+```bash
+git clone https://github.com/Okura66/kahn1 && cd kahn1
+uv venv --python 3.11 && uv pip install -e ".[gpu]"      # vLLM, CUDA GPU; CPU install below
+SYSONE_MODEL=Okura66/Kahn1-Qwen3.5-4B uv run sysone serve --port 8000
+```
+
+Then ask it something:
+
+```bash
+curl -X POST http://127.0.0.1:8000/v1/evaluate \
+  -H "Content-Type: application/json" \
+  -d '{"state":"A frustrated customer.","questions":[{"kind":"choice","key":"q","prompt":"Intent?","options":["cancel","refund","help"],"allow_other":true}],"n_permutations":3}'
+```
+
+No GPU? See [Running on CPU](#running-on-cpu-no-gpu-required). The full guide, with an AI-agent setup prompt, is at
+[kahn1.com/get-started](https://kahn1.com/get-started/).
+
+## Results at a glance
+
+Like for like: on the held-out set every system answers the same questions over the same options (Choice over the
+same 8 options); JevBench is the 231 public items of an external benchmark. Kahn1: k = 3, temperature calibration.
+
+| | Kahn1 4B | Kahn1 3B | JEV 1.13.0 | JevK5 v0.2 |
+|---|---:|---:|---:|---:|
+| Held-out, 14,663 items | 72.4 % | 70.3 % | 73.2 % | not run |
+| Held-out ECE, lower is better | 0.072 | 0.082 | 0.113 | not run |
+| JevBench, 231 public items | 87.4 % | 67.5 % | 86.6 % | 86.1 % |
+| JevBench, hard tier (111 items) | 75.7 % | 42.3 % | 73.0 % | 73.9 % |
+
+- JEV is ahead on the held-out set overall and on Choice (94.5 % vs 92.3 %, 79.1 % vs 71.6 % over every intent);
+  the two are level on Score and Kahn1 4B is ahead on Noul (75.5 % vs 74.4 %).
+- On JevBench, Kahn1 4B is on par with Jev (202 vs 200 items, exact McNemar p = 0.84) and with JevK5's own run
+  (p = 0.68). Three runners on the same items: ours for Kahn1, JevBench's for Jev, JevK5's authors' for JevK5
+  (JevBench's own run of JevK5 v0.2 scores 85.3 %).
+
+Every table, per dataset and per primitive: [Benchmark results](#benchmark-results) below and
+[kahn1.com/benchmarks](https://kahn1.com/benchmarks/).
+
+## Models
+
+Two sizes of one model, each as a merged checkpoint and as a LoRA adapter; both run on a GPU (vLLM) and on a CPU
+(transformers), and each Hugging Face repository ships its `calibration.json`.
+
+| | Kahn1 4B | Kahn1 3B |
+|---|---|---|
+| Base model | `Qwen/Qwen3.5-4B` | `Qwen/Qwen2.5-3B-Instruct` |
+| Merged model | [`Okura66/Kahn1-Qwen3.5-4B`](https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B) · 8.4 GB | [`Okura66/Kahn1-Qwen2.5-3B`](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B) · 6.17 GB |
+| LoRA adapter | [`Okura66/Kahn1-Qwen3.5-4B-LoRA`](https://huggingface.co/Okura66/Kahn1-Qwen3.5-4B-LoRA) · 57 MB | [`Okura66/Kahn1-Qwen2.5-3B-LoRA`](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B-LoRA) · 239 MB |
+| Prompt format | native chat template (thinking off), picked automatically | tag layout, picked automatically |
+| Weights licence | Apache 2.0 | [Qwen Research License](https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/blob/main/LICENSE), a research licence: see its terms |
+| Median latency (k = 3) | 88.7 ms | 36.4 ms |
+
+The 4B is the stronger one, above all on hard judgment calls; the 3B is smaller and faster. The browser demos run a
+smaller 4-bit GGUF build of the 3B ([mradermacher/Kahn1-Qwen2.5-3B-GGUF](https://huggingface.co/mradermacher/Kahn1-Qwen2.5-3B-GGUF)),
+older than the published 3B weights. Details: [kahn1.com/models](https://kahn1.com/models/).
+
+<details>
+<summary><b>Serve with plain vLLM, or load a LoRA adapter</b></summary>
 
 ```bash
 # Serve directly with vLLM (prefix caching on; it pays off on long states, see reports/LATENCY_PREFIX.md):
 vllm serve Okura66/Kahn1-Qwen3.5-4B --enable-prefix-caching --dtype bfloat16 --max-model-len 4096
+vllm serve Okura66/Kahn1-Qwen2.5-3B --enable-prefix-caching --dtype bfloat16
 
 # Or through sysone, which reads the answers from the logits (prompt format picked automatically):
 SYSONE_MODEL=Okura66/Kahn1-Qwen3.5-4B uv run sysone serve --port 8000
 ```
-
-### Kahn1 3B
-👉 **[Okura66/Kahn1-Qwen2.5-3B](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B)** (6.17 GB merged) ·
-**[Okura66/Kahn1-Qwen2.5-3B-LoRA](https://huggingface.co/Okura66/Kahn1-Qwen2.5-3B-LoRA)** (239 MB adapter on `Qwen/Qwen2.5-3B-Instruct`)
-
-Qwen2.5-3B-Instruct fine-tuned with LoRA, tag prompt layout. Smaller and faster: p50 36.4 ms at k = 3 on the
-same GPU. The browser demos (playground, Snake) run a smaller 4-bit GGUF build of the 3B, older than the
-published 3B weights.
-
-```bash
-vllm serve Okura66/Kahn1-Qwen2.5-3B --enable-prefix-caching --dtype bfloat16
-```
-
-### Loading a LoRA adapter
 
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -75,9 +129,22 @@ model = PeftModel.from_pretrained(base, "Okura66/Kahn1-Qwen3.5-4B-LoRA")
 # Kahn1 3B: base "Qwen/Qwen2.5-3B-Instruct", adapter "Okura66/Kahn1-Qwen2.5-3B-LoRA"
 ```
 
+</details>
+
+## Documentation
+
+- [Get started](https://kahn1.com/get-started/): install, serve, the API and the response format, calibration.
+- [Benchmarks](https://kahn1.com/benchmarks/) and [caveats](https://kahn1.com/caveats/): what was measured, and where Kahn1 is weak.
+- [`docs/PLAYBOOK.md`](docs/PLAYBOOK.md): retrain on your own data or on another open model.
+- [`reports/`](reports/): the evaluation reports, starting with [`KAHN1_4B_REPORT.md`](reports/KAHN1_4B_REPORT.md).
+- [What a System One model is](https://kahn1.com/learn/system-one-models/), and [the landscape of decision models](https://kahn1.com/compare/landscape/).
+
 ---
 
 ## What Kahn1 does
+
+Named after Daniel Kahneman (*Thinking, Fast and Slow*): the fast, intuitive System 1 of the
+book, next to a slow System 2. `sysone` is the Python framework behind it.
 
 - Takes a **state** (arbitrary text context) and a **list of typed questions** (Choice / Score / Noul).
 - Returns **strictly typed values + calibrated probability distributions**.
@@ -95,7 +162,10 @@ model = PeftModel.from_pretrained(base, "Okura66/Kahn1-Qwen3.5-4B-LoRA")
 
 ---
 
-## Real-World Enterprise Use Cases
+## When to use it
+
+<details>
+<summary><b>Real-World Enterprise Use Cases</b></summary>
 
 `sysone` is designed to be the **fast sensory cortex ("System 1")** of automated enterprise infrastructure, routing workflows before invoking expensive generative LLMs or human agents:
 
@@ -109,9 +179,10 @@ model = PeftModel.from_pretrained(base, "Okura66/Kahn1-Qwen3.5-4B-LoRA")
 4. **Selective Escalation to "System Two" (Human-in-the-Loop)**:
    - Using calibrated confidence scores ($p_{\max}$; Choice ECE 0.015 for Kahn1 4B on the held-out set) to automate routine decisions while safely escalating low-confidence cases to a frontier reasoning model or a human operator.
 
----
+</details>
 
-## Zero-Shot Classification vs Classical ML: When to Use What
+<details>
+<summary><b>Zero-Shot Classification vs Classical ML: When to Use What</b></summary>
 
 A common enterprise misconception is that zero-shot LLM classifiers make classical Machine Learning obsolete. From an engineering standpoint, this is fundamentally false.
 
@@ -123,13 +194,14 @@ A common enterprise misconception is that zero-shot LLM classifiers make classic
 | **Hardware Footprint** | Extremely lightweight (runs on small CPUs or tiny edge devices). | A modern GPU for throughput (measured on a 16 GB RTX 5070 Ti); both sizes also run on a CPU at seconds per question. |
 | **Explainability & Auditing** | Direct feature importances (SHAP, tree splits, linear weights). | Latent attention representations with calibrated post-hoc probabilities. |
 
-### The Engineering Takeaway
+**The engineering takeaway**
 - Use **Classical ML** when your ontology is fixed for years, latency must be sub-5ms, hardware is constrained, or data is tabular.
 - Use **`sysone`** when your business rules, categories, and criteria change weekly, when cold-starting new product lines, or when interpreting unstructured natural language context with subtle semantic nuances.
 
----
+</details>
 
-## Determinism, Governance, and the Legal Reality of Generative AI
+<details>
+<summary><b>Determinism, Governance, and the Legal Reality of Generative AI</b></summary>
 
 While `sysone` guarantees **0.0% schema and typing errors** by reading logits directly instead of parsing generated JSON text, engineering teams and legal compliance officers must understand its boundaries:
 
@@ -146,10 +218,11 @@ While `sysone` guarantees **0.0% schema and typing errors** by reading logits di
      $$\text{If } \text{confidence}(x) < \tau \implies \text{Route to human auditor or System 2}$$
    - This selective prediction threshold is what transforms an experimental LLM into an enterprise-ready, compliant decision engine.
 
+</details>
 
 ---
 
-## Quickstart
+## Install and run in detail
 
 ```bash
 uv venv --python 3.11
@@ -333,7 +406,7 @@ The codebase is **model-agnostic** via `EngineConfig.model` / `--model` / `SYSON
 - **Default Backbone**: `EngineConfig.model` defaults to `Qwen/Qwen2.5-3B-Instruct` (the server uses `checkpoints/qwen_merged` when present); point `SYSONE_MODEL` / `EngineConfig.model` at a Kahn1 checkpoint. `EngineConfig.prompt_format` defaults to `"auto"`: the native chat template for Qwen3 / Qwen3.5 checkpoints (Kahn1 4B), the tag layout for everything else (Kahn1 3B). Set it to `"tags"`, `"chatml"` or `"qwen3"` to force one.
 - **Also Supported**: `meta-llama/Llama-3.2-3B-Instruct`.
 
-### Benchmark results
+## Benchmark results
 
 **Held-out, 14,663 items never seen in training, like for like.** Six public datasets: intents
 (banking77, MASSIVE), 5-level scales (SST-5, app reviews), entailment (RTE, SciTail). Every system
@@ -413,7 +486,8 @@ Reports: 👉 [`reports/KAHN1_4B_REPORT.md`](reports/KAHN1_4B_REPORT.md) ·
 [`reports/KAHN1_3B_HELDOUT.md`](reports/KAHN1_3B_HELDOUT.md) (3B) ·
 [kahn1.com/benchmarks](https://kahn1.com/benchmarks/).
 
-### Understanding Ordinal Scoring & Human Agreement (SST-5)
+<details>
+<summary><b>Understanding Ordinal Scoring & Human Agreement (SST-5)</b></summary>
 
 On fine-grained ordinal scales like SST-5 (5 sentiment degrees from *Very Negative* to *Very Positive*), discrete exact-match accuracy is **52.4 %** for Kahn1 3B and **55.0 %** for Kahn1 4B; JEV reaches 57.7 % on the same items, so this is not a ceiling. What both sizes do well:
 1. **Human Inter-Annotator Agreement**: Human agreement on 5-way SST-5 is only **~55% - 60%** due to the natural subjectivity of nuances (e.g. distinguishing *Positive* from *Very Positive*).
@@ -422,6 +496,8 @@ On fine-grained ordinal scales like SST-5 (5 sentiment degrees from *Very Negati
 4. **Continuous Expectation**: In production, `sysone` consumes ordinal answers via expected value:
    $$\mathbb{E}[\text{Score}] = \sum_{i=0}^{K-1} i \cdot p_i$$
    This yields continuous scores (e.g. $3.65 / 4.0$) avoiding artificial discrete boundary clipping.
+
+</details>
 
 ⚠️ vLLM APIs evolve quickly. The code **dynamically inspects `SamplingParams` signature** at runtime (see `engine._detect_restrict_param`).
 

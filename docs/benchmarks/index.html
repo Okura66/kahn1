@@ -173,6 +173,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     <a href="/caveats/">Caveats</a>
     <div class="kick">COMPARE</div>
     <a href="/benchmarks/" aria-current="page">Benchmarks</a>
+    <a href="/benchmarks/open-models/">Open models</a>
     <a href="/compare/landscape/">Landscape</a>
     <a href="/alternatives/jev/">JEV alternatives</a>
     <a href="/models/">Models</a>
@@ -214,6 +215,10 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
       <p>Two benchmarks, both paired item by item. On the Kahn1 held-out set JEV was run by us through its API, with
         the same states, prompts and options as Kahn1. On JevBench, Jev's results are the ones JevBench itself
         publishes. The chart shows Kahn1 4B and Kahn1 3B; the tables below add the per-source figures, and JevK5 on JevBench.</p>
+      <p class="callout"><b>Other open models.</b> Run by us on the same items and the same GPU, Cloudflare's Clef-flash
+        (9B, in int8) is the most accurate on the held-out set, 74.8% against 72.4% for Kahn1 4B and 73.2% for JEV, and
+        level with Kahn1 4B on JevBench (83.5%, not a significant gap); Laya (421M) scores 59.1% and 57.6%. Every table,
+        the test method and the known biases: <a href="/benchmarks/open-models/">open decision models, measured like for like</a>.</p>
       <p class="callout"><b>Correction.</b> An earlier version of this page asked Choice over 8 options for Kahn1 but
         over every intent for JEV, which made Kahn1 look ahead on Choice and overall. That comparison was unequal and
         has been corrected: over the same options, JEV is ahead on Choice and overall.

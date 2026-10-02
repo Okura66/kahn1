@@ -17,6 +17,9 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent / "docs"
+import sys  # noqa: E402
+sys.path[:0] = [str(ROOT.parent), str(ROOT.parent / "src")]
+from scripts import kb_open_models as kom  # noqa: E402
 SITE = "https://kahn1.com"
 TODAY = "2026-10-01"   # the landscape was checked on this date
 MODIFIED = "2026-10-02"
@@ -461,14 +464,14 @@ def landscape(fr: bool) -> str:
 FAQ_EN = [
     ("Is Jev open source?", "No. Jev is a hosted API from TypeSafe; its weights are not published. You call it at api.typesafe.ai and pay per input token ($0.042 per million, output free, per its documentation)."),
     ("Can I run Jev locally?", "Not Jev itself. Open decision models run on your own hardware: Clef and Clef-flash (Cloudflare), JevK5, Laya, Kahn1 and others, several of them under Apache 2.0."),
-    ("Which open alternative is closest to Jev?", "It depends on the task, and no open model has been measured as a drop-in replacement on every task. In JevBench's own runs on the 231 public items (v1.4), several systems with public code or weights score at or above Jev's 86.6%: NInfer Qwen3.8-Flash-Next and JevOne (89.6%), OpenJev (thinking) and swanOne (88.7%), djev (thinking, 87.4%), reflex-27b (87.0%) and SimpleJev Qwen3.8-27B (86.6%); JevK5 v0.2 scores 85.3%. Kahn1 4B scores 87.4% on the same items in our own run, which JevBench has not reproduced; paired against Jev's published outcomes the gap is not significant (exact McNemar p = 0.84). On Kahn1's 14,663 held-out items, Jev 1.13.0 scores 73.2% and Kahn1 4B 72.4%."),
+    ("Which open alternative is closest to Jev?", "It depends on the task, and no open model has been measured as a drop-in replacement on every task. In JevBench's own runs on the 231 public items (v1.4), several systems with public code or weights score at or above Jev's 86.6%: NInfer Qwen3.8-Flash-Next and JevOne (89.6%), OpenJev (thinking) and swanOne (88.7%), djev (thinking, 87.4%), reflex-27b (87.0%) and SimpleJev Qwen3.8-27B (86.6%); JevK5 v0.2 scores 85.3%. Kahn1 4B scores 87.4% on the same items in our own run, which JevBench has not reproduced; paired against Jev's published outcomes the gap is not significant (exact McNemar p = 0.84). On Kahn1's 14,663 held-out items, Clef-flash (run in int8 on 16 GB) scores 74.8%, Jev 1.13.0 73.2%, Kahn1 4B 72.4% and Laya 59.1%; on JevBench, Clef-flash 83.5% and Laya 57.6%."),
     ("Which alternatives accept Jev's request format?", "Clef is announced as fully Jev-API compatible, and JevK5 and Laya (through laya-serve) serve the POST /v1/systemone request shape. Kahn1 takes the same question fields (type, instructions, criteria) under a \"schema\" key at POST /v1/evaluate/jev, so a Jev client needs a small adapter."),
     ("Is Kahn1 affiliated with TypeSafe?", "No. Kahn1 is an independent project; it takes Jev's question fields and compares itself with Jev on the same items."),
 ]
 FAQ_FR = [
     ("Jev est-il open source ?", "Non. Jev est une API hébergée par TypeSafe ; ses poids ne sont pas publiés. On l'appelle sur api.typesafe.ai et on paie les tokens d'entrée (0,042 $ par million, sortie gratuite, selon sa documentation)."),
     ("Peut-on faire tourner Jev en local ?", "Pas Jev lui-même. Des modèles de décision ouverts tournent sur votre matériel : Clef et Clef-flash (Cloudflare), JevK5, Laya, Kahn1 et d'autres, plusieurs sous Apache 2.0."),
-    ("Quelle alternative ouverte est la plus proche de Jev ?", "Cela dépend de la tâche, et aucun modèle ouvert n'a été mesuré comme remplaçant direct sur toutes les tâches. Dans les exécutions de JevBench lui-même sur les 231 exemples publics (v1.4), plusieurs systèmes à code ou poids publics atteignent ou dépassent les 86,6 % de Jev : NInfer Qwen3.8-Flash-Next et JevOne (89,6 %), OpenJev (thinking) et swanOne (88,7 %), djev (thinking, 87,4 %), reflex-27b (87,0 %) et SimpleJev Qwen3.8-27B (86,6 %) ; JevK5 v0.2 obtient 85,3 %. Kahn1 4B obtient 87,4 % sur les mêmes exemples dans notre propre exécution, que JevBench n'a pas reproduite ; apparié aux résultats publiés de Jev, l'écart n'est pas significatif (test exact de McNemar, p = 0,84). Sur les 14 663 exemples réservés de Kahn1, Jev 1.13.0 obtient 73,2 % et Kahn1 4B 72,4 %."),
+    ("Quelle alternative ouverte est la plus proche de Jev ?", "Cela dépend de la tâche, et aucun modèle ouvert n'a été mesuré comme remplaçant direct sur toutes les tâches. Dans les exécutions de JevBench lui-même sur les 231 exemples publics (v1.4), plusieurs systèmes à code ou poids publics atteignent ou dépassent les 86,6 % de Jev : NInfer Qwen3.8-Flash-Next et JevOne (89,6 %), OpenJev (thinking) et swanOne (88,7 %), djev (thinking, 87,4 %), reflex-27b (87,0 %) et SimpleJev Qwen3.8-27B (86,6 %) ; JevK5 v0.2 obtient 85,3 %. Kahn1 4B obtient 87,4 % sur les mêmes exemples dans notre propre exécution, que JevBench n'a pas reproduite ; apparié aux résultats publiés de Jev, l'écart n'est pas significatif (test exact de McNemar, p = 0,84). Sur les 14 663 exemples réservés de Kahn1, Clef-flash (en int8 sur 16 Go) obtient 74,8 %, Jev 1.13.0 73,2 %, Kahn1 4B 72,4 % et Laya 59,1 % ; sur JevBench, Clef-flash 83,5 % et Laya 57,6 %."),
     ("Quelles alternatives acceptent le format de requête de Jev ?", "Clef est annoncé entièrement compatible avec l'API Jev, et JevK5 et Laya (via laya-serve) servent des requêtes au format POST /v1/systemone. Kahn1 prend les mêmes champs de question (type, instructions, criteria) sous une clé « schema » sur POST /v1/evaluate/jev : un client Jev demande donc un petit adaptateur."),
     ("Kahn1 est-il affilié à TypeSafe ?", "Non. Kahn1 est un projet indépendant ; il prend les champs de question de Jev et se compare à Jev sur les mêmes exemples."),
 ]
@@ -484,21 +487,24 @@ def alternatives(fr: bool) -> tuple[str, list]:
                  "Clef, JevK5 et Laya servent son format de requête, Kahn1 prend les mêmes champs de question sur sa propre "
                  "route. Aucun n'est mesuré comme remplaçant direct sur toutes les tâches.", items, True, "Mis à jour le 2 octobre 2026")
         alt = table(["Alternative", "Éditeur", "Licence", "Tailles", "Compatible Jev", "Mesurée ici à périmètre égal"], [
-            ['<a href="https://blog.cloudflare.com/clef-decision-models/" rel="noopener">Clef, Clef-flash</a>', "Cloudflare", "Apache 2.0", "27B, 9B", "Oui, annoncé (API Jev)", "Pas encore"],
+            ['<a href="https://blog.cloudflare.com/clef-decision-models/" rel="noopener">Clef, Clef-flash</a>', "Cloudflare", "Apache 2.0", "27B, 9B", "Oui, annoncé (API Jev)", "Clef-flash : holdout et JevBench public (int8, <a href=\"/fr/comparer/kahn1-vs-clef-flash/\">face à Kahn1</a>)"],
             ['<a href="https://github.com/allebee/jevk5" rel="noopener">JevK5 v0.3</a>', "allebee", "Apache 2.0", "4B, 9B (+ 2B, Lite)", "Format /v1/systemone", "v0.2 sur JevBench public (exécution de ses auteurs et de JevBench)"],
-            ['<a href="https://huggingface.co/convaiinnovations/laya" rel="noopener">Laya</a>', "Convai Innovations", "Apache 2.0", "421M, 322M (encodeurs)", "Format /v1/systemone (laya-serve)", "Non"],
+            ['<a href="https://huggingface.co/convaiinnovations/laya" rel="noopener">Laya</a>', "Convai Innovations", "Apache 2.0", "421M, 322M (encodeurs)", "Format /v1/systemone (laya-serve)", "Holdout et JevBench public (<a href=\"/fr/comparer/kahn1-vs-laya/\">face à Kahn1</a>)"],
             ['<a href="/fr/modeles/">Kahn1</a>', "Kahn1", "4B Apache 2.0, 3B licence de recherche Qwen", "4B, 3B", "Champs de question de Jev sous une clé « schema » sur /v1/evaluate/jev ; pas un remplaçant direct pour un client Jev", "Oui : holdout et JevBench public"],
             ['<a href="https://github.com/ikermoel/open-alternative-jev" rel="noopener">open-alternative-jev (so1)</a>', "ikermoel", "Apache 2.0", "N'importe quel LLM ouvert", "", "Non"],
             ['<a href="https://huggingface.co/togethercomputer/Tev1-4B-experimental" rel="noopener">Tev1-4B-experimental</a>', "Together AI", "En cours", "4B", "", "Non"]])
-        mes = table(["", "Exemples", "Jev 1.13.0", "JevK5 v0.2, exécution JevBench", "JevK5 v0.2, exécution de ses auteurs", "Kahn1 4B"], [
-            ["Holdout Kahn1, global (Choice sur les mêmes 8 options)", f"14{N}663", f"<b>73,2{N}%</b>", "", "", f"72,4{N}%"],
-            ["JevBench public, tous niveaux", "231", f"86,6{N}%", f"85,3{N}%", f"86,1{N}%", f"<b>87,4{N}%</b>"],
-            ["JevBench public, niveau difficile", "111", f"73,0{N}%", "", f"73,9{N}%", f"<b>75,7{N}%</b>"]], {1, 2, 3, 4, 5})
+        mes = table(["", "Exemples", "Jev 1.13.0", "JevK5 v0.2, exécution JevBench", "JevK5 v0.2, exécution de ses auteurs", "Clef-flash (int8)", "Laya", "Kahn1 4B"], [
+            ["Holdout Kahn1, global (Choice sur les mêmes 8 options)", f"14{N}663", f"73,2{N}%", "", "", kom.pct(kom.held("clef", "all"), True, True), kom.pct(kom.held("laya", "all"), True), f"72,4{N}%"],
+            ["JevBench public, tous niveaux", "231", f"86,6{N}%", f"85,3{N}%", f"86,1{N}%", kom.pct(kom.jb("clef", "all"), True), kom.pct(kom.jb("laya", "all"), True), f"<b>87,4{N}%</b>"],
+            ["JevBench public, niveau difficile", "111", f"73,0{N}%", "", f"73,9{N}%", kom.pct(kom.jb("clef", "hard"), True), kom.pct(kom.jb("laya", "hard"), True), f"<b>75,7{N}%</b>"]], {1, 2, 3, 4, 5, 6, 7})
         body = [sec(1, "reponse", "La réponse courte", p(
             "Si vous voulez des décisions typées avec probabilités sans envoyer vos données à une API, prenez un modèle "
-            "de décision ouvert. Si vous voulez la meilleure précision globale mesurée sans rien héberger, Jev reste devant sur "
-            f"notre holdout : 73,2{N}% contre 72,4{N}% pour Kahn1 4B sur 14{N}663 exemples réservés. Sur les 231 exemples "
-            f"publics de JevBench, les deux sont au même niveau (Kahn1 4B 87,4{N}%, Jev 86,6{N}%, écart non significatif, p{N}={N}0,84).")),
+            "de décision ouvert. Sur notre holdout de 14" + N + "663 exemples, le plus précis mesuré est un modèle ouvert, "
+            f"Clef-flash de Cloudflare ({kom.pct(kom.held('clef', 'all'), True)}), devant Jev (73,2{N}%) et Kahn1 4B (72,4{N}%) ; "
+            "il demande un GPU de plus de 16" + N + "Go en bf16. Si vous ne voulez rien héberger, Jev reste devant Kahn1 4B "
+            f"sur ce holdout. Sur les 231 exemples publics de JevBench, Kahn1 4B, Jev, JevK5 et Clef-flash sont au même "
+            f"niveau (Kahn1 4B 87,4{N}%, Jev 86,6{N}%, Clef-flash {kom.pct(kom.jb('clef', 'all'), True)}, écarts non "
+            "significatifs). Méthode et biais : <a href=\"/fr/resultats/modeles-ouverts/\">Modèles ouverts</a>.")),
                 sec(2, "alternatives", "Les alternatives ouvertes", alt + p(
                     "Le paysage complet, hébergé et ouvert, est sur la page <a href=\"/fr/comparer/paysage/\">Paysage</a>.")),
                 sec(3, "mesures", "Ce qui est mesuré", mes + p(
@@ -521,7 +527,7 @@ def alternatives(fr: bool) -> tuple[str, list]:
                     '    -d \'{"state": "Bonjour, impossible de me connecter depuis ce matin.", "schema": {"categorie": {"type": "choice",\n'
                     '         "instructions": "Catégorie du ticket", "criteria": {"bug": "Une erreur", "compte": "Connexion, accès"}}}}\'</pre>\n'),
                 sec(5, "jev", "Quand Jev reste le bon choix", ul([
-                    "Vous voulez la meilleure précision globale mesurée sur notre holdout, sans infrastructure à gérer.",
+                    "Vous voulez une précision globale proche de la meilleure mesurée sur notre holdout, sans infrastructure à gérer.",
                     "Vos textes sont longs : Jev accepte 64k tokens par requête (32k pour l'état et la plus longue question), selon sa documentation.",
                     "Vous travaillez en anglais, la langue où Jev est le plus précis selon TypeSafe.",
                     "Vous acceptez qu'un tiers traite vos données et un prix par token d'entrée."])),
@@ -536,21 +542,24 @@ def alternatives(fr: bool) -> tuple[str, list]:
              "Kahn1 takes the same question fields on its own route. None has been measured as a drop-in replacement on "
              "every task.", items, False, "Updated October 2, 2026")
     alt = table(["Alternative", "Provider", "Licence", "Sizes", "Jev-compatible", "Measured here like for like"], [
-        ['<a href="https://blog.cloudflare.com/clef-decision-models/" rel="noopener">Clef, Clef-flash</a>', "Cloudflare", "Apache 2.0", "27B, 9B", "Yes, announced (Jev API)", "Not yet"],
+        ['<a href="https://blog.cloudflare.com/clef-decision-models/" rel="noopener">Clef, Clef-flash</a>', "Cloudflare", "Apache 2.0", "27B, 9B", "Yes, announced (Jev API)", "Clef-flash: held-out and public JevBench (int8, <a href=\"/compare/kahn1-vs-clef-flash/\">vs Kahn1</a>)"],
         ['<a href="https://github.com/allebee/jevk5" rel="noopener">JevK5 v0.3</a>', "allebee", "Apache 2.0", "4B, 9B (+ 2B, Lite)", "/v1/systemone request shape", "v0.2 on public JevBench (its authors' run and JevBench's)"],
-        ['<a href="https://huggingface.co/convaiinnovations/laya" rel="noopener">Laya</a>', "Convai Innovations", "Apache 2.0", "421M, 322M (encoders)", "/v1/systemone request shape (laya-serve)", "No"],
+        ['<a href="https://huggingface.co/convaiinnovations/laya" rel="noopener">Laya</a>', "Convai Innovations", "Apache 2.0", "421M, 322M (encoders)", "/v1/systemone request shape (laya-serve)", "Held-out and public JevBench (<a href=\"/compare/kahn1-vs-laya/\">vs Kahn1</a>)"],
         ['<a href="/models/">Kahn1</a>', "Kahn1", "4B Apache 2.0, 3B Qwen Research License", "4B, 3B", "Jev's question fields under a “schema” key at /v1/evaluate/jev; not a drop-in for Jev clients", "Yes: held-out and public JevBench"],
         ['<a href="https://github.com/ikermoel/open-alternative-jev" rel="noopener">open-alternative-jev (so1)</a>', "ikermoel", "Apache 2.0", "Any open LLM", "", "No"],
         ['<a href="https://huggingface.co/togethercomputer/Tev1-4B-experimental" rel="noopener">Tev1-4B-experimental</a>', "Together AI", "Being finalized", "4B", "", "No"]])
-    mes = table(["", "Items", "Jev 1.13.0", "JevK5 v0.2, JevBench's run", "JevK5 v0.2, its authors' run", "Kahn1 4B"], [
-        ["Kahn1 held-out, all primitives (Choice over the same 8 options)", "14,663", "<b>73.2%</b>", "", "", "72.4%"],
-        ["Public JevBench, all tiers", "231", "86.6%", "85.3%", "86.1%", "<b>87.4%</b>"],
-        ["Public JevBench, hard tier", "111", "73.0%", "", "73.9%", "<b>75.7%</b>"]], {1, 2, 3, 4, 5})
+    mes = table(["", "Items", "Jev 1.13.0", "JevK5 v0.2, JevBench's run", "JevK5 v0.2, its authors' run", "Clef-flash (int8)", "Laya", "Kahn1 4B"], [
+        ["Kahn1 held-out, all primitives (Choice over the same 8 options)", "14,663", "73.2%", "", "", kom.pct(kom.held("clef", "all"), False, True), kom.pct(kom.held("laya", "all"), False), "72.4%"],
+        ["Public JevBench, all tiers", "231", "86.6%", "85.3%", "86.1%", kom.pct(kom.jb("clef", "all"), False), kom.pct(kom.jb("laya", "all"), False), "<b>87.4%</b>"],
+        ["Public JevBench, hard tier", "111", "73.0%", "", "73.9%", kom.pct(kom.jb("clef", "hard"), False), kom.pct(kom.jb("laya", "hard"), False), "<b>75.7%</b>"]], {1, 2, 3, 4, 5, 6, 7})
     body = [sec(1, "answer", "The short answer", p(
         "If you want typed decisions with probabilities without sending your data to an API, pick an open decision "
-        "model. If you want the best measured overall accuracy with nothing to host, Jev is still ahead on our held-out set: "
-        "73.2% against 72.4% for Kahn1 4B on 14,663 items. On the 231 public JevBench items the two are level (Kahn1 4B "
-        "87.4%, Jev 86.6%, not a significant gap, p&nbsp;=&nbsp;0.84).")),
+        "model. On our 14,663-item held-out set, the most accurate system measured is an open one, Cloudflare's "
+        f"Clef-flash ({kom.pct(kom.held('clef', 'all'), False)}), ahead of Jev (73.2%) and Kahn1 4B (72.4%); it needs a GPU "
+        "with more than 16&nbsp;GB in bf16. If you want nothing to host, Jev is still ahead of Kahn1 4B on that set. On "
+        "the 231 public JevBench items, Kahn1 4B, Jev, JevK5 and Clef-flash are level (Kahn1 4B 87.4%, Jev 86.6%, "
+        f"Clef-flash {kom.pct(kom.jb('clef', 'all'), False)}, no significant gap). Method and biases: "
+        "<a href=\"/benchmarks/open-models/\">open models</a>.")),
             sec(2, "alternatives", "The open alternatives", alt + p(
                 "The full landscape, hosted and open, is on the <a href=\"/compare/landscape/\">landscape</a> page.")),
             sec(3, "measured", "What is measured", mes + p(
@@ -572,7 +581,7 @@ def alternatives(fr: bool) -> tuple[str, list]:
                 '    -d \'{"state": "Hello, I cannot log in to my account.", "schema": {"category": {"type": "choice",\n'
                 '         "instructions": "Support ticket category", "criteria": {"bug": "Something is broken", "account": "Login, access"}}}}\'</pre>\n'),
             sec(5, "jev", "When Jev is still the right pick", ul([
-                "You want the best measured overall accuracy on our held-out set, with no infrastructure to run.",
+                "You want overall accuracy close to the best measured on our held-out set, with no infrastructure to run.",
                 "Your texts are long: Jev takes 64k tokens per request (32k for the state plus the longest question), per its documentation.",
                 "You work in English, where TypeSafe says Jev is most accurate.",
                 "You are fine with a third party processing your data and a price per input token."])),
@@ -608,6 +617,30 @@ PAGES = [
          desc_fr="Les alternatives à poids ouverts au Jev de TypeSafe : Clef, JevK5, Kahn1 et d'autres. Licences, API "
                  "compatibles, précision à périmètre égal, quand garder Jev.",
          crumb_en="JEV alternatives", crumb_fr="Alternatives à JEV", nav_en="JEV alternatives", nav_fr="Alternatives à JEV"),
+    dict(key="openmodels", pub="2026-10-02", en="/benchmarks/open-models/", fr="/fr/resultats/modeles-ouverts/",
+         title_en="Open decision models compared on the same items",
+         title_fr="Modèles de décision ouverts comparés à périmètre égal",
+         desc_en="Kahn1 4B, Clef-flash, Laya and JEV on the same 14,663 held-out and 231 JevBench items: data, test "
+                 "method, known biases, per-item downloads.",
+         desc_fr="Kahn1 4B, Clef-flash, Laya et JEV sur les mêmes 14 663 exemples réservés et 231 de JevBench : données, "
+                 "méthode, biais connus, résultats par exemple.",
+         crumb_en="Open models", crumb_fr="Modèles ouverts", nav_en="Open models", nav_fr="Modèles ouverts"),
+    dict(key="vsclef", pub="2026-10-02", en="/compare/kahn1-vs-clef-flash/", fr="/fr/comparer/kahn1-vs-clef-flash/",
+         title_en="Kahn1 vs Clef-flash: open decision models compared",
+         title_fr="Kahn1 vs Clef-flash : modèles de décision ouverts",
+         desc_en="Kahn1 4B and Cloudflare's Clef-flash on the same 14,663 held-out and 231 JevBench items: accuracy, "
+                 "calibration, size, hardware, which one to pick.",
+         desc_fr="Kahn1 4B et Clef-flash de Cloudflare sur les mêmes exemples : précision, calibration, taille, matériel, "
+                 "lequel choisir.",
+         crumb_en="Kahn1 vs Clef-flash", crumb_fr="Kahn1 vs Clef-flash", nav_en="", nav_fr=""),
+    dict(key="vslaya", pub="2026-10-02", en="/compare/kahn1-vs-laya/", fr="/fr/comparer/kahn1-vs-laya/",
+         title_en="Kahn1 vs Laya: open decision models compared",
+         title_fr="Kahn1 vs Laya : modèles de décision ouverts",
+         desc_en="Kahn1 4B and Convai Innovations' Laya on the same 14,663 held-out and 231 JevBench items: accuracy, "
+                 "calibration, size, latency, which one to pick.",
+         desc_fr="Kahn1 4B et Laya de Convai Innovations sur les mêmes exemples : précision, calibration, taille, latence, "
+                 "lequel choisir.",
+         crumb_en="Kahn1 vs Laya", crumb_fr="Kahn1 vs Laya", nav_en="", nav_fr=""),
 ]
 
 KW = {
@@ -617,6 +650,12 @@ KW = {
                   "comparatif modèles de décision, alternatives à JEV, structured outputs, classification zero-shot, modèles guardrails, LLM juge"),
     "alternatives": ("open source JEV alternative, JEV alternative, run JEV locally, JEV vs JevK5, JEV vs Kahn1, Clef, JevK5, Kahn1",
                      "alternative open source à JEV, alternative à JEV, JEV en local, JEV ou JevK5, Clef, JevK5, Kahn1"),
+    "openmodels": ("open decision models benchmark, Clef-flash benchmark, Laya benchmark, JEV alternatives compared, like-for-like evaluation, benchmark contamination",
+                   "benchmark modèles de décision ouverts, Clef-flash, Laya, alternatives à JEV comparées, évaluation à périmètre égal, contamination"),
+    "vsclef": ("Kahn1 vs Clef-flash, Clef-flash vs Kahn1, Clef-flash benchmark, Cloudflare Clef, open decision model",
+               "Kahn1 ou Clef-flash, Clef-flash, Cloudflare Clef, modèle de décision ouvert"),
+    "vslaya": ("Kahn1 vs Laya, Laya vs Kahn1, Laya benchmark, Convai Laya, open decision model",
+               "Kahn1 ou Laya, Laya, Convai Laya, modèle de décision ouvert"),
 }
 
 
@@ -657,7 +696,7 @@ def build_page(tpl: str, page: dict, fr: bool, main_html: str, extra_ld: list[di
            "publisher": {"@id": SITE + "/#author"},
            "about": {"@type": "SoftwareApplication", "@id": SITE + "/#software", "name": "Kahn1", "url": SITE + "/"},
            "isPartOf": {"@type": "WebSite", "@id": SITE + "/#website", "name": "Kahn1", "url": SITE + "/"},
-           "datePublished": TODAY, "dateModified": MODIFIED}
+           "datePublished": page.get("pub", TODAY), "dateModified": MODIFIED}
     bc = {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
         {"@type": "ListItem", "position": 1, "name": "Kahn1", "item": home},
         {"@type": "ListItem", "position": 2, "name": crumb, "item": url}]}
@@ -702,27 +741,43 @@ def dataset_ld(url: str, fr: bool) -> dict:
 # Sidebar, sitemap, llms.txt
 # ---------------------------------------------------------------------------------------------
 SIDE_EN = {"LEARN": ('<a href="/get-started/"', '<a href="/learn/system-one-models/">System One models</a>'),
-           "COMPARE": ('<a href="/benchmarks/"', '<a href="/compare/landscape/">Landscape</a>\n    <a href="/alternatives/jev/">JEV alternatives</a>')}
+           "COMPARE": ('<a href="/benchmarks/"', '<a href="/benchmarks/open-models/">Open models</a>\n    <a href="/compare/landscape/">Landscape</a>\n    <a href="/alternatives/jev/">JEV alternatives</a>')}
 SIDE_FR = {"APPRENDRE": ('<a href="/fr/demarrer/"', '<a href="/fr/apprendre/modeles-system-one/">Modèles System One</a>'),
-           "COMPARER": ('<a href="/fr/resultats/"', '<a href="/fr/comparer/paysage/">Paysage</a>\n    <a href="/fr/alternatives/jev/">Alternatives à JEV</a>')}
+           "COMPARER": ('<a href="/fr/resultats/"', '<a href="/fr/resultats/modeles-ouverts/">Modèles ouverts</a>\n    <a href="/fr/comparer/paysage/">Paysage</a>\n    <a href="/fr/alternatives/jev/">Alternatives à JEV</a>')}
 
 
 def add_side_links(t: str, fr: bool, current: str | None) -> str:
     for kick, (anchor, links) in (SIDE_FR if fr else SIDE_EN).items():
         aside = re.search(r"<aside class=\"side\".*?</aside>", t, re.S)
-        if aside and links.split('"')[1] in aside[0]:
+        # only the links this sidebar does not have yet, in their order
+        missing = [ln.strip() for ln in links.split("\n")
+                   if not (aside and f'href="{ln.split(chr(34))[1]}"' in aside[0])]
+        if not missing:
             continue
-        # insert the new links after the group's first link line
+        # insert them after the group's first link line
         m = re.search(rf'(<div class="kick">{kick}</div>\n\s*{re.escape(anchor)}[^\n]*\n)', t)
         if m:
-            t = t[:m.end()] + "    " + links + "\n" + t[m.end():]
+            t = t[:m.end()] + "".join(f"    {ln}\n" for ln in missing) + t[m.end():]
     if current:
         t = t.replace(f'<a href="{current}">', f'<a href="{current}" aria-current="page">', 1)
     return t
 
 
+def open_models_dataset_ld(url: str, fr: bool) -> dict:
+    return {"@context": "https://schema.org", "@type": "Dataset",
+            "name": "Modèles de décision ouverts, résultats par exemple" if fr else "Open decision models, per-item results",
+            "description": ("Kahn1 4B, Clef-flash, Laya et JEV sur les 14 663 exemples réservés de Kahn1 et les 231 exemples "
+                            "publics de JevBench : juste ou faux et confiance, par exemple.") if fr else
+                           ("Kahn1 4B, Clef-flash, Laya and JEV on Kahn1's 14,663 held-out items and the 231 public JevBench "
+                            "items: right or wrong and confidence, per item."),
+            "url": url, "dateModified": MODIFIED, "creator": {"@type": "Person", "name": "Axel Montzamir"},
+            "distribution": [{"@type": "DataDownload", "encodingFormat": "text/csv", "contentUrl": SITE + "/data/open_models_heldout.csv"},
+                             {"@type": "DataDownload", "encodingFormat": "text/csv", "contentUrl": SITE + "/data/open_models_jevbench.csv"}]}
+
+
 def main():
     write_csv()
+    kom.write_csvs(ROOT)
     en_tpl = (ROOT / "caveats" / "index.html").read_bytes().decode("utf-8")
     fr_tpl = (ROOT / "fr" / "vigilance" / "index.html").read_bytes().decode("utf-8")
     for page in PAGES:
@@ -734,6 +789,11 @@ def main():
                 extra = [terms_ld(terms, url, fr)]
             elif page["key"] == "landscape":
                 html, extra = landscape(fr), [dataset_ld(url, fr)]
+            elif page["key"] == "openmodels":
+                html, extra = kom.open_models(fr)[0], [open_models_dataset_ld(url, fr)]
+            elif page["key"] in ("vsclef", "vslaya"):
+                html, faq = kom.vs_page("clef" if page["key"] == "vsclef" else "laya", fr)
+                extra = [faq_ld(faq)]
             else:
                 html, faq = alternatives(fr)
                 extra = [faq_ld(faq)]
@@ -771,7 +831,7 @@ def main():
                           f'    <xhtml:link rel="alternate" hreflang="en" href="{SITE}{page["en"]}"/>\n'
                           f'    <xhtml:link rel="alternate" hreflang="fr" href="{SITE}{page["fr"]}"/>\n'
                           f'    <xhtml:link rel="alternate" hreflang="x-default" href="{SITE}{page["en"]}"/>\n'
-                          f"    <lastmod>{TODAY}</lastmod>\n  </url>\n</urlset>")
+                          f"    <lastmod>{page.get('pub', TODAY)}</lastmod>\n  </url>\n</urlset>")
     sm.write_bytes((t.replace("\n", "\r\n") if crlf else t).encode("utf-8"))
     # llms.txt
     lt = ROOT / "llms.txt"
@@ -786,6 +846,13 @@ def main():
              "- [Alternatives open source à JEV (français)](https://kahn1.com/fr/alternatives/jev/): la même page en français\n")
     if "learn/system-one-models" not in t:
         t = t.replace("## Pages\n\n", "## Pages\n\n" + lines, 1)
+    om_lines = ("- [Open decision models, measured like for like](https://kahn1.com/benchmarks/open-models/): Kahn1 4B, Clef-flash, Laya and JEV on the same 14,663 held-out and 231 JevBench items, test method, known biases, train-split probe (CSV: https://kahn1.com/data/open_models_heldout.csv)\n"
+                "- [Modèles de décision ouverts (français)](https://kahn1.com/fr/resultats/modeles-ouverts/): la même page en français\n"
+                "- [Kahn1 vs Clef-flash](https://kahn1.com/compare/kahn1-vs-clef-flash/): head to head on the same items, which one to pick\n"
+                "- [Kahn1 vs Laya](https://kahn1.com/compare/kahn1-vs-laya/): head to head on the same items, which one to pick\n")
+    if "benchmarks/open-models" not in t:
+        anchor = "- [Open-source alternatives to JEV]"
+        t = t.replace(anchor, om_lines + anchor, 1) if anchor in t else t + om_lines
     lt.write_bytes((t.replace("\n", "\r\n") if crlf else t).encode("utf-8"))
 
 

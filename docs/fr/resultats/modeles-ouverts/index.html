@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<!-- Google Tag Manager, loaded only once the visitor accepts analytics cookies
+     (ePrivacy / CNIL: no non-essential cookie before consent). See the consent banner. -->
+<script>
+function loadGTM() {
+  if (window.__gtmLoaded) return;
+  window.__gtmLoaded = true;
+  (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-TTC5WPRN');
+}
+try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); } catch (e) {}
+</script>
+<!-- End Google Tag Manager -->
+<!-- GoatCounter: cookieless visit count, exempt from consent. Runs for every visitor. -->
+<script data-goatcounter="https://kahn1.goatcounter.com/count"
+        async src="https://gc.zgo.at/count.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modèles de décision ouverts comparés à périmètre égal</title>
+<meta name="description" content="Kahn1 4B, Clef-flash, Laya et JEV sur les mêmes 14 663 exemples réservés et 231 de JevBench : données, méthode, biais connus, résultats par exemple.">
+<link rel="canonical" href="https://kahn1.com/fr/resultats/modeles-ouverts/">
+<link rel="alternate" hreflang="en" href="https://kahn1.com/benchmarks/open-models/">
+<link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/resultats/modeles-ouverts/">
+<link rel="alternate" hreflang="x-default" href="https://kahn1.com/benchmarks/open-models/">
+<meta name="author" content="Axel Montzamir">
+<meta name="theme-color" content="#faf8f5">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kahn1">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:locale:alternate" content="en_US">
+<meta property="og:url" content="https://kahn1.com/fr/resultats/modeles-ouverts/">
+<meta property="og:title" content="Modèles de décision ouverts comparés à périmètre égal">
+<meta property="og:description" content="Kahn1 4B, Clef-flash, Laya et JEV sur les mêmes 14 663 exemples réservés et 231 de JevBench : données, méthode, biais connus, résultats par exemple.">
+<meta property="og:image" content="https://kahn1.com/assets/og-fr.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Kahn1 : n&#39;importe quel texte en entrée, des réponses typées en sortie.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231c1b19'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='20' font-weight='700' fill='%23d9542b' text-anchor='middle'%3E1%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;1,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<!-- Instrument Serif draws its 1 like an l ("Kahnl"): that one glyph comes from Libre Caslon Display. -->
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Display&text=1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css?v=20260928">
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "TechArticle",
+ "image": "https://kahn1.com/assets/og-fr.png",
+ "headline": "Modèles de décision ouverts comparés à périmètre égal",
+ "inLanguage": "fr",
+ "url": "https://kahn1.com/fr/resultats/modeles-ouverts/",
+ "description": "Kahn1 4B, Clef-flash, Laya et JEV sur les mêmes 14 663 exemples réservés et 231 de JevBench : données, méthode, biais connus, résultats par exemple.",
+ "keywords": "benchmark modèles de décision ouverts, Clef-flash, Laya, alternatives à JEV comparées, évaluation à périmètre égal, contamination",
+ "author": {
+  "@type": "Person",
+  "@id": "https://kahn1.com/#author",
+  "name": "Axel Montzamir",
+  "url": "https://www.linkedin.com/in/amontzamir/"
+ },
+ "publisher": {
+  "@id": "https://kahn1.com/#author"
+ },
+ "about": {
+  "@type": "SoftwareApplication",
+  "@id": "https://kahn1.com/#software",
+  "name": "Kahn1",
+  "url": "https://kahn1.com/"
+ },
+ "isPartOf": {
+  "@type": "WebSite",
+  "@id": "https://kahn1.com/#website",
+  "name": "Kahn1",
+  "url": "https://kahn1.com/"
+ },
+ "datePublished": "2026-10-02",
+ "dateModified": "2026-10-02"
+}
+</script>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "BreadcrumbList",
+ "itemListElement": [
+  {
+   "@type": "ListItem",
+   "position": 1,
+   "name": "Kahn1",
+   "item": "https://kahn1.com/fr/"
+  },
+  {
+   "@type": "ListItem",
+   "position": 2,
+   "name": "Modèles ouverts",
+   "item": "https://kahn1.com/fr/resultats/modeles-ouverts/"
+  }
+ ]
+}
+</script>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "Dataset",
+ "name": "Modèles de décision ouverts, résultats par exemple",
+ "description": "Kahn1 4B, Clef-flash, Laya et JEV sur les 14 663 exemples réservés de Kahn1 et les 231 exemples publics de JevBench : juste ou faux et confiance, par exemple.",
+ "url": "https://kahn1.com/fr/resultats/modeles-ouverts/",
+ "dateModified": "2026-10-02",
+ "creator": {
+  "@type": "Person",
+  "name": "Axel Montzamir"
+ },
+ "distribution": [
+  {
+   "@type": "DataDownload",
+   "encodingFormat": "text/csv",
+   "contentUrl": "https://kahn1.com/data/open_models_heldout.csv"
+  },
+  {
+   "@type": "DataDownload",
+   "encodingFormat": "text/csv",
+   "contentUrl": "https://kahn1.com/data/open_models_jevbench.csv"
+  }
+ ]
+}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Aller au contenu</a>
+
+<div class="consent" id="consent" role="dialog" aria-labelledby="consentText" hidden>
+  <p id="consentText">Google Analytics peut-il compter cette visite&nbsp;? Il dépose des cookies. Refuser ne change rien d'autre sur le site, et rien de ce que vous tapez dans les démos ne lui est envoyé.</p>
+  <div class="row2">
+    <button class="primary" id="consentYes">ACCEPTER</button>
+    <button id="consentNo">REFUSER</button>
+  </div>
+</div>
+
+<a class="brand" href="/fr/" aria-label="Kahn1, accueil">KAHN<span>1</span></a>
+<header class="topbar">
+  <button class="menu-btn" type="button" data-menu="open" aria-label="Ouvrir le menu"><span>MENU</span><i></i></button>
+</header>
+<aside class="side" aria-label="Navigation du site">
+  <div class="menu-head"><span class="wordmark">KAHN<span>1</span></span><button class="menu-close" type="button" data-menu="close" aria-label="Fermer le menu">FERMER ✕</button></div>
+  <nav class="otp" aria-label="Sur cette page"><div class="kick">SUR CETTE PAGE</div><div class="otp-list"></div></nav>
+  <div class="side-links">
+    <div class="rule"></div>
+    <div class="kick">ESSAYER</div>
+    <a href="/playground/">Playground</a>
+    <a href="/snake/">Kahn1 joue à Snake</a>
+    <div class="kick">APPRENDRE</div>
+    <a href="/fr/demarrer/">Démarrer</a>
+    <a href="/fr/apprendre/modeles-system-one/">Modèles System One</a>
+    <a href="/fr/vigilance/">Points de vigilance</a>
+    <div class="kick">COMPARER</div>
+    <a href="/fr/resultats/">Résultats</a>
+    <a href="/fr/resultats/modeles-ouverts/" aria-current="page">Modèles ouverts</a>
+    <a href="/fr/comparer/paysage/">Paysage</a>
+    <a href="/fr/alternatives/jev/">Alternatives à JEV</a>
+    <a href="/fr/modeles/">Modèles</a>
+    <div class="icons">
+      <a href="https://huggingface.co/Okura66" target="_blank" rel="noopener" title="Hugging Face" aria-label="Hugging Face">🤗</a>
+      <a href="https://github.com/Okura66/kahn1" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+      <a href="https://www.linkedin.com/in/amontzamir/" target="_blank" rel="noopener" title="LinkedIn" aria-label="LinkedIn"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M0 1.15C0 .52.52 0 1.18 0h13.64C15.48 0 16 .52 16 1.15v13.7c0 .63-.52 1.15-1.18 1.15H1.18C.52 16 0 15.48 0 14.85V1.15zm4.94 12.24V6.17H2.54v7.22h2.4zM3.74 5.18c.84 0 1.36-.55 1.36-1.25-.02-.71-.52-1.25-1.35-1.25-.82 0-1.36.54-1.36 1.25 0 .7.52 1.25 1.33 1.25h.02zm4.9 8.21V9.36c0-.22.02-.43.08-.59.18-.43.57-.88 1.23-.88.87 0 1.22.66 1.22 1.64v3.86h2.4V9.25c0-2.22-1.18-3.25-2.76-3.25-1.27 0-1.84.7-2.16 1.19v.02h-.02l.02-.02V6.17h-2.4c.03.68 0 7.22 0 7.22h2.4z"/></svg></a>
+    </div>
+  </div>
+</aside>
+<div class="prefs" role="group" aria-label="Langue et cookies">
+  <a href="/benchmarks/open-models/" hreflang="en" lang="en" title="Read in English">EN</a>
+  <a href="/fr/resultats/modeles-ouverts/" hreflang="fr" lang="fr" aria-current="page">FR</a>
+  <i aria-hidden="true"></i>
+  <button type="button" data-cookies title="Modifier votre choix de cookies">COOKIES</button>
+</div>
+
+<div class="shell">
+
+  <main id="main" class="page">
+    <section class="page-hero" aria-labelledby="title">
+      <h1 id="title">Modèles de décision ouverts, mesurés à périmètre égal</h1>
+      <p class="lead">Kahn1 4B, Clef-flash, Laya et JEV sur les mêmes 14&nbsp;663 exemples réservés et les 231 exemples publics de JevBench, sur un seul GPU&nbsp;: les chiffres, la méthode de test, et les biais que l'on connaît, y compris les nôtres.</p>
+      <p class="small faint">Mis à jour le 2 octobre 2026</p>
+      <nav class="toc" aria-label="Sur cette page">
+        <ol>
+          <li><a href="#apercu">En bref</a></li>
+          <li><a href="#holdout">Holdout Kahn1, par dataset</a></li>
+          <li><a href="#jevbench">JevBench, par niveau</a></li>
+          <li><a href="#methode">Comment chaque système a tourné</a></li>
+          <li><a href="#biais">Biais connus et limites</a></li>
+          <li><a href="#exposition">Un système a-t-il vu les sources du test&nbsp;?</a></li>
+          <li><a href="#donnees">Données et reproduction</a></li>
+        </ol>
+      </nav>
+    </section>
+    <section class="sec doc" id="apercu" aria-labelledby="h-apercu">
+      <h2 id="h-apercu">01 · En bref</h2>
+      <p>Clef-flash, un modèle de 9B, est le plus précis sur notre holdout (74,8&nbsp;%), devant JEV (73,2&nbsp;%) et Kahn1 4B (72,4&nbsp;%), grâce à Choice. Kahn1 4B est devant en Noul et le mieux calibré. Sur JevBench, Kahn1 4B, Jev, JevK5 et Clef-flash tiennent en 4 points, et aucun écart entre Kahn1 4B et l'un d'eux n'est significatif. Laya, un encodeur de 421M, est loin derrière sur les deux, alors que ses données d'entraînement couvrent les six sources du holdout.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col">Groupe</th><th scope="col" class="r">Exemples</th><th scope="col" class="r">Kahn1 4B</th><th scope="col" class="r">Clef-flash</th><th scope="col" class="r">JEV 1.13.0</th><th scope="col" class="r">Laya</th></tr></thead><tbody><tr><td>Global</td><td class="r">14&nbsp;663</td><td class="r">72,4&nbsp;%</td><td class="r"><b>74,8&nbsp;%</b></td><td class="r">73,2&nbsp;%</td><td class="r">59,1&nbsp;%</td></tr><tr><td>Choice</td><td class="r">6&nbsp;050</td><td class="r">92,3&nbsp;%</td><td class="r"><b>98,6&nbsp;%</b></td><td class="r">94,5&nbsp;%</td><td class="r">83,2&nbsp;%</td></tr><tr><td>Score</td><td class="r">6&nbsp;210</td><td class="r">51,9&nbsp;%</td><td class="r"><b>53,7&nbsp;%</b></td><td class="r">52,0&nbsp;%</td><td class="r">29,5&nbsp;%</td></tr><tr><td>Noul</td><td class="r">2&nbsp;403</td><td class="r"><b>75,5&nbsp;%</b></td><td class="r">69,7&nbsp;%</td><td class="r">74,4&nbsp;%</td><td class="r">74,8&nbsp;%</td></tr></tbody></table></div>
+      <p>ECE (0 est parfait)&nbsp;: Kahn1 4B 0,072, Clef-flash 0,101, JEV 0,113, Laya 0,184. Chaque système est mesuré tel qu'il est livré&nbsp;: Kahn1 avec sa calibration par température, Laya avec la sienne, Clef-flash en softmax brute, JEV tel que l'API répond.</p>
+    </section>
+    <section class="sec doc" id="holdout" aria-labelledby="h-holdout">
+      <h2 id="h-holdout">02 · Holdout Kahn1, par dataset</h2>
+      <p>14&nbsp;663 exemples issus des splits de test de six datasets publics&nbsp;: intentions (BANKING77, MASSIVE), échelles à 5 niveaux (SST-5, avis d'applications), implication (RTE, SciTail). Une question par requête, mêmes options pour tous&nbsp;: chaque question Choice liste la bonne intention et 7 distracteurs tirés de l'état, 8 options en tout.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col">Groupe</th><th scope="col" class="r">Exemples</th><th scope="col" class="r">Kahn1 4B</th><th scope="col" class="r">Clef-flash</th><th scope="col" class="r">JEV 1.13.0</th><th scope="col" class="r">Laya</th></tr></thead><tbody><tr><td>Global</td><td class="r">14&nbsp;663</td><td class="r">72,4&nbsp;%</td><td class="r"><b>74,8&nbsp;%</b></td><td class="r">73,2&nbsp;%</td><td class="r">59,1&nbsp;%</td></tr><tr><td>Choice</td><td class="r">6&nbsp;050</td><td class="r">92,3&nbsp;%</td><td class="r"><b>98,6&nbsp;%</b></td><td class="r">94,5&nbsp;%</td><td class="r">83,2&nbsp;%</td></tr><tr><td>Score</td><td class="r">6&nbsp;210</td><td class="r">51,9&nbsp;%</td><td class="r"><b>53,7&nbsp;%</b></td><td class="r">52,0&nbsp;%</td><td class="r">29,5&nbsp;%</td></tr><tr><td>Noul</td><td class="r">2&nbsp;403</td><td class="r"><b>75,5&nbsp;%</b></td><td class="r">69,7&nbsp;%</td><td class="r">74,4&nbsp;%</td><td class="r">74,8&nbsp;%</td></tr><tr><td>BANKING77</td><td class="r">3&nbsp;076</td><td class="r">91,8&nbsp;%</td><td class="r"><b>99,3&nbsp;%</b></td><td class="r">94,8&nbsp;%</td><td class="r">86,1&nbsp;%</td></tr><tr><td>MASSIVE</td><td class="r">2&nbsp;974</td><td class="r">92,9&nbsp;%</td><td class="r"><b>97,8&nbsp;%</b></td><td class="r">94,1&nbsp;%</td><td class="r">80,1&nbsp;%</td></tr><tr><td>SST-5</td><td class="r">2&nbsp;210</td><td class="r">55,0&nbsp;%</td><td class="r"><b>58,2&nbsp;%</b></td><td class="r">57,7&nbsp;%</td><td class="r">40,4&nbsp;%</td></tr><tr><td>App reviews</td><td class="r">4&nbsp;000</td><td class="r">50,2&nbsp;%</td><td class="r"><b>51,2&nbsp;%</b></td><td class="r">48,9&nbsp;%</td><td class="r">23,5&nbsp;%</td></tr><tr><td>SciTail</td><td class="r">2&nbsp;126</td><td class="r">74,1&nbsp;%</td><td class="r">67,6&nbsp;%</td><td class="r">72,4&nbsp;%</td><td class="r"><b>74,5&nbsp;%</b></td></tr><tr><td>RTE</td><td class="r">277</td><td class="r">85,9&nbsp;%</td><td class="r">85,9&nbsp;%</td><td class="r"><b>89,9&nbsp;%</b></td><td class="r">77,3&nbsp;%</td></tr></tbody></table></div>
+      <p>Apparié à Kahn1 4B, exemple par exemple (test exact de McNemar)&nbsp;: Clef-flash réussit 1&nbsp;187 exemples que Kahn1 rate, Kahn1 836 que Clef-flash rate (p&nbsp;=&nbsp;6&nbsp;×&nbsp;10<sup>−15</sup>)&nbsp;; JEV 930 contre 819 (p&nbsp;=&nbsp;0,01)&nbsp;; Laya 1&nbsp;010 contre 2&nbsp;969 (p&nbsp;=&nbsp;6&nbsp;×&nbsp;10<sup>−221</sup>). Clef-flash et JEV sont donc significativement devant Kahn1 4B sur ce holdout.</p>
+      <p>La formulation de Noul change beaucoup les résultats. Posée comme la phrase brute (la forme native de Jev), la question devient «&nbsp;est-ce vrai en général&nbsp;?&nbsp;»&nbsp;: JEV tombe à 48,7&nbsp;%, Clef-flash à 53,4&nbsp;%, Laya à 69,5&nbsp;%. Les tableaux utilisent <code>The text supports this statement: {statement}</code>, la formulation la plus favorable aux trois, celle que Kahn1 pose lui-même.</p>
+    </section>
+    <section class="sec doc" id="jevbench" aria-labelledby="h-jevbench">
+      <h2 id="h-jevbench">03 · JevBench, par niveau</h2>
+      <p><a href="https://github.com/fstandhartinger/jevbench" rel="noopener">JevBench</a> est un benchmark public indépendant pour les modèles de classe Jev, avec des rubriques longues et des décisions difficiles. Clef-flash et Laya ont reçu les questions et les états JevBench natifs, descriptions des critères comprises, comme le runner de JevBench les envoie à Jev.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col">Niveau</th><th scope="col" class="r">Exemples</th><th scope="col" class="r">Kahn1 4B</th><th scope="col" class="r">JEV 1.13.0</th><th scope="col" class="r">JevK5 v0.2</th><th scope="col" class="r">Clef-flash</th><th scope="col" class="r">Laya</th></tr></thead><tbody><tr><td>Tous</td><td class="r">231</td><td class="r"><b>87,4&nbsp;%</b></td><td class="r">86,6&nbsp;%</td><td class="r">86,1&nbsp;%</td><td class="r">83,5&nbsp;%</td><td class="r">57,6&nbsp;%</td></tr><tr><td>Standard</td><td class="r">72</td><td class="r">97,2&nbsp;%</td><td class="r"><b>98,6&nbsp;%</b></td><td class="r">95,8&nbsp;%</td><td class="r">97,2&nbsp;%</td><td class="r">70,8&nbsp;%</td></tr><tr><td>Facile</td><td class="r">48</td><td class="r"><b>100,0&nbsp;%</b></td><td class="r">100,0&nbsp;%</td><td class="r">100,0&nbsp;%</td><td class="r">100,0&nbsp;%</td><td class="r">95,8&nbsp;%</td></tr><tr><td>Difficile</td><td class="r">111</td><td class="r"><b>75,7&nbsp;%</b></td><td class="r">73,0&nbsp;%</td><td class="r">73,9&nbsp;%</td><td class="r">67,6&nbsp;%</td><td class="r">32,4&nbsp;%</td></tr></tbody></table></div>
+      <p>Apparié à Kahn1 4B&nbsp;: Clef-flash 12 contre 21 (p&nbsp;=&nbsp;0,16, non significatif), Laya 8 contre 77 (p&nbsp;=&nbsp;3&nbsp;×&nbsp;10<sup>−15</sup>), Jev 11 contre 13 (p&nbsp;=&nbsp;0,84), JevK5 10 contre 13 (p&nbsp;=&nbsp;0,68). Trois exécutions sur les mêmes exemples&nbsp;: la nôtre pour Kahn1, Clef-flash et Laya, celle de JevBench pour Jev, celle des auteurs de JevK5 pour JevK5 (l'exécution de JevBench donne 85,3&nbsp;% à JevK5 v0.2).</p>
+    </section>
+    <section class="sec doc" id="methode" aria-labelledby="h-methode">
+      <h2 id="h-methode">04 · Comment chaque système a tourné</h2>
+      <ul>
+        <li><b>Mêmes exemples, mêmes options, mêmes labels.</b> Choice sur les 8 mêmes options que Kahn1, Score sur les mêmes niveaux, Noul dans la formulation ci-dessus. Les questions sont envoyées dans les champs de Jev (<code>type</code>, <code>instructions</code>, <code>criteria</code>), le format natif de Clef-flash et Laya.</li>
+        <li><b>Kahn1 4B</b>&nbsp;: <code>Okura66/Kahn1-Qwen3.5-4B</code>, vLLM, bf16, k&nbsp;=&nbsp;3 ordres d'options moyennés, calibration par température, ses prédictions enregistrées.</li>
+        <li><b>Clef-flash</b>&nbsp;: <code>Cloudflare/clef-flash</code> avec son code de publication (<code>joint_schema_model.py</code>), transformers, softmax par question. Poids en <b>int8</b> (bitsandbytes)&nbsp;: en bf16, ses 18,8&nbsp;Go ne tiennent pas dans les 16&nbsp;Go de notre carte. Texte seul.</li>
+        <li><b>Laya</b>&nbsp;: <code>convaiinnovations/laya</code> 0.3.23, son <code>Router</code> recommandé (il choisit le checkpoint anglais ou multilingue), sa calibration livrée.</li>
+        <li><b>JEV 1.13.0</b>&nbsp;: l'API TypeSafe, appelée par nous avec les mêmes exemples (holdout)&nbsp;; sur JevBench, les résultats publiés par JevBench.</li>
+        <li><b>Matériel</b>&nbsp;: une RTX 5070 Ti (16&nbsp;Go), WSL2. <b>Statistiques</b>&nbsp;: test exact de McNemar apparié, ECE sur 15 tranches de p<sub>max</sub>. Une seule exécution par système&nbsp;: les quatre sont déterministes à l'inférence.</li>
+      </ul>
+    </section>
+    <section class="sec doc" id="biais" aria-labelledby="h-biais">
+      <h2 id="h-biais">05 · Biais connus et limites</h2>
+      <ul>
+        <li><b>Le holdout est le nôtre.</b> Nous avons choisi ses six sources et sa forme (8 options en Choice). Elles ont été écartées de l'entraînement de Kahn1, mais Kahn1 a été entraîné sur des tâches voisines&nbsp;: intentions (CLINC150, qui contient des intentions bancaires), sentiment (Yelp, Amazon, IMDB), NLI (MNLI, ANLI, WANLI…).</li>
+        <li><b>Laya a été entraîné sur les six sources du holdout</b> (BANKING77, MASSIVE, SST-5, SciTail, RTE, app_reviews, selon sa fiche)&nbsp;: ses chiffres de holdout sont in-distribution, pas zero-shot, et pourtant derrière.</li>
+        <li><b>Les données d'entraînement de Clef-flash ne sont pas publiées</b> («&nbsp;internal synthetic datasets&nbsp;»). BANKING77 figure dans les benchmarks de son éditeur. Voir la section suivante.</li>
+        <li><b>Clef-flash a tourné en int8</b>, pas en bf16 comme publié&nbsp;: ses chiffres peuvent bouger un peu en bf16.</li>
+        <li><b>Laya lit 512 tokens</b> avec son checkpoint anglais&nbsp;: 57 des 231 états JevBench sont tronqués. Lu en entier par son checkpoint multilingue (8&nbsp;192 tokens), il fait moins bien (46,8&nbsp;%)&nbsp;: la troncature n'explique pas son score.</li>
+        <li><b>Réglages livrés</b>&nbsp;: Kahn1 moyenne 3 ordres d'options et se calibre, les autres répondent en une passe. L'ECE compare donc des systèmes tels que livrés, pas après une recalibration commune.</li>
+        <li><b>Trois runners sur JevBench</b>&nbsp;; seule la moitié publique de JevBench a pu être testée ici.</li>
+      </ul>
+    </section>
+    <section class="sec doc" id="exposition" aria-labelledby="h-exposition">
+      <h2 id="h-exposition">06 · Un système a-t-il vu les sources du test&nbsp;?</h2>
+      <p>Deux tests. D'abord une sonde&nbsp;: 2&nbsp;000 exemples tirés des splits <i>train</i> de cinq sources, posés exactement comme le holdout. Un modèle qui a mémorisé ces exemples fait mieux sur train que sur test&nbsp;; un modèle qui n'a jamais vu la source fait pareil sur les deux. Kahn1, qui n'a vu aucune de ces sources, sert de témoin&nbsp;; Noul y est posé comme la phrase brute pour Clef-flash et Laya, des deux côtés.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col">Source</th><th scope="col" class="r">Kahn1 4B, test → train</th><th scope="col" class="r">Clef-flash, test → train</th><th scope="col" class="r">Laya, test → train</th></tr></thead><tbody><tr><td>BANKING77</td><td class="r">91,8&nbsp;% → 91,5&nbsp;% (-0,3 pt)</td><td class="r">99,3&nbsp;% → 99,2&nbsp;% (-0,1 pt)</td><td class="r">86,1&nbsp;% → 84,7&nbsp;% (-1,4 pt)</td></tr><tr><td>MASSIVE</td><td class="r">92,9&nbsp;% → 93,4&nbsp;% (+0,5 pt)</td><td class="r">97,8&nbsp;% → 98,7&nbsp;% (+0,9 pt)</td><td class="r">80,1&nbsp;% → 81,3&nbsp;% (+1,2 pt)</td></tr><tr><td>SST-5</td><td class="r">55,0&nbsp;% → 55,4&nbsp;% (+0,4 pt)</td><td class="r">58,2&nbsp;% → 60,5&nbsp;% (+2,3 pt)</td><td class="r">40,4&nbsp;% → 36,6&nbsp;% (-3,8 pt)</td></tr><tr><td>SciTail</td><td class="r">74,1&nbsp;% → 72,0&nbsp;% (-2,2 pt)</td><td class="r">50,3&nbsp;% → 48,2&nbsp;% (-2,1 pt)</td><td class="r">68,3&nbsp;% → 66,8&nbsp;% (-1,6 pt)</td></tr><tr><td>RTE</td><td class="r">85,9&nbsp;% → 87,3&nbsp;% (+1,4 pt)</td><td class="r">77,3&nbsp;% → 77,1&nbsp;% (-0,2 pt)</td><td class="r">78,0&nbsp;% → 73,7&nbsp;% (-4,3 pt)</td></tr></tbody></table></div>
+      <p>Aucun système ne montre d'écart au-delà de celui du témoin, Laya compris, qui déclare pourtant avoir été entraîné sur ces sources. La sonde détecte la mémorisation, pas l'exposition&nbsp;: un modèle entraîné sur un split train sans sur-apprentissage fait aussi bien sur le test. Elle ne prouve donc pas qu'un système n'a pas vu ces données.</p>
+      <p>Ensuite, le gain par rapport au modèle de base, à k&nbsp;=&nbsp;1 sans calibration&nbsp;: ce que le fine-tuning ajoute au modèle brut.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col">Groupe</th><th scope="col" class="r">Qwen3.5-4B (base)</th><th scope="col" class="r">Kahn1 4B, k&nbsp;=&nbsp;1</th><th scope="col" class="r">Qwen3.5-9B (base, fp8)</th><th scope="col" class="r">Clef-flash</th></tr></thead><tbody><tr><td>Global</td><td class="r">62,2&nbsp;%</td><td class="r">72,0&nbsp;%</td><td class="r">66,3&nbsp;%</td><td class="r">74,8&nbsp;%</td></tr><tr><td>Choice</td><td class="r">88,3&nbsp;%</td><td class="r">92,1&nbsp;%</td><td class="r">92,0&nbsp;%</td><td class="r">98,6&nbsp;%</td></tr><tr><td>Score</td><td class="r">39,3&nbsp;%</td><td class="r">51,2&nbsp;%</td><td class="r">45,2&nbsp;%</td><td class="r">53,7&nbsp;%</td></tr><tr><td>Noul</td><td class="r">55,7&nbsp;%</td><td class="r">75,2&nbsp;%</td><td class="r">55,9&nbsp;%</td><td class="r">69,7&nbsp;%</td></tr><tr><td>BANKING77</td><td class="r">87,9&nbsp;%</td><td class="r">91,2&nbsp;%</td><td class="r">91,8&nbsp;%</td><td class="r">99,3&nbsp;%</td></tr><tr><td>MASSIVE</td><td class="r">88,7&nbsp;%</td><td class="r">93,1&nbsp;%</td><td class="r">92,3&nbsp;%</td><td class="r">97,8&nbsp;%</td></tr></tbody></table></div>
+      <p>Sur BANKING77, Clef-flash supprime 92&nbsp;% des erreurs de son modèle de base (de 8,2&nbsp;% à 0,7&nbsp;% d'erreurs), et 71&nbsp;% sur MASSIVE&nbsp;; Kahn1 4B en supprime 27&nbsp;% et 39&nbsp;% (Kahn1 n'a vu aucun des deux). Un gain aussi fort sur les intentions est ce que donne un entraînement sur des données d'intention, qu'il s'agisse de ces datasets ou de datasets proches, et ces deux tests ne permettent pas de trancher. Lecture honnête&nbsp;: l'avance de Clef-flash en Choice est réelle sur ces exemples, mais on ne peut pas affirmer qu'elle est zero-shot. Les modèles de base sont lus avec le format de prompt de Kahn1, en fp8 pour le 9B.</p>
+    </section>
+    <section class="sec doc" id="donnees" aria-labelledby="h-donnees">
+      <h2 id="h-donnees">07 · Données et reproduction</h2>
+      <p>Résultats par exemple&nbsp;: <a href="/data/open_models_heldout.csv">open_models_heldout.csv</a> (holdout, juste ou faux et confiance pour chaque système) et <a href="/data/open_models_jevbench.csv">open_models_jevbench.csv</a>. L'index d'exemple renvoie à <code>data/eval.jsonl</code>, que <code>training/build_dataset.py</code> reconstruit à l'identique.</p>
+      <p>Scripts&nbsp;: <code>scripts/jev_models_eval.py</code> (Clef-flash, Laya, rapport), <code>scripts/contamination_probe.py</code> (sonde), <code>scripts/eval_base.py</code> (modèles de base). Rapports&nbsp;: <a href="https://github.com/Okura66/kahn1/blob/main/reports/OPEN_DECISION_MODELS.md" rel="noopener">OPEN_DECISION_MODELS.md</a>, <a href="https://github.com/Okura66/kahn1/blob/main/reports/CONTAMINATION_PROBE.md" rel="noopener">CONTAMINATION_PROBE.md</a>.</p>
+      <p>Comparaisons détaillées&nbsp;: <a href="/fr/comparer/kahn1-vs-clef-flash/">Kahn1 vs Clef-flash</a>, <a href="/fr/comparer/kahn1-vs-laya/">Kahn1 vs Laya</a>. Une erreur dans la façon dont un système a été lancé&nbsp;? <a href="https://github.com/Okura66/kahn1/issues" rel="noopener">Ouvrez une issue</a>, on relance.</p>
+    </section>
+  </main>
+
+<footer class="foot">
+  <div>KAHN1 · Licence MIT · par <a href="https://www.linkedin.com/in/amontzamir/" rel="noopener">Axel Montzamir</a></div>
+  <nav aria-label="Footer">
+    <a href="/playground/">Playground</a>
+    <a href="/snake/">Snake</a>
+    <a href="https://github.com/Okura66/kahn1" rel="noopener">GitHub</a>
+    <a href="https://huggingface.co/Okura66" rel="noopener">Hugging Face</a>
+  </nav>
+  <span class="disc">Kahn1 est un projet indépendant. Il accepte le format de schéma JEV et n'est pas affilié à TypeSafe.</span>
+</footer>
+</div>
+<script src="/assets/site.js?v=20260928"></script>
+</body>
+</html>

@@ -71,19 +71,27 @@ No GPU? See [Running on CPU](#running-on-cpu-no-gpu-required). The full guide, w
 
 Like for like: on the held-out set every system answers the same questions over the same options (Choice over the
 same 8 options); JevBench is the 231 public items of an external benchmark. Kahn1: k = 3, temperature calibration.
+Clef-flash and Laya: run by us on the same GPU, each through its own release code, in its shipped setting.
 
-| | Kahn1 4B | Kahn1 3B | JEV 1.13.0 | JevK5 v0.2 |
-|---|---:|---:|---:|---:|
-| Held-out, 14,663 items | 72.4 % | 70.3 % | 73.2 % | not run |
-| Held-out ECE, lower is better | 0.072 | 0.082 | 0.113 | not run |
-| JevBench, 231 public items | 87.4 % | 67.5 % | 86.6 % | 86.1 % |
-| JevBench, hard tier (111 items) | 75.7 % | 42.3 % | 73.0 % | 73.9 % |
+| | Kahn1 4B | Kahn1 3B | JEV 1.13.0 | JevK5 v0.2 | Clef-flash (int8) | Laya |
+|---|---:|---:|---:|---:|---:|---:|
+| Held-out, 14,663 items | 72.4 % | 70.3 % | 73.2 % | not run | **74.8 %** | 59.1 % |
+| Held-out ECE, lower is better | **0.072** | 0.082 | 0.113 | not run | 0.101 | 0.184 |
+| JevBench, 231 public items | **87.4 %** | 67.5 % | 86.6 % | 86.1 % | 83.5 % | 57.6 % |
+| JevBench, hard tier (111 items) | **75.7 %** | 42.3 % | 73.0 % | 73.9 % | 67.6 % | 32.4 % |
 
 - JEV is ahead on the held-out set overall and on Choice (94.5 % vs 92.3 %, 79.1 % vs 71.6 % over every intent);
   the two are level on Score and Kahn1 4B is ahead on Noul (75.5 % vs 74.4 %).
 - On JevBench, Kahn1 4B is on par with Jev (202 vs 200 items, exact McNemar p = 0.84) and with JevK5's own run
   (p = 0.68). Three runners on the same items: ours for Kahn1, JevBench's for Jev, JevK5's authors' for JevK5
   (JevBench's own run of JevK5 v0.2 scores 85.3 %).
+- Cloudflare's [Clef-flash](https://huggingface.co/Cloudflare/clef-flash) (9B; int8 here, its 18.8 GB of bf16 weights
+  do not fit in 16 GB) is the most accurate on the held-out set, significantly ahead of Kahn1 4B (p = 6e-15), on the
+  strength of Choice (98.6 % vs 92.3 %); Kahn1 4B is ahead on Noul and better calibrated, and the two are level on
+  JevBench (p = 0.16). [Laya](https://huggingface.co/convaiinnovations/laya) (421M encoder) is far behind on both,
+  although it was trained on the six held-out sources. Method, biases and a train-split probe:
+  [kahn1.com/benchmarks/open-models](https://kahn1.com/benchmarks/open-models/),
+  [`reports/OPEN_DECISION_MODELS.md`](reports/OPEN_DECISION_MODELS.md).
 
 Every table, per dataset and per primitive: [Benchmark results](#benchmark-results) below and
 [kahn1.com/benchmarks](https://kahn1.com/benchmarks/).
@@ -155,7 +163,7 @@ book, next to a slow System 2. `sysone` is the Python framework behind it.
 ## What Kahn1 does not do (honestly)
 
 - **Does not match the intelligence of a frontier model** on ambiguous subjective judgments (a 4B or 3B model makes no such claim).
-- **Is not more accurate than JEV**: asked the same questions over the same options, JEV 1.13.0 is ahead on the held-out set overall and on Choice, level on Score (see [Benchmark results](#benchmark-results)).
+- **Is not more accurate than JEV or Clef-flash on its own held-out set**: asked the same questions over the same options, JEV 1.13.0 is ahead overall and on Choice, level on Score, and Clef-flash (9B) is ahead of both (see [Benchmark results](#benchmark-results)).
 - **Does not use TypeSafe's proprietary sampler or architecture**.
 - **Calibration is valid only for the training distribution** — hence the `sysone calibrate` command to recalibrate on your domain.
 - **Latency comes from answering at a single position per question**, helped by prefix caching on long states only, not from an exotic architectural innovation. It grows with the number of questions per request.
@@ -454,6 +462,32 @@ Kahn1 4B gets right and 10 only JevK5 (exact McNemar p = 0.68). Against Jev's pu
 The Kahn1, JevK5 and Jev figures come from three different runners on the same items: ours, JevK5's
 authors' and JevBench's.
 
+**Other open decision models, same items, same GPU.** Clef-flash (Cloudflare, Qwen3.5-9B with a joint
+schema head, Apache 2.0) through its release code, weights in int8 (bitsandbytes); Laya (Convai
+Innovations, ModernBERT-large encoder, Apache 2.0) through its Router. Both take Jev's question fields;
+Noul is asked as "The text supports this statement: ...", as for JEV above; on JevBench they get the
+native JevBench questions and states.
+
+| | Items | Kahn1 4B | Clef-flash (int8) | Laya |
+|---|---:|---:|---:|---:|
+| Held-out, all | 14,663 | 72.4 % | **74.8 %** | 59.1 % |
+| Choice (8 options) | 6,050 | 92.3 % | **98.6 %** | 83.2 % |
+| Score | 6,210 | 51.9 % | **53.7 %** | 29.5 % |
+| Noul | 2,403 | **75.5 %** | 69.7 % | 74.8 % |
+| Held-out ECE | 14,663 | **0.072** | 0.101 | 0.184 |
+| JevBench, all | 231 | **87.4 %** | 83.5 % | 57.6 % |
+| JevBench, hard | 111 | **75.7 %** | 67.6 % | 32.4 % |
+
+Paired with Kahn1 4B: Clef-flash 1,187 against 836 items on the held-out set (p = 6e-15), 12 against 21
+on JevBench (p = 0.16, not significant). Laya was trained on the six held-out sources (its model card),
+so its held-out figures are in-distribution; Clef-flash's training data is not published. A probe on the
+train splits of five held-out sources finds no memorisation for any system, which does not rule out
+exposure; against their own base models, Clef-flash removes 92 % of Qwen3.5-9B's errors on BANKING77 and
+Kahn1 4B 27 % of Qwen3.5-4B's, so Clef-flash's Choice lead may not be zero-shot
+([`reports/CONTAMINATION_PROBE.md`](reports/CONTAMINATION_PROBE.md)). Everything, with the
+method and the known biases: [`reports/OPEN_DECISION_MODELS.md`](reports/OPEN_DECISION_MODELS.md) and
+[kahn1.com/benchmarks/open-models](https://kahn1.com/benchmarks/open-models/).
+
 **Hard decision dev split.** 317 questions written by Claude Opus on long, realistic documents,
 English and French, checked by two blind Opus solvers, never trained on (used to choose the
 checkpoint, so a dev score, not a benchmark), k = 1, balanced over primitives: base Qwen3.5-4B
@@ -468,7 +502,9 @@ Kahn1 3B p50 36.4 ms. Latency grows with the number of questions per request, le
 Kahn1 4B is ahead on Noul (75.5 % vs 74.4 %, a gap not tested for significance). On JevBench, Kahn1 4B
 gets 202 of 231 items right and Jev 200 (p = 0.84, not significant; the hard tier, 84 against 81 of
 111, was not tested on its own), and it is on par with JevK5's own run. Kahn1's case is that it is
-open, runs locally, is better calibrated overall (ECE 0.072 vs 0.113) and costs nothing per call. Where the 4B is weak:
+open, runs locally, is better calibrated overall (ECE 0.072 vs 0.113 for JEV and 0.101 for Clef-flash) and costs
+nothing per call. Among open models, Clef-flash is more accurate on the held-out set but twice the size and does
+not fit in bf16 on a 16 GB card; on JevBench the two are level. Where the 4B is weak:
 dates, durations and amounts computed in a single forward pass (5 of 15 on JevBench's hard temporal
 items); Score, its weakest primitive; Choice over every intent (71.6 %, JEV 79.1 %);
 calibration fitted on the training distribution (recalibrate on your domain).

@@ -125,4 +125,46 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://kahn1.com/alternatives/jev/"/>
     <lastmod>2026-10-02</lastmod>
   </url>
+  <url>
+    <loc>https://kahn1.com/benchmarks/open-models/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kahn1.com/benchmarks/open-models/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/resultats/modeles-ouverts/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kahn1.com/benchmarks/open-models/"/>
+    <lastmod>2026-10-02</lastmod>
+  </url>
+  <url>
+    <loc>https://kahn1.com/fr/resultats/modeles-ouverts/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kahn1.com/benchmarks/open-models/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/resultats/modeles-ouverts/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kahn1.com/benchmarks/open-models/"/>
+    <lastmod>2026-10-02</lastmod>
+  </url>
+  <url>
+    <loc>https://kahn1.com/compare/kahn1-vs-clef-flash/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kahn1.com/compare/kahn1-vs-clef-flash/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/comparer/kahn1-vs-clef-flash/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kahn1.com/compare/kahn1-vs-clef-flash/"/>
+    <lastmod>2026-10-02</lastmod>
+  </url>
+  <url>
+    <loc>https://kahn1.com/fr/comparer/kahn1-vs-clef-flash/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kahn1.com/compare/kahn1-vs-clef-flash/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/comparer/kahn1-vs-clef-flash/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kahn1.com/compare/kahn1-vs-clef-flash/"/>
+    <lastmod>2026-10-02</lastmod>
+  </url>
+  <url>
+    <loc>https://kahn1.com/compare/kahn1-vs-laya/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kahn1.com/compare/kahn1-vs-laya/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/comparer/kahn1-vs-laya/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kahn1.com/compare/kahn1-vs-laya/"/>
+    <lastmod>2026-10-02</lastmod>
+  </url>
+  <url>
+    <loc>https://kahn1.com/fr/comparer/kahn1-vs-laya/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kahn1.com/compare/kahn1-vs-laya/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/comparer/kahn1-vs-laya/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kahn1.com/compare/kahn1-vs-laya/"/>
+    <lastmod>2026-10-02</lastmod>
+  </url>
 </urlset>

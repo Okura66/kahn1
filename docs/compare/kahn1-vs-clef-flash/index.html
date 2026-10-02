@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google Tag Manager, loaded only once the visitor accepts analytics cookies
+     (ePrivacy / CNIL: no non-essential cookie before consent). See the consent banner. -->
+<script>
+function loadGTM() {
+  if (window.__gtmLoaded) return;
+  window.__gtmLoaded = true;
+  (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-TTC5WPRN');
+}
+try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); } catch (e) {}
+</script>
+<!-- End Google Tag Manager -->
+<!-- GoatCounter: cookieless visit count, exempt from consent. Runs for every visitor. -->
+<script data-goatcounter="https://kahn1.goatcounter.com/count"
+        async src="https://gc.zgo.at/count.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kahn1 vs Clef-flash: open decision models compared</title>
+<meta name="description" content="Kahn1 4B and Cloudflare's Clef-flash on the same 14,663 held-out and 231 JevBench items: accuracy, calibration, size, hardware, which one to pick.">
+<link rel="canonical" href="https://kahn1.com/compare/kahn1-vs-clef-flash/">
+<link rel="alternate" hreflang="en" href="https://kahn1.com/compare/kahn1-vs-clef-flash/">
+<link rel="alternate" hreflang="fr" href="https://kahn1.com/fr/comparer/kahn1-vs-clef-flash/">
+<link rel="alternate" hreflang="x-default" href="https://kahn1.com/compare/kahn1-vs-clef-flash/">
+<meta name="author" content="Axel Montzamir">
+<meta name="theme-color" content="#faf8f5">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kahn1">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="fr_FR">
+<meta property="og:url" content="https://kahn1.com/compare/kahn1-vs-clef-flash/">
+<meta property="og:title" content="Kahn1 vs Clef-flash: open decision models compared">
+<meta property="og:description" content="Kahn1 4B and Cloudflare's Clef-flash on the same 14,663 held-out and 231 JevBench items: accuracy, calibration, size, hardware, which one to pick.">
+<meta property="og:image" content="https://kahn1.com/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Kahn1: any text in, typed answers out.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231c1b19'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='20' font-weight='700' fill='%23d9542b' text-anchor='middle'%3E1%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;1,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<!-- Instrument Serif draws its 1 like an l ("Kahnl"): that one glyph comes from Libre Caslon Display. -->
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Display&text=1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css?v=20260928">
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "TechArticle",
+ "image": "https://kahn1.com/assets/og.png",
+ "headline": "Kahn1 vs Clef-flash: open decision models compared",
+ "inLanguage": "en",
+ "url": "https://kahn1.com/compare/kahn1-vs-clef-flash/",
+ "description": "Kahn1 4B and Cloudflare's Clef-flash on the same 14,663 held-out and 231 JevBench items: accuracy, calibration, size, hardware, which one to pick.",
+ "keywords": "Kahn1 vs Clef-flash, Clef-flash vs Kahn1, Clef-flash benchmark, Cloudflare Clef, open decision model",
+ "author": {
+  "@type": "Person",
+  "@id": "https://kahn1.com/#author",
+  "name": "Axel Montzamir",
+  "url": "https://www.linkedin.com/in/amontzamir/"
+ },
+ "publisher": {
+  "@id": "https://kahn1.com/#author"
+ },
+ "about": {
+  "@type": "SoftwareApplication",
+  "@id": "https://kahn1.com/#software",
+  "name": "Kahn1",
+  "url": "https://kahn1.com/"
+ },
+ "isPartOf": {
+  "@type": "WebSite",
+  "@id": "https://kahn1.com/#website",
+  "name": "Kahn1",
+  "url": "https://kahn1.com/"
+ },
+ "datePublished": "2026-10-02",
+ "dateModified": "2026-10-02"
+}
+</script>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "BreadcrumbList",
+ "itemListElement": [
+  {
+   "@type": "ListItem",
+   "position": 1,
+   "name": "Kahn1",
+   "item": "https://kahn1.com/"
+  },
+  {
+   "@type": "ListItem",
+   "position": 2,
+   "name": "Kahn1 vs Clef-flash",
+   "item": "https://kahn1.com/compare/kahn1-vs-clef-flash/"
+  }
+ ]
+}
+</script>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "FAQPage",
+ "mainEntity": [
+  {
+   "@type": "Question",
+   "name": "Is Clef-flash more accurate than Kahn1?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "On Kahn1's held-out set, yes: 74.8% against 72.4% on the same 14,663 items, a significant gap, driven by Choice. On the 231 public JevBench items, the two are level (87.4% for Kahn1 4B, 83.5% for Clef-flash, exact McNemar p = 0.16)."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Can Clef-flash run on a 16 GB GPU?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Not in bf16: its weights take 18.8 GB. We ran it in int8 with bitsandbytes on a 16 GB RTX 5070 Ti; that changes the model slightly."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Which is better calibrated?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Kahn1 4B: ECE 0.072 against 0.101 for Clef-flash on the held-out set, each as shipped."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Did Clef-flash see the test data?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "We cannot tell. Its training data is not published. A probe on the train splits of the test sources finds no memorisation, but a model trained without overfitting would not show any either. Against its own base model (Qwen3.5-9B), Clef-flash removes 92% of the errors on BANKING77; Kahn1 4B, which never saw it, removes 27% of its base model's."
+   }
+  }
+ ]
+}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<div class="consent" id="consent" role="dialog" aria-labelledby="consentText" hidden>
+  <p id="consentText">Can Google Analytics count this visit? It sets cookies. Refusing changes nothing else on the site, and nothing you type in the demos is sent to it.</p>
+  <div class="row2">
+    <button class="primary" id="consentYes">ACCEPT</button>
+    <button id="consentNo">REFUSE</button>
+  </div>
+</div>
+
+<a class="brand" href="/" aria-label="Kahn1, home">KAHN<span>1</span></a>
+<header class="topbar">
+  <button class="menu-btn" type="button" data-menu="open" aria-label="Open menu"><span>MENU</span><i></i></button>
+</header>
+<aside class="side" aria-label="Site navigation">
+  <div class="menu-head"><span class="wordmark">KAHN<span>1</span></span><button class="menu-close" type="button" data-menu="close" aria-label="Close menu">CLOSE ✕</button></div>
+  <nav class="otp" aria-label="On this page"><div class="kick">ON THIS PAGE</div><div class="otp-list"></div></nav>
+  <div class="side-links">
+    <div class="rule"></div>
+    <div class="kick">TRY</div>
+    <a href="/playground/">Playground</a>
+    <a href="/snake/">Kahn1 plays Snake</a>
+    <div class="kick">LEARN</div>
+    <a href="/get-started/">Get started</a>
+    <a href="/learn/system-one-models/">System One models</a>
+    <a href="/caveats/">Caveats</a>
+    <div class="kick">COMPARE</div>
+    <a href="/benchmarks/">Benchmarks</a>
+    <a href="/benchmarks/open-models/">Open models</a>
+    <a href="/compare/landscape/">Landscape</a>
+    <a href="/alternatives/jev/">JEV alternatives</a>
+    <a href="/models/">Models</a>
+    <div class="icons">
+      <a href="https://huggingface.co/Okura66" target="_blank" rel="noopener" title="Hugging Face" aria-label="Hugging Face">🤗</a>
+      <a href="https://github.com/Okura66/kahn1" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+      <a href="https://www.linkedin.com/in/amontzamir/" target="_blank" rel="noopener" title="LinkedIn" aria-label="LinkedIn"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M0 1.15C0 .52.52 0 1.18 0h13.64C15.48 0 16 .52 16 1.15v13.7c0 .63-.52 1.15-1.18 1.15H1.18C.52 16 0 15.48 0 14.85V1.15zm4.94 12.24V6.17H2.54v7.22h2.4zM3.74 5.18c.84 0 1.36-.55 1.36-1.25-.02-.71-.52-1.25-1.35-1.25-.82 0-1.36.54-1.36 1.25 0 .7.52 1.25 1.33 1.25h.02zm4.9 8.21V9.36c0-.22.02-.43.08-.59.18-.43.57-.88 1.23-.88.87 0 1.22.66 1.22 1.64v3.86h2.4V9.25c0-2.22-1.18-3.25-2.76-3.25-1.27 0-1.84.7-2.16 1.19v.02h-.02l.02-.02V6.17h-2.4c.03.68 0 7.22 0 7.22h2.4z"/></svg></a>
+    </div>
+  </div>
+</aside>
+<div class="prefs" role="group" aria-label="Language and cookies">
+  <a href="/compare/kahn1-vs-clef-flash/" hreflang="en" lang="en" aria-current="page">EN</a>
+  <a href="/fr/comparer/kahn1-vs-clef-flash/" hreflang="fr" lang="fr" title="Lire en français">FR</a>
+  <i aria-hidden="true"></i>
+  <button type="button" data-cookies title="Change your cookie choice">COOKIES</button>
+</div>
+
+<div class="shell">
+
+  <main id="main" class="page">
+    <section class="page-hero" aria-labelledby="title">
+      <h1 id="title">Kahn1 vs Clef-flash</h1>
+      <p class="lead">Two open decision models that answer typed questions about a text with a probability per option: Kahn1 4B and Cloudflare's Clef-flash, on the same items, run on the same GPU.</p>
+      <p class="small faint">Updated October 2, 2026</p>
+      <nav class="toc" aria-label="On this page">
+        <ol>
+          <li><a href="#answer">The short answer</a></li>
+          <li><a href="#side">Side by side</a></li>
+          <li><a href="#measured">Measured on the same items</a></li>
+          <li><a href="#pick">Which one to pick</a></li>
+          <li><a href="#caveats">What to keep in mind</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ol>
+      </nav>
+    </section>
+    <section class="sec doc" id="answer" aria-labelledby="h-answer">
+      <h2 id="h-answer">01 · The short answer</h2>
+      <p>Clef-flash is more accurate on our held-out set (74.8% against 72.4%, a significant gap), above all on Choice (98.6% against 92.3%). Kahn1 4B is ahead on Noul (75.5% against 69.7%), better calibrated (ECE 0.072 against 0.101) and level on JevBench (87.4% against 83.5%, not significant; hard tier 75.7% against 67.6%). Kahn1 4B is half the size and runs in bf16 on a 16&nbsp;GB card; Clef-flash also reads images and video, and speaks Jev's request format as it is.</p>
+    </section>
+    <section class="sec doc" id="side" aria-labelledby="h-side">
+      <h2 id="h-side">02 · Side by side</h2>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col"></th><th scope="col">Kahn1 4B</th><th scope="col">Clef-flash</th></tr></thead><tbody><tr><td>Developer</td><td>Kahn1, independent</td><td>Cloudflare</td></tr><tr><td>Licence</td><td>Weights Apache 2.0, code MIT</td><td>Apache 2.0</td></tr><tr><td>Built on</td><td>Qwen3.5-4B + LoRA, merged</td><td>Qwen3.5-9B + a joint schema head</td></tr><tr><td>Size</td><td>4B; 8.4 GB in bf16</td><td>9B; 18.8 GB in bf16</td></tr><tr><td>Inputs</td><td>Text</td><td>Text, JSON, images, video; up to 16,384 tokens by default</td></tr><tr><td>How answers are scored</td><td>Option-token logits, 3 option orders averaged, temperature calibration</td><td>A head that scores every option of every question jointly; calibration according to the vendor</td></tr><tr><td>Request format</td><td>Jev question fields under a "schema" key at /v1/evaluate/jev (adapter needed for a Jev client)</td><td>Jev /v1/systemone request and response body (release code), hosted on Workers AI</td></tr><tr><td>Runs on</td><td>One 16 GB GPU in bf16 (vLLM), or a CPU (transformers)</td><td>A GPU with more than 16 GB in bf16 (vendor tested an H200); we ran it in int8 on 16 GB</td></tr><tr><td>Latency</td><td>Median 88.7 ms per request, k = 3, RTX 5070 Ti (our measure)</td><td>Median 38.8 ms per request according to the vendor; not measured comparably here</td></tr></tbody></table></div>
+    </section>
+    <section class="sec doc" id="measured" aria-labelledby="h-measured">
+      <h2 id="h-measured">03 · Measured on the same items</h2>
+      <p>Kahn1 held-out set (14,663 items, Choice over the same 8 options):</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col">Group</th><th scope="col" class="r">Items</th><th scope="col" class="r">Kahn1 4B</th><th scope="col" class="r">Clef-flash</th></tr></thead><tbody><tr><td>All</td><td class="r">14,663</td><td class="r">72.4%</td><td class="r"><b>74.8%</b></td></tr><tr><td>Choice</td><td class="r">6,050</td><td class="r">92.3%</td><td class="r"><b>98.6%</b></td></tr><tr><td>Score</td><td class="r">6,210</td><td class="r">51.9%</td><td class="r"><b>53.7%</b></td></tr><tr><td>Noul</td><td class="r">2,403</td><td class="r"><b>75.5%</b></td><td class="r">69.7%</td></tr><tr><td>BANKING77</td><td class="r">3,076</td><td class="r">91.8%</td><td class="r"><b>99.3%</b></td></tr><tr><td>MASSIVE</td><td class="r">2,974</td><td class="r">92.9%</td><td class="r"><b>97.8%</b></td></tr><tr><td>SST-5</td><td class="r">2,210</td><td class="r">55.0%</td><td class="r"><b>58.2%</b></td></tr><tr><td>App reviews</td><td class="r">4,000</td><td class="r">50.2%</td><td class="r"><b>51.2%</b></td></tr><tr><td>SciTail</td><td class="r">2,126</td><td class="r"><b>74.1%</b></td><td class="r">67.6%</td></tr><tr><td>RTE</td><td class="r">277</td><td class="r"><b>85.9%</b></td><td class="r">85.9%</td></tr></tbody></table></div>
+      <p>Public JevBench (231 items):</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th scope="col">Tier</th><th scope="col" class="r">Items</th><th scope="col" class="r">Kahn1 4B</th><th scope="col" class="r">Clef-flash</th></tr></thead><tbody><tr><td>All</td><td class="r">231</td><td class="r"><b>87.4%</b></td><td class="r">83.5%</td></tr><tr><td>Standard</td><td class="r">72</td><td class="r"><b>97.2%</b></td><td class="r">97.2%</td></tr><tr><td>Easy</td><td class="r">48</td><td class="r"><b>100.0%</b></td><td class="r">100.0%</td></tr><tr><td>Hard</td><td class="r">111</td><td class="r"><b>75.7%</b></td><td class="r">67.6%</td></tr></tbody></table></div>
+      <p>Paired item by item (exact McNemar test): on the held-out set, Clef-flash gets 1,187 items right that Kahn1 misses and Kahn1 836 that Clef-flash misses (p&nbsp;=&nbsp;6&nbsp;×&nbsp;10<sup>−15</sup>); on JevBench, 12 against 21 (p&nbsp;=&nbsp;0.16). ECE: Kahn1 4B 0.072, Clef-flash 0.101. Full method and biases: <a href="/benchmarks/open-models/">open decision models, measured like for like</a>.</p>
+    </section>
+    <section class="sec doc" id="pick" aria-labelledby="h-pick">
+      <h2 id="h-pick">04 · Which one to pick</h2>
+      <h3 class="sub">Pick Clef-flash if</h3>
+      <ul>
+        <li>You want the best measured accuracy on intent-style Choice questions.</li>
+        <li>Your states include images, video or long JSON.</li>
+        <li>You want Jev's request and response format with no adapter, or Cloudflare's hosting (Workers AI).</li>
+        <li>You have a GPU with more than 16&nbsp;GB, or accept int8 on 16&nbsp;GB.</li>
+      </ul>
+      <h3 class="sub">Pick Kahn1 if</h3>
+      <ul>
+        <li>You threshold on the confidence: Kahn1 is the better calibrated of the two.</li>
+        <li>Your questions are mostly entailment and policy checks (Noul).</li>
+        <li>You have one 16&nbsp;GB GPU, or only a CPU.</li>
+        <li>You want the smaller model at the same JevBench level.</li>
+      </ul>
+    </section>
+    <section class="sec doc" id="caveats" aria-labelledby="h-caveats">
+      <h2 id="h-caveats">05 · What to keep in mind</h2>
+      <ul>
+        <li>Clef-flash's training data is not published. Our train-split probe finds no memorisation, which does not rule out exposure, and Clef-flash removes 92% of its base model's errors on BANKING77 where Kahn1 removes 27% of its own: its Choice lead may not be zero-shot (see the method page).</li>
+        <li>Clef-flash ran in int8 (bitsandbytes), not in bf16 as released.</li>
+        <li>Kahn1 averages 3 option orders and calibrates; Clef-flash answers in one pass, its probabilities as shipped.</li>
+        <li>The held-out set is Kahn1's; JevBench is independent but only its public half was run.</li>
+      </ul>
+    </section>
+    <section class="sec doc" id="faq" aria-labelledby="h-faq">
+      <h2 id="h-faq">06 · FAQ</h2>
+      <h3 class="sub">Is Clef-flash more accurate than Kahn1?</h3>
+      <p>On Kahn1's held-out set, yes: 74.8% against 72.4% on the same 14,663 items, a significant gap, driven by Choice. On the 231 public JevBench items, the two are level (87.4% for Kahn1 4B, 83.5% for Clef-flash, exact McNemar p = 0.16).</p>
+      <h3 class="sub">Can Clef-flash run on a 16 GB GPU?</h3>
+      <p>Not in bf16: its weights take 18.8 GB. We ran it in int8 with bitsandbytes on a 16 GB RTX 5070 Ti; that changes the model slightly.</p>
+      <h3 class="sub">Which is better calibrated?</h3>
+      <p>Kahn1 4B: ECE 0.072 against 0.101 for Clef-flash on the held-out set, each as shipped.</p>
+      <h3 class="sub">Did Clef-flash see the test data?</h3>
+      <p>We cannot tell. Its training data is not published. A probe on the train splits of the test sources finds no memorisation, but a model trained without overfitting would not show any either. Against its own base model (Qwen3.5-9B), Clef-flash removes 92% of the errors on BANKING77; Kahn1 4B, which never saw it, removes 27% of its base model's.</p>
+    </section>
+  </main>
+
+<footer class="foot">
+  <div>KAHN1 · MIT License · by <a href="https://www.linkedin.com/in/amontzamir/" rel="noopener">Axel Montzamir</a></div>
+  <nav aria-label="Footer">
+    <a href="/playground/">Playground</a>
+    <a href="/snake/">Snake</a>
+    <a href="https://github.com/Okura66/kahn1" rel="noopener">GitHub</a>
+    <a href="https://huggingface.co/Okura66" rel="noopener">Hugging Face</a>
+  </nav>
+  <span class="disc">Kahn1 is an independent project. It accepts the JEV schema format and is not affiliated with TypeSafe.</span>
+</footer>
+</div>
+<script src="/assets/site.js?v=20260928"></script>
+</body>
+</html>

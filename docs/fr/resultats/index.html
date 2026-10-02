@@ -173,6 +173,7 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
     <a href="/fr/vigilance/">Points de vigilance</a>
     <div class="kick">COMPARER</div>
     <a href="/fr/resultats/" aria-current="page">Résultats</a>
+    <a href="/fr/resultats/modeles-ouverts/">Modèles ouverts</a>
     <a href="/fr/comparer/paysage/">Paysage</a>
     <a href="/fr/alternatives/jev/">Alternatives à JEV</a>
     <a href="/fr/modeles/">Modèles</a>
@@ -214,6 +215,11 @@ try { if (localStorage.getItem("kahn1-demo:consent") === "granted") loadGTM(); }
       <p>Deux benchmarks, tous deux appariés exemple par exemple. Sur le holdout de Kahn1, nous avons lancé JEV via son
         API, avec les mêmes états, prompts et options que Kahn1. Sur JevBench, les résultats de Jev sont ceux que publie
         JevBench. Le graphique montre Kahn1 4B et Kahn1 3B&nbsp;; les tableaux ci-dessous ajoutent le détail par dataset, et JevK5 sur JevBench.</p>
+      <p class="callout"><b>Autres modèles ouverts.</b> Lancé par nous sur les mêmes exemples et le même GPU, Clef-flash
+        de Cloudflare (9B, en int8) est le plus précis sur le holdout, 74,8&nbsp;% contre 72,4&nbsp;% pour Kahn1 4B et
+        73,2&nbsp;% pour JEV, et au même niveau que Kahn1 4B sur JevBench (83,5&nbsp;%, écart non significatif)&nbsp;; Laya
+        (421M) obtient 59,1&nbsp;% et 57,6&nbsp;%. Tous les tableaux, la méthode de test et les biais connus&nbsp;:
+        <a href="/fr/resultats/modeles-ouverts/">modèles de décision ouverts, mesurés à périmètre égal</a>.</p>
       <p class="callout"><b>Correction.</b> Une version précédente de cette page posait Choice sur 8 options à Kahn1
         mais sur toutes les intentions à JEV, ce qui faisait paraître Kahn1 devant en Choice et au global. Cette
         comparaison était inégale et a été corrigée&nbsp;: sur les mêmes options, JEV est devant en Choice et au global.

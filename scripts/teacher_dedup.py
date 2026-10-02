@@ -8,9 +8,10 @@ Checks, in author order, so the later of two near-identical items is the one dro
   (the share of the smaller one): dropped, JevBench stays clean;
 - a question whose content words overlap more than --question-jaccard with an earlier question
   of the same family: dropped;
-- with --balance-length, Choice questions whose correct option is the longest one are dropped at
-  random until that happens no more often than chance (sum of 1/n): t3's first wave had it at 35 %
-  against 23 %, a cue a model can learn instead of reading the document;
+- with --balance-length, the share of Choice questions whose correct option is the longest one is
+  brought back to chance (mean of 1/n) by dropping, at random, questions on the side in excess: t3's
+  first wave had it at 35 % against 23 %, and the first authors given a rule against it went to 0 %;
+  either way a model could learn the length instead of reading the document;
 - names: a two-word name that recurs in earlier documents or JevBench (the favourites the
   briefs' name pools are there to avoid, training/teacher_catalog.py) is reported, not dropped.
 
@@ -157,16 +158,23 @@ def main() -> None:
         ch = [r for r in rows_by_id.values() if r["kind"] == "choice"]
         cue = [r for r in ch if longest(r) == r["label"]]
         rate = sum(1 / len(r["options"]) for r in ch) / max(len(ch), 1)
-        k = 0
-        while k < len(cue) and (len(cue) - k) / (len(ch) - k) > rate:
-            k += 1
-        drop = {r["id"] for r in random.Random(0).sample(cue, k)}
+        other = [r for r in ch if longest(r) != r["label"]]
+        k, side = 0, (cue if len(cue) / max(len(ch), 1) > rate else other)
+        if side is cue:
+            while k < len(cue) and (len(cue) - k) / (len(ch) - k) > rate:
+                k += 1
+        else:
+            while k < len(other) and len(cue) / (len(ch) - k) < rate:
+                k += 1
+        reason = ("length cue (correct option the longest too often; balanced to chance)" if side is cue else
+                  "length cue (correct option the longest too rarely; balanced to chance)")
+        drop = {r["id"] for r in random.Random(0).sample(side, k)}
         for d in decisions:
             if d["id"] in drop:
-                d["status"], d["reason"] = "drop", "length cue (correct option the longest; balanced to chance)"
+                d["status"], d["reason"] = "drop", reason
                 del rows_by_id[d["id"]]
         print(f"length cue: {len(cue)} of {len(ch)} Choice questions answered by their longest option "
-              f"(chance {100 * rate:.0f} %), {k} dropped")
+              f"(chance {100 * rate:.0f} %), {k} dropped on the {'longest' if side is cue else 'other'} side")
     for d in decisions:
         if d["status"] == "keep":
             r = rows_by_id[d["id"]]

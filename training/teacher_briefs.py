@@ -98,7 +98,7 @@ EXAMPLES = {
 
 def brief(n: int, lang: str, trio: tuple[str, ...], domains: list[str], out_path: Path, prefix: str = "t",
           question_noul: bool = False, mechanisms: list[str] | None = None,
-          names: dict[str, list[str]] | None = None, length_rule: bool = False) -> str:
+          names: dict[str, list[str]] | None = None, length_rule: int = 0) -> str:
     fam = ", ".join(f'"{f}" ({FAMILIES[f]})' for f in trio)
     if mechanisms:
         # Document k: the family, domain and deciding detail it is built around.
@@ -110,11 +110,20 @@ def brief(n: int, lang: str, trio: tuple[str, ...], domains: list[str], out_path
         plan = (f"- Families (spread evenly over the 10 documents): {fam}.\n"
                 f"- Domains (use each one exactly twice): {'; '.join(domains)}.")
     # Wave 1 of round 3 made the correct option the longest one 35 % of the time (chance 23 %):
-    # the deciding nuance went into the right answer only. Wave 2 gets this rule.
-    length_text = (" Write every wrong option with the same length and level of detail as the correct one "
-                   "(conditions, amounts, qualifiers): across your choice questions the correct option must be the "
-                   "longest one no more often than any other option, and never the only one that states a "
-                   "condition or a nuance." if length_rule else "")
+    # the deciding nuance went into the right answer only. Authors 35-44 got rule 1, and the first
+    # of them overcorrected (the correct option never the longest, a cue too); from author 45, rule 2.
+    length_text = {
+        0: "",
+        1: (" Write every wrong option with the same length and level of detail as the correct one "
+            "(conditions, amounts, qualifiers): across your choice questions the correct option must be the "
+            "longest one no more often than any other option, and never the only one that states a "
+            "condition or a nuance."),
+        2: (" Write every wrong option with the same length and level of detail as the correct one "
+            "(conditions, amounts, qualifiers), so that length says nothing about the answer: across your 13 "
+            "choice questions, make the correct option the longest one in about 3 of them (roughly what chance "
+            "gives), never in most of them and not in none; and it is never the only option that states a "
+            "condition or a nuance."),
+    }[length_rule]
     names_rule = ("" if not names else
                   "\n- Names: for people use ONLY names from this list: " + ", ".join(names["people"])
                   + ". For organisations use ONLY these: " + ", ".join(names["organisations"])
@@ -243,7 +252,8 @@ def main() -> None:
         out = (root / f"author_{n:02d}.jsonl").resolve()
         (root / "briefs" / f"author_{n:02d}.md").write_text(
             brief(n, lang, rd["trios"][ti], domains, out, rd["prefix"], rd["question_noul"],
-                  mech[n - 1], names[n - 1], length_rule=bool(rd.get("catalog")) and n > 34),
+                  mech[n - 1], names[n - 1],
+                  length_rule=(0 if not rd.get("catalog") or n <= 34 else 1 if n <= 44 else 2)),
             encoding="utf-8")
     print(f"{len(plan)} briefs in {root / 'briefs'}")
 

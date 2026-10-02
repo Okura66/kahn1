@@ -21,6 +21,11 @@ The run of 2026-09-30 (a ~20 % teacher share):
     python training/build_teacher_mix.py --round2 --trim --teacher-repeat 5 --round2-repeat 4
         --replay arc=1000,csqa=1000,mmlu_pro_val=70 --out data/train_4b_v2.jsonl
 
+The run of 2026-10-02 (Kahn1 4B, internal v7; the NLI sources whole again, 20.7 % teacher):
+
+    python training/build_teacher_mix.py --round2 --round3 --teacher-repeat 3 --round2-repeat 3
+        --round3-repeat 2 --replay arc=1000,csqa=1000,mmlu_pro_val=70 --out data/train_4b_v3.jsonl
+
 --round3 adds data/teacher/t3: the questions scripts/teacher_dedup.py kept, minus those the
 spot-check solver contradicted (scripts/teacher_spotcheck.py). Spot-checked documents whose three
 questions all agree become data/dev_teacher_t3.jsonl, a second hard dev split from the newest

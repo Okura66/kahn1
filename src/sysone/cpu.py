@@ -21,10 +21,14 @@ Expect seconds per prompt rather than the tens of milliseconds vLLM reaches on a
 GPU: there is no paged KV cache and no prefix caching here. Prefer `float32`.
 `bfloat16` halves memory but runs ~7x slower on CPUs without AMX, because the
 matmuls fall back to emulation.
+
+`device="cuda"` runs the same backend on a GPU where vLLM is not an option (a
+Hugging Face ZeroGPU Space, for one); use `bfloat16` there.
 """
 
 from __future__ import annotations
 
+import inspect
 import time
 from dataclasses import dataclass, field
 from typing import Any
@@ -78,6 +82,11 @@ class TorchCPUBackend:
         self.model = model
         self.tokenizer = tokenizer
         self.batch_size = batch_size
+        # Only the last position is read. Without this the forward returns logits for every
+        # position: batch x tokens x vocab, 9.5 GB in bfloat16 for 12 prompts of 1,600 tokens
+        # with Qwen3.5's 248k vocabulary. Older transformers releases lack the argument.
+        params = inspect.signature(model.forward).parameters
+        self._forward_kwargs = {"logits_to_keep": 1} if "logits_to_keep" in params else {}
 
     def generate(self, prompts: list[str], params_list: list[CPUSamplingParams]):
         import torch
@@ -94,15 +103,17 @@ class TorchCPUBackend:
                     padding_side="left",
                     add_special_tokens=False,
                 )
-                mask = enc["attention_mask"]
+                device = self.model.device
+                mask = enc["attention_mask"].to(device)
                 # A raw forward() does not derive position_ids from the mask (only
                 # generate() does). Without this, left padding shifts RoPE positions
                 # and silently corrupts every prompt shorter than the batch maximum.
                 position_ids = (mask.cumsum(-1) - 1).clamp(min=0)
                 logits = self.model(
-                    input_ids=enc["input_ids"],
+                    input_ids=enc["input_ids"].to(device),
                     attention_mask=mask,
                     position_ids=position_ids,
+                    **self._forward_kwargs,
                 ).logits[:, -1, :].float()
 
                 for row, params in enumerate(chunk_params):
@@ -110,7 +121,7 @@ class TorchCPUBackend:
                     # Restrict then renormalize: this reproduces vLLM's
                     # allowed_token_ids masking followed by log_softmax, so the
                     # values Engine._extract reads carry the same meaning.
-                    logprobs = torch.log_softmax(logits[row, ids], dim=-1)
+                    logprobs = torch.log_softmax(logits[row, ids], dim=-1).tolist()
                     lp = {tid: _Logprob(float(lg)) for tid, lg in zip(ids, logprobs)}
                     n_real = int(mask[row].sum())
                     outputs.append(_RequestOutput(
@@ -121,7 +132,7 @@ class TorchCPUBackend:
 
 
 class CPUEngine(Engine):
-    """Engine backed by transformers on CPU rather than vLLM on GPU."""
+    """Engine backed by transformers rather than vLLM, on CPU by default."""
 
     def __init__(
         self,
@@ -131,6 +142,7 @@ class CPUEngine(Engine):
         num_threads: int | None = None,
         config: EngineConfig | None = None,
         tokenizer=None,
+        device: str = "cpu",
     ):
         cfg = config or EngineConfig()
         if model is not None:
@@ -139,6 +151,7 @@ class CPUEngine(Engine):
         super().__init__(cfg, tokenizer=tokenizer)
         self.batch_size = batch_size
         self.num_threads = num_threads
+        self.device = device
 
     def _ensure_loaded(self):
         if self._llm is not None:
@@ -167,10 +180,12 @@ class CPUEngine(Engine):
             low_cpu_mem_usage=True,
         )
         model.eval()
+        if self.device != "cpu":
+            model.to(self.device)
         self._llm = TorchCPUBackend(model, tok, batch_size=self.batch_size)
         print(
             f"[cpu] loaded {self.config.model} dtype={self.config.dtype} "
-            f"threads={torch.get_num_threads()} in {time.perf_counter() - t0:.1f}s"
+            f"device={self.device} threads={torch.get_num_threads()} in {time.perf_counter() - t0:.1f}s"
         )
 
     def close(self) -> None:

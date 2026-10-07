@@ -620,13 +620,14 @@ function fromJev(schema) {
     const instructions = spec.instructions || spec.prompt || "";
     const c = spec.criteria;
     if (type === "choice") {
-      let options;
-      if (c && typeof c === "object" && !Array.isArray(c)) options = Object.entries(c).map(([l, d]) => (d ? l + ": " + d : l));
+      let options, names = null;
+      // {label: description}: the model reads "label: description", the answer gives "label", as JEV does.
+      if (c && typeof c === "object" && !Array.isArray(c)) { options = Object.entries(c).map(([l, d]) => (d ? l + ": " + d : l)); names = Object.keys(c); }
       else if (Array.isArray(c)) options = c.map(String);
       else if (Array.isArray(spec.options)) options = spec.options.map(String);
       else throw new Error("Choice question " + JSON.stringify(key) + " must provide 'criteria' or 'options'.");
       if (options.length < 2 || new Set(options).size !== options.length) throw new Error("Choice " + JSON.stringify(key) + " needs 2+ unique options.");
-      out.push({ key, kind: "choice", prompt: instructions, options, allowOther: spec.allow_other ?? true });
+      out.push({ key, kind: "choice", prompt: instructions, options, names: names || options, allowOther: spec.allow_other ?? true });
     } else if (type === "score") {
       const levels = Array.isArray(c) ? c.map(String) : Array.isArray(spec.levels) ? spec.levels.map(String) : null;
       if (!levels) throw new Error("Score question " + JSON.stringify(key) + " must provide 'criteria' or 'levels'.");
@@ -709,7 +710,7 @@ function compose(questions, entries) {
     const items = entries.filter((e) => e.qi === qi);
     if (q.kind === "choice") {
       const p = mean(items.map((e) => remap(e.order, e.probs)));
-      const eff = items[0].eff;
+      const eff = items[0].eff.map((o, i) => (i < q.names.length ? q.names[i] : o));
       answers[q.key] = { choice: eff[argmax(p)], confidence: confidence(p),
                          probabilities: Object.fromEntries(eff.map((o, i) => [o, p[i]])) };
     } else if (q.kind === "score") {

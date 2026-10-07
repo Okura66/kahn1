@@ -55,8 +55,7 @@ def test_evaluate_endpoint_mocked(client):
     )
     mock_engine.evaluate.return_value = mock_resp
 
-    with patch("sysone.server.get_engine", return_value=mock_engine), \
-         patch("sysone.server._calibrated", None):
+    with patch("sysone.server.get_runner", return_value=mock_engine):
         payload = {
             "state": "Cet assistant est remarquablement rapide et fiable.",
             "questions": [
@@ -151,3 +150,50 @@ def test_usage_counts_prefill_and_one_scored_token_per_prompt():
         "completion_tokens": 2, "total_tokens": 1212,
     }
     assert Engine._usage([]).total_tokens == 0
+
+
+def test_evaluate_endpoints_apply_calibration_from_the_first_request(monkeypatch, tmp_path):
+    """Regression: /v1/evaluate and /v1/evaluate/jev skipped calibration until /race,
+    /api/demo/evaluate or /v1/calibrate/load had built the calibrated runner."""
+    import sysone.server as srv
+
+    calls = []
+
+    class FakeCalibrated:
+        def __init__(self, engine, cfg):
+            pass
+
+        def evaluate(self, query, n_permutations=3):
+            calls.append(query.questions[0].key)
+            return EvaluateResponse(answers={}, latency_ms=1.0, cache_hit_rate=0.0)
+
+    calib = tmp_path / "calibration.json"
+    TemperatureConfig(choice=1.2, score=1.0, noul=1.0).save(calib)
+    monkeypatch.setenv("SYSONE_CALIBRATION", str(calib))
+    monkeypatch.setattr(srv, "_calibrated", None)
+    monkeypatch.setattr(srv, "get_engine", lambda: MagicMock())
+    monkeypatch.setattr("sysone.calibrate.CalibratedEngine", FakeCalibrated)
+    client = TestClient(app)
+    q = {"kind": "noul", "key": "a", "statement": "s"}
+    assert client.post("/v1/evaluate", json={"state": "x", "questions": [q]}).status_code == 200
+    assert client.post("/v1/evaluate/jev", json={
+        "state": "x", "schema": {"b": {"type": "noul", "instructions": "s"}}}).status_code == 200
+    assert calls == ["a", "b"]
+
+
+def test_calibration_path_prefers_the_models_own_file(monkeypatch, tmp_path):
+    import sysone.server as srv
+
+    model_dir = tmp_path / "model"
+    model_dir.mkdir()
+    TemperatureConfig().save(model_dir / "calibration.json")
+    TemperatureConfig().save(tmp_path / "calibration.json")  # a stray file in the cwd
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("SYSONE_CALIBRATION", raising=False)
+    fake = MagicMock()
+    fake.config.model = str(model_dir)
+    monkeypatch.setattr(srv, "get_engine", lambda: fake)
+    assert srv.calibration_path() == model_dir / "calibration.json"
+
+    monkeypatch.setenv("SYSONE_CALIBRATION", str(tmp_path / "calibration.json"))
+    assert srv.calibration_path() == tmp_path / "calibration.json"

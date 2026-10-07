@@ -62,6 +62,8 @@ def test_query_from_jev_canonical():
     assert q_cat.prompt == "Determine the broad category of this support ticket"
     assert len(q_cat.options) == 4
     assert q_cat.options[0].startswith("bug_report:")
+    assert q_cat.labels[0] == "bug_report"
+    assert q_cat.answer_names(q_cat.options + ["None of these answers"])[-1] == "None of these answers"
     assert q_cat.allow_other is True
 
     # 2. bug_severity
@@ -124,9 +126,10 @@ def test_server_jev_integration(monkeypatch):
             answers = {}
             for q in query.questions:
                 if q.kind == "choice":
+                    names = q.answer_names(q.options)
                     answers[q.key] = ChoiceAnswer(
-                        choice=q.options[0],
-                        probabilities={opt: (1.0 if i == 0 else 0.0) for i, opt in enumerate(q.options)},
+                        choice=names[0],
+                        probabilities={opt: (1.0 if i == 0 else 0.0) for i, opt in enumerate(names)},
                         confidence=1.0,
                     )
                 elif q.kind == "score":
@@ -144,8 +147,7 @@ def test_server_jev_integration(monkeypatch):
                 cache_hit_rate=0.98,
             )
 
-    monkeypatch.setattr(srv, "get_engine", lambda: FakeEngine())
-    monkeypatch.setattr(srv, "_calibrated", None)
+    monkeypatch.setattr(srv, "get_runner", lambda: FakeEngine())
 
     client = TestClient(app)
 
@@ -165,4 +167,4 @@ def test_server_jev_integration(monkeypatch):
     assert res_jev.status_code == 200, res_jev.text
     data_jev = res_jev.json()
     assert len(data_jev["answers"]) == 5
-    assert data_jev["answers"]["category"]["choice"].startswith("bug_report:")
+    assert data_jev["answers"]["category"]["choice"] == "bug_report"

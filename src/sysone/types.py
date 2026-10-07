@@ -45,6 +45,10 @@ class ChoiceQuestion(BaseModel):
     prompt: str
     options: list[str] = Field(..., min_length=2, max_length=64)
     allow_other: bool = True
+    # Names the answer reports in place of options, one per option. JEV criteria given as
+    # {label: description} are read by the model as "label: description" and answered
+    # as "label", as JEV does.
+    labels: list[str] | None = None
 
     @field_validator("options")
     @classmethod
@@ -52,6 +56,21 @@ class ChoiceQuestion(BaseModel):
         if len(set(v)) != len(v):
             raise ValueError("Options must be unique.")
         return v
+
+    @model_validator(mode="after")
+    def _check_labels(self) -> "ChoiceQuestion":
+        if self.labels is not None:
+            if len(self.labels) != len(self.options):
+                raise ValueError("labels must have one entry per option.")
+            if len(set(self.labels)) != len(self.labels):
+                raise ValueError("Labels must be unique.")
+        return self
+
+    def answer_names(self, eff_options: list[str]) -> list[str]:
+        """Names for the scored options (options, then the fallback if any) in answers."""
+        if self.labels is None:
+            return list(eff_options)
+        return list(self.labels) + list(eff_options[len(self.labels):])
 
 
 class ScoreQuestion(BaseModel):
@@ -122,8 +141,10 @@ class Query(BaseModel):
             criteria = spec.get("criteria")
 
             if q_type == "choice":
+                labels = None
                 if isinstance(criteria, dict):
                     options = [f"{lbl}: {desc}" if desc else lbl for lbl, desc in criteria.items()]
+                    labels = [str(lbl) for lbl in criteria]
                 elif isinstance(criteria, list):
                     options = [str(opt) for opt in criteria]
                 elif "options" in spec:
@@ -138,6 +159,7 @@ class Query(BaseModel):
                         prompt=instructions,
                         options=options,
                         allow_other=allow_other,
+                        labels=labels,
                     )
                 )
 

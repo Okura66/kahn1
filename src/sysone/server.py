@@ -72,15 +72,37 @@ def get_engine() -> Engine:
     return _engine
 
 
+def calibration_path() -> "Path | None":
+    """The temperatures to apply: SYSONE_CALIBRATION when set; else the served model's own
+    calibration.json (its local folder, or its Hub repo); else ./calibration.json.
+
+    Temperatures belong to one model, so the model's own file wins over a stray one in the
+    working directory.
+    """
+    import os
+    from pathlib import Path
+    explicit = os.environ.get("SYSONE_CALIBRATION")
+    if explicit:
+        return Path(explicit) if Path(explicit).exists() else None
+    model = str(get_engine().config.model)
+    if (Path(model) / "calibration.json").exists():
+        return Path(model) / "calibration.json"
+    if not Path(model).exists() and model.count("/") == 1:
+        try:
+            from huggingface_hub import hf_hub_download
+            return Path(hf_hub_download(model, "calibration.json"))
+        except Exception:  # no such file in the repo, offline, or no huggingface_hub
+            pass
+    return Path("calibration.json") if Path("calibration.json").exists() else None
+
+
 def get_runner():
-    """Engine wrapped in temperature calibration when SYSONE_CALIBRATION points at a file."""
+    """The engine, wrapped in temperature calibration when calibration_path() finds a file."""
     global _calibrated
     if _calibrated is not None:
         return _calibrated
-    import os
-    from pathlib import Path
-    path = Path(os.environ.get("SYSONE_CALIBRATION", "calibration.json"))
-    if path.exists():
+    path = calibration_path()
+    if path is not None:
         from .calibrate import CalibratedEngine, TemperatureConfig
         _calibrated = CalibratedEngine(get_engine(), TemperatureConfig.load(path))
         return _calibrated
@@ -106,7 +128,6 @@ async def health():
 
 @app.post("/v1/evaluate", response_model=EvaluateResponse)
 async def evaluate(req: EvaluateRequest) -> EvaluateResponse:
-    global _calibrated
     # Direct support for JEV schema format or sysone questions format
     if req.schema_jev is not None:
         query = Query.from_jev(state=req.state, schema=req.schema_jev)
@@ -120,10 +141,7 @@ async def evaluate(req: EvaluateRequest) -> EvaluateResponse:
         )
 
     try:
-        engine = get_engine()
-        if _calibrated is not None:
-            return _calibrated.evaluate(query, n_permutations=req.n_permutations)
-        return engine.evaluate(query, n_permutations=req.n_permutations)
+        return get_runner().evaluate(query, n_permutations=req.n_permutations)
     except ModuleNotFoundError as e:
         if "vllm" in str(e).lower():
             from fastapi import HTTPException
@@ -138,12 +156,8 @@ async def evaluate(req: EvaluateRequest) -> EvaluateResponse:
 @app.post("/v1/evaluate/jev", response_model=EvaluateResponse)
 async def evaluate_jev(req: JevEvaluateRequest) -> EvaluateResponse:
     """Dedicated endpoint directly accepting JEV / TypeSafe schema requests."""
-    global _calibrated
     query = Query.from_jev(state=req.state, schema=req.schema_jev)
-    engine = get_engine()
-    if _calibrated is not None:
-        return _calibrated.evaluate(query, n_permutations=req.n_permutations)
-    return engine.evaluate(query, n_permutations=req.n_permutations)
+    return get_runner().evaluate(query, n_permutations=req.n_permutations)
 
 
 
@@ -282,7 +296,7 @@ async def demo_info():
     return {
         "backend": os.environ.get("SYSONE_BACKEND", "vllm"),
         "model": engine.config.model,
-        "calibrated": Path(os.environ.get("SYSONE_CALIBRATION", "calibration.json")).exists(),
+        "calibrated": calibration_path() is not None,
         "loaded": engine._llm is not None,
     }
 

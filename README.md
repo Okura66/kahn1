@@ -253,12 +253,21 @@ uv run python scripts/run_cpu_demo.py --model Okura66/Kahn1-Qwen3.5-4B   # or Ok
 ```
 
 ```python
+from huggingface_hub import hf_hub_download
 from sysone.calibrate import CalibratedEngine, TemperatureConfig
 from sysone.cpu import CPUEngine
+from sysone.types import Query
 
-engine = CPUEngine("Okura66/Kahn1-Qwen3.5-4B", dtype="float32", num_threads=16)  # or "Okura66/Kahn1-Qwen2.5-3B"
-engine = CalibratedEngine(engine, TemperatureConfig.load("calibration.json"))  # shipped with each model on the Hub
+model = "Okura66/Kahn1-Qwen3.5-4B"  # or "Okura66/Kahn1-Qwen2.5-3B"
+engine = CPUEngine(model, dtype="float32", num_threads=16)
+# Each model ships its own temperatures on the Hub
+engine = CalibratedEngine(engine, TemperatureConfig.load(hf_hub_download(model, "calibration.json")))
+query = Query.from_jev(state="Hello, I cannot log in to my account since this morning.", schema={
+    "category": {"type": "choice", "instructions": "Support ticket category",
+                 "criteria": {"bug": "Something is broken", "account": "Login, credentials, permissions"}},
+})
 response = engine.evaluate(query, n_permutations=3)
+print(response.answers["category"].choice)  # "account"
 ```
 
 Expect seconds per prompt instead of the tens of milliseconds vLLM reaches on a
@@ -301,7 +310,7 @@ panel says so rather than showing invented numbers.
 | `SYSONE_MODEL` | model id or local path |
 | `SYSONE_THREADS` | torch CPU threads |
 | `SYSONE_MAX_MODEL_LEN` | vLLM context length in tokens (default 8192; the longest JevBench items are ~3,700) |
-| `SYSONE_CALIBRATION` | temperature config (default `calibration.json`) |
+| `SYSONE_CALIBRATION` | temperature config (default: the served model's own `calibration.json`, from its folder or its Hub repo, else `./calibration.json`) |
 | `JEV_API_KEY` | TypeSafe credentials, also read as `TYPESAFE_API_KEY` |
 
 ### Verification & Test Suite

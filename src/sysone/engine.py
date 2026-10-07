@@ -566,8 +566,9 @@ class Engine:
             remapped = remap_distribution(perm, probs)  # indexed by canonical option
             perm_results.append((perm, remapped))
         avg = average_distributions([r for _, r in perm_results])
-        # Map to option string labels
-        prob_map = {eff_options[i]: avg[i] for i in range(len(eff_options))}
+        # Map to option names (the JEV labels when the question has them)
+        names = question.answer_names(eff_options)
+        prob_map = {names[i]: avg[i] for i in range(len(eff_options))}
         # Renormalize defensively
         s = sum(prob_map.values())
         if s > 0:
@@ -684,9 +685,11 @@ class Engine:
                 stage2_q = ChoiceQuestion(
                     key=orig_q.key, prompt=orig_q.prompt,
                     options=top, allow_other=False,  # top-k is already filtered
+                    labels=None if orig_q.labels is None
+                    else [orig_q.labels[orig_q.options.index(o)] for o in top],
                 )
                 stage2_questions.append(stage2_q)
-                mapping.append((qi, top))
+                mapping.append((qi, stage2_q.answer_names(top)))
             # Batch execution of stage 2
             s2_query = type(query)(state=query.state, questions=stage2_questions)
             s2_entries = self._build_batch(s2_query, n_permutations=1)

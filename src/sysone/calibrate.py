@@ -302,6 +302,7 @@ class CalibratedEngine:
         return EvaluateResponse(
             answers=answers, latency_ms=latency_ms,
             cache_hit_rate=eng._cache_hit_rate(outputs),
+            usage=eng._usage(outputs),
         )
 
 

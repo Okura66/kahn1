@@ -300,6 +300,7 @@ panel says so rather than showing invented numbers.
 | `SYSONE_BACKEND` | `vllm` (default) or `cpu` |
 | `SYSONE_MODEL` | model id or local path |
 | `SYSONE_THREADS` | torch CPU threads |
+| `SYSONE_MAX_MODEL_LEN` | vLLM context length in tokens (default 8192; the longest JevBench items are ~3,700) |
 | `SYSONE_CALIBRATION` | temperature config (default `calibration.json`) |
 | `JEV_API_KEY` | TypeSafe credentials, also read as `TYPESAFE_API_KEY` |
 
@@ -309,7 +310,7 @@ panel says so rather than showing invented numbers.
 uv run pytest tests/ -q
 ```
 
-Runs the complete suite of 151 deterministic unit and integration tests, 150 passed and 1 skipped (validating token mapping, prompt formats, debiasing invariance, ordinal scoring, post-hoc calibration, and REST API endpoints).
+Runs the complete suite of 152 deterministic unit and integration tests, 151 passed and 1 skipped (validating token mapping, prompt formats, debiasing invariance, ordinal scoring, post-hoc calibration, and REST API endpoints).
 
 The first logit check, on the Mistral-7B prototype that came before Kahn1, is archived in [`reports/SPIKE.md`](reports/SPIKE.md).
 

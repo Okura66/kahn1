@@ -271,9 +271,24 @@ Answer = Union[ChoiceAnswer, ScoreAnswer, NoulAnswer]
 # API Response Schema
 # ---------------------------------------------------------------------------
 
+class Usage(BaseModel):
+    """Token counts for one evaluation. Each prompt is scored on a single continuation
+    token (max_tokens=1), so completion_tokens equals prompts: the cost is the prefill."""
+
+    prompts: int = 0
+    prompt_tokens: int = 0
+    # Prompt tokens served from the prefix cache, not recomputed. Hits come from earlier
+    # requests sharing a prefix (same state); the k option orders of one request are
+    # scheduled together and do not hit each other.
+    cached_tokens: int = 0
+    completion_tokens: int = 0
+    total_tokens: int = 0
+
+
 class EvaluateResponse(BaseModel):
     """End-to-end evaluation payload containing answers and inference telemetry."""
 
     answers: dict[str, Answer]
     latency_ms: float
     cache_hit_rate: float
+    usage: Usage | None = None

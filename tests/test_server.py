@@ -133,3 +133,21 @@ def test_load_calibration_endpoint(client, tmp_path):
 def test_cors_allows_only_the_site_and_local_pages(client, origin, allowed):
     resp = client.get("/health", headers={"Origin": origin})
     assert (resp.headers.get("access-control-allow-origin") == origin) is allowed
+
+
+def test_usage_counts_prefill_and_one_scored_token_per_prompt():
+    from sysone.cpu import _Completion, _RequestOutput
+    from sysone.engine import Engine
+
+    outputs = [
+        _RequestOutput(outputs=[_Completion(logprobs=[{}])],
+                       prompt_token_ids=list(range(600)), num_cached_tokens=0),
+        _RequestOutput(outputs=[_Completion(logprobs=[{}])],
+                       prompt_token_ids=list(range(610)), num_cached_tokens=592),
+    ]
+    usage = Engine._usage(outputs)
+    assert usage.model_dump() == {
+        "prompts": 2, "prompt_tokens": 1210, "cached_tokens": 592,
+        "completion_tokens": 2, "total_tokens": 1212,
+    }
+    assert Engine._usage([]).total_tokens == 0

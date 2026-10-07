@@ -3,7 +3,9 @@
 Endpoints:
     POST /v1/evaluate
     { "state": "...", "questions": [...], "n_permutations": 3 }
-    -> { "answers": {...}, "latency_ms": 87, "cache_hit_rate": 0.94 }
+    -> { "answers": {...}, "latency_ms": 87, "cache_hit_rate": 0.94,
+         "usage": {"prompts": 3, "prompt_tokens": 7644, "cached_tokens": 4224,
+                   "completion_tokens": 3, "total_tokens": 7647} }
 
 Exposes prefix cache hit rate in the response payload to monitor KV cache sharing.
 """
@@ -66,7 +68,7 @@ def get_engine() -> Engine:
             )
         else:
             _engine = Engine(EngineConfig(model=model,
-                                          max_model_len=int(os.environ.get("SYSONE_MAX_MODEL_LEN", "2048"))))
+                                          max_model_len=int(os.environ.get("SYSONE_MAX_MODEL_LEN", "8192"))))
     return _engine
 
 

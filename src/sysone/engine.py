@@ -63,6 +63,7 @@ from .types import (
     Query,
     ScoreAnswer,
     ScoreQuestion,
+    Usage,
     confidence_from_probs,
 )
 
@@ -448,7 +449,7 @@ class Engine:
         latency_ms = (time.perf_counter() - t0) * 1000.0
         return EvaluateResponse(
             answers=answers, latency_ms=latency_ms,
-            cache_hit_rate=cache_hit_rate,
+            cache_hit_rate=cache_hit_rate, usage=self._usage(outputs),
         )
 
     def evaluate_batch(self, queries: list[Query], n_permutations: int = 3) -> list[EvaluateResponse]:
@@ -470,8 +471,8 @@ class Engine:
             all_entries.extend(entries)
 
         if not all_entries:
-            return [EvaluateResponse(answers={}, latency_ms=0.0, cache_hit_rate=0.0)
-                    for _ in queries]
+            return [EvaluateResponse(answers={}, latency_ms=0.0, cache_hit_rate=0.0,
+                                     usage=Usage()) for _ in queries]
 
         prompts = [e["spec"].full_text for e in all_entries]
         params_list = [self._make_params(e["resolved"].token_ids) for e in all_entries]
@@ -497,8 +498,10 @@ class Engine:
                     answers[question.key] = self._compose_noul(question, items)
             # Per-query latency is not meaningful in a shared batch; report the
             # shared wall-clock so a caller summing them does not double count.
+            # Token counts are per prompt, so each query gets its own.
             responses.append(EvaluateResponse(
-                answers=answers, latency_ms=latency_ms, cache_hit_rate=cache_hit_rate))
+                answers=answers, latency_ms=latency_ms, cache_hit_rate=cache_hit_rate,
+                usage=self._usage(outputs[lo:hi])))
         return responses
 
     def _make_params_with_logprobs(self, max_opts: int):
@@ -536,6 +539,19 @@ class Engine:
         except Exception:
             pass
         return 0.0
+
+    @staticmethod
+    def _usage(outputs) -> Usage:
+        """Token counts from vLLM (or CPU backend) outputs: prompt tokens prefilled,
+        how many came from the prefix cache, and the one scored token per prompt."""
+        prompt_tokens = cached = 0
+        for out in outputs:
+            p_tokens = getattr(out, "prompt_token_ids", None)
+            prompt_tokens += len(p_tokens) if p_tokens is not None else 0
+            cached += getattr(out, "num_cached_tokens", None) or 0
+        n = len(outputs)
+        return Usage(prompts=n, prompt_tokens=prompt_tokens, cached_tokens=cached,
+                     completion_tokens=n, total_tokens=prompt_tokens + n)
 
     # -- Answer composition --
     def _compose_choice(self, question: ChoiceQuestion, items: list[dict]) -> ChoiceAnswer:
@@ -645,10 +661,12 @@ class Engine:
 
         # Stage 1: batch execution of all Noul prompts
         answers: dict[str, Answer] = {}
+        all_outputs: list = []
         if noul_entries:
             prompts = [e["spec"].full_text for e in noul_entries]
             params_list = [self._make_params(e["resolved"].token_ids) for e in noul_entries]
             outputs = self._llm.generate(prompts, params_list)
+            all_outputs.extend(outputs)
             # Aggregate score per option
             option_scores: dict[int, list[tuple[str, float]]] = {}
             for e, out in zip(noul_entries, outputs):
@@ -675,6 +693,7 @@ class Engine:
             s2_prompts = [e["spec"].full_text for e in s2_entries]
             s2_params_list = [self._make_params(e["resolved"].token_ids) for e in s2_entries]
             s2_outputs = self._llm.generate(s2_prompts, s2_params_list)
+            all_outputs.extend(s2_outputs)
             s2_results = [self._extract(o, e["spec"], e["resolved"])
                           for o, e in zip(s2_outputs, s2_entries)]
             for (qi, top), entry, lr in zip(mapping, s2_entries, s2_results):
@@ -694,6 +713,7 @@ class Engine:
             prompts = [e["spec"].full_text for e in direct_entries]
             params_list = [self._make_params(e["resolved"].token_ids) for e in direct_entries]
             outputs = self._llm.generate(prompts, params_list)
+            all_outputs.extend(outputs)
             results = [self._extract(o, e["spec"], e["resolved"])
                        for o, e in zip(outputs, direct_entries)]
             by_qi: dict[int, list[dict]] = {}
@@ -711,5 +731,5 @@ class Engine:
         latency_ms = (time.perf_counter() - t0) * 1000.0
         return EvaluateResponse(
             answers=answers, latency_ms=latency_ms,
-            cache_hit_rate=0.0,
+            cache_hit_rate=0.0, usage=self._usage(all_outputs),
         )

@@ -277,9 +277,10 @@ class Usage(BaseModel):
 
     prompts: int = 0
     prompt_tokens: int = 0
-    # Prompt tokens served from the prefix cache, not recomputed. Hits come from earlier
-    # requests sharing a prefix (same state); the k option orders of one request are
-    # scheduled together and do not hit each other.
+    # Prompt tokens served from the prefix cache, not recomputed. vLLM counts hits in
+    # whole KV blocks (528 tokens for Kahn1 4B, a hybrid Qwen3.5), so a prompt shorter
+    # than one block never hits. On longer states the k option orders of one request
+    # reuse the shared prefix of the first, and a repeated state reuses it for all k.
     cached_tokens: int = 0
     completion_tokens: int = 0
     total_tokens: int = 0

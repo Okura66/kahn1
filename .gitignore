@@ -63,6 +63,11 @@ SPEC-system-one-poc.md
 # Scratchpads & Temporary Scripts
 scratch/
 scripts/scratch/
+# One-off GPU checks and superseded run scripts (the v6/v7 recipes stay tracked)
+.*_smoke.sh
+.pilot_*.sh
+.dev_teacher_eval.sh
+.v5_*.sh
 
 # Local Calibration & Experiment Artifacts
 calibration*.json
